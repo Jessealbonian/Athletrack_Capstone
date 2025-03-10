@@ -1,0 +1,140 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f5f5f5;
+    margin-left: 16rem;
+    margin-top: 3rem;
+    padding: 0;
+}
+.container {
+    padding: 20px;
+}
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.header button, .header .export, .header .search, .header .filter {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.header button {
+    background-color: #007bff;
+    color: white;
+}
+.header .export {
+    background-color: white;
+    border: 1px solid #ddd;
+    color: #007bff;
+}
+.header .search {
+    flex-grow: 1;
+    margin: 0 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+.header .filter {
+    background-color: white;
+    border: 1px solid #ddd;
+    color: #007bff;
+}
+.cards {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.card {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    margin: 0 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+.card:first-child {
+    margin-left: 0;
+}
+.card:last-child {
+    margin-right: 0;
+}
+.card .icon {
+    font-size: 24px;
+    position: relative;
+    z-index: 1;
+}
+.card .icon.total {
+    color: #007bff;
+}
+.card .icon.pending {
+    color: #ffc107;
+}
+.card .icon.overdue {
+    color: #dc3545;
+}
+.card .icon::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    background-color: currentColor;
+    border-radius: 50%;
+    opacity: 0.1;
+    z-index: 0;
+}
+.table-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+table th, table td {
+    padding: 10px;
+    text-align: left;
+}
+table th {
+    background-color: #f5f5f5;
+}
+table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+.status {
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+}
+.status.paid {
+    background-color: #28a745;
+}
+.status.pending {
+    background-color: #ffc107;
+    color: black;
+}
+.status.overdue {
+    background-color: #dc3545;
+}
+.action i {
+    cursor: pointer;
+    margin: 0 5px;
+}
+.action .edit {
+    color: #007bff;
+}
+.action .delete {
+    color: #dc3545;
+}

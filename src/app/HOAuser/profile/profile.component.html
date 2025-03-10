@@ -1,0 +1,149 @@
+<div class="flex h-screen flex-col">
+  <app-sidenav (navToggled)="onNavToggled($event)" class="fixed top-0 left-0 h-full z-10"></app-sidenav>
+  <app-navbar class="relative z-20"></app-navbar>
+          <div class="dashboard-container">
+             <div class="transition-all duration-300 z-1 mt-16" 
+            [class.lg:ml-64]="isNavOpen"
+            [class.lg:ml-20]="!isNavOpen">
+      <div class="flex-1 p-6">
+        <section class="bg-white p-6 rounded-lg shadow-lg mt-4 relative">
+         <button class="absolute top-4 right-4 text-blue-500 hover:text-blue-600 transition-colors" (click)="toggleEdit()">
+          <i class="fas fa-pencil-alt text-xl">
+          </i>
+         </button>
+         <div *ngIf="profile?.username" class="flex items-center space-x-4">
+          <!-- <img alt="Profile picture of the homeowner" class="w-24 h-24 rounded-full" height="100" src="https://storage.googleapis.com/a1aa/image/LKGU5RMrEhq8FdxMUg1ewEF3Tuf17KmfL1fRxMRTIbWbjy7PB.jpg" width="100"/> -->
+          <div>
+           <h2 class="text-xl font-bold">
+            {{ profile.username }}
+           </h2>
+           <p class="text-gray-600">
+            Block 23 Lot 14
+           </p>
+          </div>
+         </div>
+         <div  class="mt-4 hidden" id="editForm">
+          <form>
+           <div *ngIf="profile?.username" class="mb-4">
+            <label class="block text-gray-700" for="name">
+             Name
+            </label>
+            <input class="w-full p-2 border border-gray-300 rounded" id="name" name="name" type="text" value= "{{ profile.username }}"/>
+           </div>
+           <div class="mb-4">
+            <label class="block text-gray-700" for="street">
+             Street
+            </label>
+            <input class="w-full p-2 border border-gray-300 rounded" id="street" name="street" type="text" value="1234 Elm Street, Springfield"/>
+           </div>
+           <div class="mb-4">
+            <label class="block text-gray-700" for="image">
+             Upload Image
+            </label>
+            <input class="w-full p-2 border border-gray-300 rounded" id="image" name="image" type="file"/>
+           </div>
+           <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors" type="submit">
+            Save
+           </button>
+          </form>
+         </div>
+        </section>
+
+        <section class="mt-6 bg-white p-6 rounded-lg shadow-lg relative">
+         <button class="absolute top-4 right-4 text-blue-500 hover:text-blue-600 transition-colors" (click)="toggleEditDetails()">
+          <i class="fas fa-pencil-alt text-xl">
+          </i>
+         </button>
+         <h3 class="text-lg font-bold mb-4">
+          Property Details
+         </h3>
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="propertyDetails">
+          <div>
+           <p class="text-gray-700">
+            <span class="font-bold">
+             Square Footage:
+            </span>
+            300 sq ft
+           </p>
+           <p class="text-gray-700">
+            <span class="font-bold">
+             Bedrooms:
+            </span>
+            2
+           </p>
+           <p class="text-gray-700">
+            <span class="font-bold">
+             Bathrooms:
+            </span>
+            2
+           </p>
+          </div>
+          <div>
+           <p class="text-gray-700">
+            <span class="font-bold">
+             HOA Fees:
+            </span>
+            ₱200/month
+           </p>
+           <p class="text-gray-700">
+            <span class="font-bold">
+             Status:
+            </span>
+            Active
+           </p>
+          </div>
+         </div>
+         <div class="mt-4 hidden" id="editDetailsForm">
+          <form>
+           <div class="mb-4">
+            <input class="w-full p-2 border border-gray-300 rounded" id="propertyType" name="propertyType" type="text" value="Single Family Home"/>
+           </div>
+           <div class="mb-4">
+            <label class="block text-gray-700" for="squareFootage">
+             Square Footage
+            </label>
+            <input class="w-full p-2 border border-gray-300 rounded" id="squareFootage" name="squareFootage" type="text" value="2,500 sq ft"/>
+           </div>
+           <div class="mb-4">
+            <label class="block text-gray-700" for="bedrooms">
+             Bedrooms
+            </label>
+            <input class="w-full p-2 border border-gray-300 rounded" id="bedrooms" name="bedrooms" type="text" value="4"/>
+           </div>
+           <div class="mb-4">
+            <label class="block text-gray-700" for="bathrooms">
+             Bathrooms
+            </label>
+            <input class="w-full p-2 border border-gray-300 rounded" id="bathrooms" name="bathrooms" type="text" value="3"/>
+           </div>
+           <div class="mb-4">
+            <input class="w-full p-2 border border-gray-300 rounded" id="yearBuilt" name="yearBuilt" type="text" value="2010"/>
+           </div>
+           <div class="mb-4">
+            <input class="w-full p-2 border border-gray-300 rounded" id="lotSize" name="lotSize" type="text" value="0.5 acres"/>
+           </div>
+           <div class="mb-4">
+            <label class="block text-gray-700" for="status">
+             Status
+            </label>
+            <input class="w-full p-2 border border-gray-300 rounded" id="status" name="status" type="text" value="Active"/>
+           </div>
+           <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors" type="submit">
+            Save
+           </button>
+          </form>
+         </div>
+        </section>
+       </div>
+      </div>
+     </div>
+     <script>
+      function toggleEdit() {
+               document.getElementById('editForm').classList.toggle('hidden');
+           }
+   
+           function toggleEditDetails() {
+               document.getElementById('editDetailsForm').classList.toggle('hidden');
+           }
+     </script>
+    

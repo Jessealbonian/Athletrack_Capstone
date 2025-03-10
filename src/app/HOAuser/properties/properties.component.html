@@ -1,0 +1,118 @@
+<div class="flex h-screen flex-col">
+    <app-sidenav (navToggled)="onNavToggled($event)" class="fixed top-0 left-0 h-full z-10"></app-sidenav>
+    <app-navbar class="relative z-20"></app-navbar>
+    <div class="content-area">
+      <div class="dashboard-container">
+        <div class="transition-all duration-300 z-1 mt-16" [class.lg:ml-64]="isNavOpen" [class.lg:ml-20]="!isNavOpen">
+          <div class="px-10 py-10">
+            <div class="flex justify-between items-center mb-4">
+              <h1 class="text-xl">Property List</h1>
+    
+            </div>
+  
+            <div class="flex space-x-4 mb-4">
+              <button (click)="filterProperty('')" class="bg-gray-200 px-4 py-2 rounded">All</button>
+              <button (click)="filterProperty('For Sale')" class="bg-blue-500 text-white px-4 py-2 rounded">For Sale</button>
+              <button (click)="filterProperty('For Rent')" class="bg-blue-500 text-white px-4 py-2 rounded">For Rent</button>
+              <!-- <button (click)="filterProperty('Rented')" class="bg-green-500 text-white px-4 py-2 rounded">Rented</button>
+              <button (click)="filterProperty('Maintenance')" class="bg-yellow-500 text-white px-4 py-2 rounded">Maintenance</button> -->
+  
+            </div>
+  
+            <div *ngIf="isLoading" class="flex justify-center items-center py-8">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+  
+            <div *ngIf="!isLoading && filteredProperties.length === 0" class="text-center py-8 text-gray-500">
+              No properties found
+            </div>
+  
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" *ngIf="!isLoading && filteredProperties.length > 0">
+              <div *ngFor="let property of filteredProperties" class="bg-white shadow-md rounded-lg overflow-hidden">
+                <img  [src]="'http://localhost/DEMO2/demoproject/api/' + property.image" [alt]="property.prop_name" class="w-full h-40 object-cover" />
+                <div class="p-4">
+                  <h2 class="text-xl font-bold">{{ property.prop_name }}</h2>
+                  <p class="text-gray-600">Address: {{ property.prop_address }}</p>
+                  <p class="text-gray-600">Status: {{ property.prop_status }}</p>
+                  <button (click)="showPropertyDetails(property)"
+                  class="text-blue-500 flex items-center text-sm font-medium hover:underline">
+                  <i class="fas fa-search mr-1"></i> View Details
+                </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Viewing Property -->
+    <!-- Property Details Modal -->
+  <div *ngIf="selectedProperty" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" id="property-details-modal">
+    <div class="bg-white rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold">Property Details</h2>
+        <button (click)="showPropertyDetails(null)" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="bg-white rounded-lg shadow-lg flex flex-col md:flex-row">
+        <div class="p-6 flex-1">
+          <div class="flex items-center mb-4">
+            <i class="fas fa-map-marker-alt text-blue-500 text-xl mr-2"></i>
+            <h2 class="text-2xl font-bold">{{selectedProperty.prop_name}}</h2>
+          </div>
+          <p class="text-gray-600 mb-2">{{selectedProperty.prop_address}}</p>
+          <p class="text-gray-600 mb-4">{{selectedProperty.details}}</p>
+          <ul class="text-gray-600 mb-4">
+            <li class="flex items-center mb-1">
+              <i class="fas fa-check text-red-500 mr-2"></i>
+              Quiet Neighbourhood
+            </li>
+            <li class="flex items-center mb-1">
+              <i class="fas fa-check text-red-500 mr-2"></i>
+              Great Local Community
+            </li>
+            <li class="flex items-center mb-1">
+              <i class="fas fa-check text-pink-500 mr-2"></i>
+              Fabulous Views
+            </li>
+            <li class="flex items-center mb-1">
+              <i class="fas fa-check text-pink-500 mr-2"></i>
+              Large Play Center In Yard
+            </li>
+          </ul>
+          <div class="flex items-center">
+            <div class="bg-red-400 text-white text-md font-medium py-2 px-4 rounded-lg mr-4">
+              ₱ {{selectedProperty.prop_price}} 
+            </div>
+            <div class="flex items-center text-gray-600">
+              <i class="fas fa-ruler-combined mr-2"></i>
+              {{selectedProperty.prop_size}} sq.m.
+            </div>
+            <div class="flex items-center text-gray-600 ml-4">
+              <i class="fas fa-bed mr-2"></i>
+              {{selectedProperty.prop_rooms}} rooms
+            </div>
+            <div class="flex items-center text-gray-600 ml-4">
+              <i class="fas fa-bath mr-2"></i>
+              {{selectedProperty.prop_baths}} baths
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <div class="bg-green-500 flex text-white text-lg font-medium py-2 px-2 rounded-lg items-center">
+              {{selectedProperty.prop_status}}
+            </div>
+          </div>
+        </div>
+        <div class="flex-1">
+          <img [src]="'http://localhost/DEMO2/demoproject/api/' + selectedProperty.image" 
+               [alt]="selectedProperty.prop_address" 
+               class="w-full h-full object-cover rounded-r-lg">
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  

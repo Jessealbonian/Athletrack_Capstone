@@ -1,0 +1,71 @@
+body {
+    background-color: #f7fafc; /* bg-gray-100 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.page-layout {
+    width: 100%;
+    min-height: 100vh;
+}
+
+.main-content {
+    display: flex;
+    height: calc(100vh - 64px); /* Adjust based on your navbar height */
+}
+
+.content-area {
+    flex: 1;
+    padding: 20px;
+    background-color: #f7fafc;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-y: auto;
+}
+
+.container {
+    background-color: #ffffff; /* bg-white */
+    padding: 1.5rem; /* p-6 */
+    border-radius: 0.5rem; /* rounded-lg */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-md */
+    width: 100%;
+    max-width: 28rem; /* max-w-md */
+    margin-top: 20px;
+}
+
+.title {
+    font-size: 1.25rem; /* text-xl */
+    font-weight: bold; /* font-bold */
+    margin-bottom: 1rem; /* mb-4 */
+}
+
+.event-list {
+    margin-top: 1rem; /* space-y-4 */
+}
+
+.event-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem; /* space-y-4 */
+}
+
+.event-title {
+    font-weight: 600; /* font-semibold */
+}
+
+.event-date {
+    color: #718096; /* text-gray-600 */
+}
+
+.rsvp-button {
+    background-color: #48bb78; /* bg-green-500 */
+    color: #ffffff; /* text-white */
+    padding: 0.5rem 1rem; /* px-4 py-2 */
+    border-radius: 0.25rem; /* rounded */
+    border: none;
+    cursor: pointer;
+}

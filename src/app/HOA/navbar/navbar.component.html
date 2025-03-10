@@ -1,0 +1,29 @@
+<body class="bg-gray-100">
+  <div
+    class="navbar-container fixed top-0 left-0 right-0 z-50 flex justify-between items-center p-4 bg-white shadow-md">
+    <!-- Left-aligned title with icon -->
+    <div class="page-title text-xl font-bold flex items-center">
+      <i class="fas fa-home text-blue-500 text-2xl mr-2"></i>
+      HOA Management
+    </div>
+    <!-- Right-aligned user section -->
+    <div class="user-section flex items-center space-x-4">
+      <!-- Profile and Dropdown -->
+      <div class="relative">
+        <button (click)="toggleDropdown()" class="flex items-center gap-2">
+          <i class="fa-regular fa-user text-xl cursor-pointer"></i>
+          <div *ngIf="profile">
+            <span class="username font-medium">{{ profile.username }}</span>
+          </div>
+        </button>
+        <div *ngIf="isDropdownOpen"
+          class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+          <div class="py-1">
+            <a (click)="logout()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"> <i
+                class="fas fa-sign-out-alt mr-1"></i>Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>

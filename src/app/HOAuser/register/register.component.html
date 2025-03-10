@@ -1,0 +1,177 @@
+<!-- <app-navbar></app-navbar> -->
+<title>Register</title>
+<section class="min-h-screen flex items-center justify-center bg-gradient-to-r from-[#93cb53] to-[#417505]    py-6 sm:py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+  <div class="relative w-full max-w-md mx-auto">
+    <!-- Background Circles -->
+    <div class="absolute top-[-50px] left-[-50px] w-[100px] h-[100px] rounded-full bg-white/30 backdrop-blur-sm"></div>
+    <div class="absolute bottom-[-50px] right-[-50px] w-[100px] h-[100px] rounded-full bg-white/30 backdrop-blur-sm"></div>
+
+    <!-- Main Container -->
+    <div class="relative bg-white/90 backdrop-blur-sm p-4 sm:p-8 rounded-xl shadow-lg overflow-hidden">
+      <!-- Illustration -->
+      <img 
+        src="https://raw.githubusercontent.com/hicodersofficial/glassmorphism-login-form/master/assets/illustration.png" 
+        alt="illustration" 
+        class="absolute w-[200px] md:w-[300px] h-auto right-[-10px] top-[10px] opacity-100 pointer-events-none z-0"
+      />
+
+      <div class="relative z-10 space-y-6 sm:space-y-8">
+        <div class="relative z-10">
+          <h2 class="mt-4 sm:mt-6 text-center text-2xl sm:text-3xl font-extrabold text-black">
+            Create your HOA account
+          </h2>
+          <p class="mt-2 text-center text-sm text-black">
+            Already have an account?
+            <a (click)="navigateToLogin()" class="font-medium text-[#93cb53] hover:text-[#6ba330] cursor-pointer">
+              Sign in
+            </a>
+          </p>
+        </div>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="mt-8 space-y-6">
+          <div *ngIf="successMessage" class="mb-4 p-4 bg-[#93cb53]/20 text-[#417505] rounded-md">
+            {{ successMessage }}
+          </div>
+          
+          <div class="space-y-4">
+            <!-- Username Field -->
+            <div>
+              <label for="username" class="block text-sm font-medium text-black mb-1">
+                Username
+              </label>
+              <input
+                id="username"
+                type="text"
+                formControlName="username"
+                placeholder="Enter your username"
+                class="appearance-none relative block w-full px-3 py-2 border border-[#93cb53] rounded-lg placeholder-[#6ba330] text-black focus:outline-none focus:ring-2 focus:ring-[#93cb53] focus:border-[#93cb53] focus:z-10 sm:text-sm"
+                [ngClass]="{'border-red-500': registerForm.get('username')?.invalid && registerForm.get('username')?.touched}"
+              >
+              <p *ngIf="registerForm.get('username')?.invalid && registerForm.get('username')?.touched" 
+                 class="mt-2 text-sm text-red-600">
+                Username is required
+              </p>
+            </div>
+
+            <!-- Email Field -->
+            <div>
+              <label for="email" class="block text-sm font-medium text-black mb-1">
+                Email address
+              </label>
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                placeholder="Enter your email"
+                class="appearance-none relative block w-full px-3 py-2 border border-[#93cb53] rounded-lg placeholder-[#6ba330] text-black focus:outline-none focus:ring-2 focus:ring-[#93cb53] focus:border-[#93cb53] focus:z-10 sm:text-sm"
+                [ngClass]="{'border-red-500': registerForm.get('email')?.invalid && registerForm.get('email')?.touched}"
+              >
+              <p *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" 
+                 class="mt-2 text-sm text-red-600">
+                Please enter a valid email address
+              </p>
+            </div>
+
+            <!-- Password Field -->
+            <div class="relative">
+              <label for="password" class="block text-sm font-medium text-black mb-1">
+                Password
+              </label>
+              <input
+                id="password"
+                [type]="hidePassword ? 'password' : 'text'"
+                formControlName="password"
+                placeholder="Enter your password"
+                class="appearance-none relative block w-full px-3 py-2 border border-[#93cb53] rounded-lg placeholder-[#6ba330] text-black focus:outline-none focus:ring-2 focus:ring-[#93cb53] focus:border-[#93cb53] focus:z-10 sm:text-sm"
+                [ngClass]="{'border-red-500': registerForm.get('password')?.invalid && registerForm.get('password')?.touched}"
+              >
+              <button 
+                type="button"
+                (click)="hidePassword = !hidePassword"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center top-6"
+              >
+                <svg *ngIf="hidePassword" class="h-5 w-5 text-[#93cb53]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <svg *ngIf="!hidePassword" class="h-5 w-5 text-[#93cb53]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                </svg>
+              </button>
+              <p *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" 
+                 class="mt-2 text-sm text-red-600">
+                Password must be at least 8 characters
+              </p>
+            </div>
+
+            <!-- Confirm Password Field -->
+            <div class="relative">
+              <label for="confirmPassword" class="block text-sm font-medium text-[#417505] mb-1">
+                Confirm password
+              </label>
+              <input
+                id="confirmPassword"
+                [type]="hidePassword ? 'password' : 'text'"
+                formControlName="confirmPassword"
+                placeholder="Confirm your password"
+                class="appearance-none relative block w-full px-3 py-2 border border-[#93cb53] rounded-lg placeholder-[#6ba330] text-[#417505] focus:outline-none focus:ring-2 focus:ring-[#93cb53] focus:border-[#93cb53] focus:z-10 sm:text-sm"
+                [ngClass]="{'border-red-500': registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched}"
+              >
+              <p *ngIf="registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched" 
+                 class="mt-2 text-sm text-red-600">
+                Passwords do not match
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              [disabled]="registerForm.invalid"
+              class="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#93cb53] hover:bg-[#6ba330] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#417505] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ease-in-out"
+            >
+              Create account
+            </button>
+          </div>
+
+          <!-- Social Sign-in Section -->
+          <!-- Removed Google and Facebook buttons -->
+          <!-- <div class="mt-6"> -->
+          <!--   <div class="relative"> -->
+          <!--     <div class="absolute inset-0 flex items-center"> -->
+          <!--       <div class="w-full border-t border-[#93cb53]/30"></div> -->
+          <!--     </div> -->
+          <!--     <div class="relative flex justify-center text-sm"> -->
+          <!--       <span class="px-2 bg-white text-[#417505]">Or continue with</span> -->
+          <!--     </div> -->
+          <!--   </div> -->
+
+          <!--   <div class="mt-6 grid grid-cols-2 gap-3"> -->
+          <!--     <button -->
+          <!--       type="button" -->
+          <!--       (click)="signInWithGoogle()" -->
+          <!--       class="w-full inline-flex justify-center py-2 px-4 border border-[#93cb53] rounded-lg shadow-sm bg-white text-sm font-medium text-black hover:bg-[#93cb53]/10 transition-all duration-200" -->
+          <!--     > -->
+          <!--       <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"> -->
+          <!--         <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path> -->
+          <!--       </svg> -->
+          <!--       <span>Google</span> -->
+          <!--     </button> -->
+
+          <!--     <button -->
+          <!--       type="button" -->
+          <!--       (click)="signInWithFacebook()" -->
+          <!--       class="w-full inline-flex justify-center py-2 px-4 border border-[#93cb53] rounded-lg shadow-sm bg-white text-sm font-medium text-black hover:bg-[#93cb53]/10 transition-all duration-200" -->
+          <!--     > -->
+          <!--       <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> -->
+          <!--         <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/> -->
+          <!--       </svg> -->
+          <!--       Facebook -->
+          <!--     </button> -->
+          <!--   </div> -->
+          <!-- </div> -->
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

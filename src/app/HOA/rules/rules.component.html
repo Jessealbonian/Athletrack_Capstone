@@ -1,0 +1,225 @@
+<div class="flex h-screen flex-col">
+  <app-sidenav (navToggled)="onNavToggled($event)" class="fixed top-0 left-0 h-full z-10"></app-sidenav>
+  <app-navbar class="relative z-20"></app-navbar>
+  <div class="content-area">
+    <div class="dashboard-container">
+      <div class="transition-all duration-300 z-1 mt-16" [class.lg:ml-64]="isNavOpen" [class.lg:ml-20]="!isNavOpen">
+      <!-- Main Content -->
+      <div class="p-4">
+        <!-- Header -->
+        <div class="mb-4 p-2">
+          <h1 class="text-xl">Dashboard Overview</h1>
+        </div>
+        <!-- Main content -->
+        <div class="flex-1 p-6">
+          <!-- Header with buttons -->
+          <div class="flex flex-col md:flex-row items-center justify-between mb-6">
+            <button (click)="showAddModal = true" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 mb-4 md:mb-0">
+              <i class="fas fa-plus"></i> Add Documents
+            </button>
+            <div class="flex flex-col md:flex-row items-center gap-4">
+              
+              <input type="text" class="border rounded-lg px-4 py-2 w-full md:w-64" placeholder="Search document..."
+                     [(ngModel)]="searchTerm" (input)="onSearch()">
+              <select [(ngModel)]="selectedType" (change)="filterDocuments(selectedType)" class="border rounded-lg px-4 py-2">
+                <option value="">All Types</option>
+                <option value="Policy">Policy</option>
+                <option value="Rule">Rule</option>
+                <option value="Form">Form</option>
+                <option value="Archived">Archived</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Stats Section -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded p-4 flex justify-between items-center shadow">
+              <div>
+                <div class="text-sm text-gray-500">Total Documents</div>
+                <div class="text-xl font-semibold">{{stats.total_documents}}</div>
+              </div>
+              <div class="bg-blue-50 p-2 rounded">
+                <i class="fas fa-file text-blue-500"></i>
+              </div>
+            </div>
+            <div class="bg-white rounded p-4 flex justify-between items-center shadow">
+              <div>
+                <div class="text-sm text-gray-500">Rules and Bylaws</div>
+                <div class="text-xl font-semibold">{{stats.rules_count}}</div>
+              </div>
+              <div class="bg-purple-50 p-2 rounded">
+                <i class="fas fa-gavel text-purple-500"></i>
+              </div>
+            </div>
+            <div class="bg-white rounded p-4 flex justify-between items-center shadow">
+              <div>
+                <div class="text-sm text-gray-500">Forms</div>
+                <div class="text-xl font-semibold">{{stats.forms_count}}</div>
+              </div>
+              <div class="bg-green-50 p-2 rounded">
+                <i class="fas fa-file-alt text-green-500"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filter Tabs -->
+          <div class="flex flex-wrap space-x-1 mb-4">
+            <button 
+              (click)="filterDocuments('')" 
+              [class.bg-blue-600]="activeFilter === ''" 
+              [class.text-white]="activeFilter === ''" 
+              [class.bg-gray-100]="activeFilter !== ''" 
+              [class.text-gray-600]="activeFilter !== ''" 
+              class="px-4 py-1.5 rounded text-sm">
+              All
+            </button>
+            <button 
+              (click)="filterDocuments('Rule')" 
+              [class.bg-blue-600]="activeFilter === 'Rule'" 
+              [class.text-white]="activeFilter === 'Rule'" 
+              [class.bg-gray-100]="activeFilter !== 'Rule'" 
+              [class.text-gray-600]="activeFilter !== 'Rule'" 
+              class="px-4 py-1.5 rounded text-sm">
+              Rules
+            </button>
+            <button 
+              (click)="filterDocuments('Policy')" 
+              [class.bg-blue-600]="activeFilter === 'Policy'" 
+              [class.text-white]="activeFilter === 'Policy'" 
+              [class.bg-gray-100]="activeFilter !== 'Policy'" 
+              [class.text-gray-600]="activeFilter !== 'Policy'" 
+              class="px-4 py-1.5 rounded text-sm">
+              Policies
+            </button>
+            <button 
+              (click)="filterDocuments('Form')" 
+              [class.bg-blue-600]="activeFilter === 'Form'" 
+              [class.text-white]="activeFilter === 'Form'" 
+              [class.bg-gray-100]="activeFilter !== 'Form'" 
+              [class.text-gray-600]="activeFilter !== 'Form'" 
+              class="px-4 py-1.5 rounded text-sm">
+              Forms
+            </button>
+            <button 
+              (click)="filterDocuments('Archived')" 
+              [class.bg-blue-600]="activeFilter === 'Archived'" 
+              [class.text-white]="activeFilter === 'Archived'" 
+              [class.bg-gray-100]="activeFilter !== 'Archived'" 
+              [class.text-gray-600]="activeFilter !== 'Archived'" 
+              class="px-4 py-1.5 rounded text-sm">
+              Archived
+            </button>
+          </div>
+
+          <!-- Documents Table -->
+          <div class="bg-white rounded-xl shadow-md pt-10 p-6 overflow-x-auto">
+            <h3 class="text-xl font-semibold mb-4">Recent Documents</h3>
+            
+            <!-- Loading Spinner -->
+            <div *ngIf="isLoading" class="flex justify-center items-center py-8">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+
+            <!-- No Documents Message -->
+            <div *ngIf="!isLoading && filteredDocuments.length === 0" class="text-center py-8 text-gray-500">
+              No documents found
+            </div>
+
+            <!-- Documents Table -->
+            <table class="w-full" *ngIf="!isLoading && filteredDocuments.length > 0">
+              <thead>
+                <tr class="border-b">
+                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500">DOCUMENT</th>
+                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500">TYPE</th>
+                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500">LAST UPDATED</th>
+                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500">VIEWS</th>
+                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500">SIZE</th>
+                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let doc of filteredDocuments" class="border-b hover:bg-gray-50">
+                  <td class="py-3 px-4">
+                    <div class="flex items-center">
+                      <div class="w-8 h-8 bg-gray-100 rounded mr-3"></div>
+                      <span class="text-sm">{{doc.document_name}}</span>
+                    </div>
+                  </td>
+                  <td class="py-3 px-4 text-sm text-gray-600">{{doc.type}}</td>
+                  <td class="py-3 px-4 text-sm text-gray-600">{{doc.last_updated | date:'mediumDate'}}</td>
+                  <td class="py-3 px-4 text-sm text-gray-600">{{doc.views}}</td>
+                  <td class="py-3 px-4 text-sm text-gray-600">{{formatFileSize(doc.size)}}</td>
+                  <td class="py-3 px-4">
+                    <div class="flex space-x-3">
+                      <button class="text-green-500" (click)="downloadDocument(doc.id!.toString())">
+                        <i class="fas fa-download"></i>
+                      </button>                      
+                      <button class="text-red-500" (click)="confirmDelete(doc.id!)">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Document Modal -->
+<div *ngIf="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg w-[500px] p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold">Add New Document</h3>
+      <button (click)="showAddModal = false" class="text-gray-400 hover:text-gray-600">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <form (submit)="uploadDocument(); $event.preventDefault()" #documentForm="ngForm">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Document Name</label>
+          <input type="text" [(ngModel)]="newDocument.document_name" name="document_name" required
+                 class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+          <select [(ngModel)]="newDocument.type" name="type" required
+                  class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+            <option value="Policy">Policy</option>
+            <option value="Rule">Rule</option>
+            <option value="Form">Form</option>
+            <option value="Archived">Archived</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">File</label>
+          <input type="file" (change)="onFileSelected($event)" required accept=".pdf,.doc,.docx"
+                 class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+          <p class="text-sm text-gray-500 mt-1">Maximum file size: 10MB. Supported formats: PDF, DOC, DOCX</p>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <button type="button" (click)="resetForm()"
+                class="px-4 py-2 text-gray-700 bg-gray-100 rounded hover:bg-gray-200">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="!documentForm.form.valid || !selectedFile"
+                [class.opacity-50]="!documentForm.form.valid || !selectedFile"
+                class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 disabled:hover:bg-blue-500">
+          Upload
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Success Message -->
+<div *ngIf="showSuccessMessage" 
+     class="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50 flex items-center">
+  <i class="fas fa-check-circle text-green-500 mr-2"></i>
+  <p>Document uploaded successfully!</p>
+</div>

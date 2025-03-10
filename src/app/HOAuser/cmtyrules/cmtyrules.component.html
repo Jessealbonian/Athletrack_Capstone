@@ -1,0 +1,78 @@
+<div class="flex h-screen flex-col bg-white">
+    <app-sidenav (navToggled)="onNavToggled($event)" class="fixed top-0 left-0 h-full z-10"></app-sidenav>
+    <app-navbar class="relative z-20"></app-navbar>
+    <div class="content-area">
+        <div class="dashboard-container">
+            <div class="transition-all duration-300 z-1 mt-16" [class.lg:ml-64]="isNavOpen"
+                [class.lg:ml-20]="!isNavOpen">
+
+                <!-- Community Rules Section -->
+                <section class="mx-auto px-6 py-12 max-w-7xl">
+                    <h1 class="text-4xl font-bold text-gray-800 mb-8">Community Rules and Regulations</h1>
+
+                    <!-- Rule Categories -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Modal for displaying uploaded documents -->
+                        <!-- <div *ngIf="isModalOpen" class="modal">
+                            <div class="modal-content">
+                                <span class="close" (click)="closeModal()">&times;</span>
+                                <h2>Uploaded Documents</h2>
+                                <ul>
+                                    <li *ngFor="let document of uploadedDocuments">{{ document }}</li>
+                                </ul>
+                            </div>
+                        </div> -->
+
+                        <!-- Individual rule cards - updated styling -->
+                        <div
+                            class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col justify-between border border-gray-100">
+                            <div>
+                                <div class="flex items-center mb-4">
+                                    <i class="fa-solid fa-file-circle-exclamation text-blue-500 text-2xl mr-3"></i>
+                                    <h2 class="text-xl font-bold text-gray-800">Rules</h2>
+                                </div>
+                                <p class="text-gray-600 mb-6">Rules within the
+                                    community.</p>
+                            </div>
+                            <button
+                                class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center gap-2"
+                                (click)="openModal()">
+                                <i class="fas fa-eye"></i>
+                                <span>View Files</span>
+                            </button>
+                        </div>
+
+                        <!-- Repeat similar structure for other cards with appropriate icons -->
+                        <div
+                            class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col justify-between border border-gray-100">
+                            <div>
+                                <div class="flex items-center mb-4">
+                                    <i class="fa-solid fa-file-shield text-blue-500 text-2xl mr-3"></i> 
+                                    <h2 class="text-xl font-bold text-gray-800">Policies</h2>
+                                </div>
+                                <p class="text-gray-600 mb-6">Policies within the community.</p>
+                            </div>
+                            <button
+                                class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center gap-2">
+                                <i class="fas fa-eye"></i>
+                                <span>View Files</span>
+                            </button>
+                        </div>
+
+                        <!-- ... Continue with other cards using similar pattern ... -->
+
+                        <div
+                        class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col justify-between border border-gray-100">
+                        <div>
+                            <div class="flex items-center mb-4">
+                                <i class="fa-solid fa-file-lines text-blue-500 text-2xl mr-3"></i> 
+                                <h2 class="text-xl font-bold text-gray-800">Forms</h2>
+                            </div>
+                            <p class="text-gray-600 mb-6">Additional Forms.</p>
+                        </div>
+                        <button
+                            class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center gap-2">
+                            <i class="fas fa-eye"></i>
+                            <span>View Files</span>
+                        </button>
+                    </div>

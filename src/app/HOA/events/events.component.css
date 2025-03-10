@@ -1,0 +1,142 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f0f0f0;
+    margin-left: 16rem;
+    margin-top: 3rem;
+    padding: 20px;
+}
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.header button, .header input, .header .filter {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.header button.create-event {
+    background-color: #007bff;
+    color: white;
+}
+.header button.export-calendar {
+    background-color: white;
+    border: 1px solid #ccc;
+}
+.header input {
+    flex-grow: 1;
+    margin: 0 20px;
+    border: 1px solid #ccc;
+}
+.header .filter {
+    background-color: white;
+    border: 1px solid #ccc;
+}
+.stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    
+}
+.stats .stat {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    margin: 0 10px;
+    text-align: center;
+    position: relative;
+    padding-top: 1rem;
+}
+.stats .stat:first-child {
+    margin-left: 0;
+}
+.stats .stat:last-child {
+    margin-right: 0;
+}
+.stats .stat i {
+    font-size: 24px;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+}
+.stats .stat .circle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 25%; 
+    left: 50%; 
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    opacity: 0.1;
+}
+
+.stats .stat.upcoming-events .circle {
+    background-color: #007bff;
+}
+.stats .stat.board-meetings .circle {
+    background-color: #9c27b0;
+}
+.stats .stat.community-events .circle {
+    background-color: #4caf50;
+}
+.stats .stat.total-rsvps .circle {
+    background-color: #ff9800;
+}
+.calendar {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.calendar button {
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.events {
+    display: flex;
+    justify-content: space-between;
+}
+.event {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    margin: 0 10px;
+    border-top: 5px solid;
+}
+.event:first-child {
+    margin-left: 0;
+    border-color: #9c27b0;
+}
+.event:nth-child(2) {
+    border-color: #4caf50;
+}
+.event:last-child {
+    margin-right: 0;
+    border-color: #2196f3;
+}
+.event h3 {
+    margin-top: 0;
+}
+.event .details {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.event .details i {
+    margin-right: 10px;
+}

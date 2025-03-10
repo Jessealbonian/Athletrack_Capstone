@@ -1,0 +1,59 @@
+<div class="flex h-screen flex-col">
+    <app-sidenav (navToggled)="onNavToggled($event)" class="fixed top-0 left-0 h-full z-10"></app-sidenav>
+    <app-navbar class="relative z-20"></app-navbar>
+    <div class="content-area">
+        <div class="transition-all duration-300 w-full z-1 mt-16" [class.lg:ml-64]="isNavOpen" [class.lg:ml-20]="!isNavOpen">
+            <div class="dashboard-container">
+
+                <div class="px-4 py-8 flex-1">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-2xl font-bold">Community Events Calendar</h1>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Event Card 1 -->
+                        <div *ngFor="let event of filteredEvents" class="bg-white shadow-md rounded-lg overflow-hidden">
+                            <img alt="A vibrant community gathering with people enjoying various activities"
+                                class="w-full h-48 object-cover" height="400"
+                                [src]="event.image" alt="{{ event.title }}"
+                                width="600" />
+                            <div class="p-4">
+                                <h2 class="text-xl font-bold">{{event.title}}</h2>
+                                <p class="text-gray-600">{{event.description}}</p>
+                                <div class="mt-4 space-y-2">
+                                    <div class="text-gray-500 flex items-center">
+                                        <i class="fas fa-calendar-alt mr-2"></i>
+                                        {{event.date | date}}
+                                    </div>
+                                    <div class="text-gray-500 flex items-center">
+                                        <i class="fas fa-clock mr-2"></i>
+                                        <span>
+                                            {{ event.date + ' ' + event.time | date:'shortTime' }} -
+                                            {{ event.date + ' ' + event.end_time | date:'shortTime' }}
+                                            ({{ event.duration }})
+                                        </span>
+                                    </div>
+                                    <div class="text-gray-500 flex items-center">
+                                        <i class="fas fa-map-marker-alt mr-2"></i>
+                                        {{event.location}}
+                                    </div>
+                                    <!-- <div class="text-gray-500 flex items-center">
+                                        <i class="fas fa-users mr-2"></i>
+                                        {{event.attendees}}
+                                    </div> -->
+                                </div>
+                                <!-- <div class="mt-4 flex justify-end">
+                                     CREATE FUNCTION FOR ATTENDING EVENT -->
+                                    <!-- <button
+                                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Attend</button> -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                </div>
+                </div>
+
+                       
+
+                        
