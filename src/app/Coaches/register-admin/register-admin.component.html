@@ -1,0 +1,100 @@
+<section class="min-h-screen flex items-center justify-center bg-cover bg-center" style="background-image: url('../../../assets/login1.PNG');">
+  <div class="relative w-full max-w-md mx-auto">
+      <!-- Background Circles -->
+      <div class="absolute top-[-50px] left-[-50px] w-[100px] h-[100px] rounded-full bg-white/30 backdrop-blur-sm"></div>
+      <div class="absolute bottom-[-50px] right-[-50px] w-[100px] h-[100px] rounded-full bg-white/30 backdrop-blur-sm"></div>
+  
+      <!-- Main Container -->
+      <div class="relative bg-[#D9D9D9] backdrop-blur-sm p-4 sm:p-8 rounded-xl shadow-lg overflow-hidden">
+        <!-- Illustration -->
+        <img 
+          class="absolute w-[200px] md:w-[300px] h-auto right-[-10px] top-[10px] opacity-100 pointer-events-none z-0"
+        />
+  
+        <div class="relative z-10 space-y-6 sm:space-y-8">
+          <div class="relative z-10">
+            <h2 class="mt-4 sm:mt-6 text-center text-2xl sm:text-3xl font-extrabold text-black">
+              Register as Admin
+            </h2>
+          </div>
+  
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="mt-8 space-y-6">
+            <div *ngIf="successMessage" class="mb-4 p-4 bg-[#735DA5]/20 text-[#417505] rounded-md">
+              {{ successMessage }}
+            </div>
+            <div *ngIf="error" class="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
+              {{ error }}
+            </div>
+  
+            <div class="space-y-4">
+              <!-- Username Field -->
+              <div>
+                <label for="username" class="block text-sm font-medium text-black mb-1">
+                  Username
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  formControlName="username"
+                  placeholder="Enter your username"
+                  class="appearance-none relative block w-full px-3 py-2 border border-[#735DA5] rounded-lg placeholder-[#735DA5] text-black focus:outline-none focus:ring-2 focus:ring-[#735DA5] focus:border-[#735DA5] focus:z-10 sm:text-sm"
+                >
+              </div>
+  
+              <!-- Email Field -->
+              <div>
+                <label for="email" class="block text-sm font-medium text-black mb-1">
+                  Email address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  formControlName="email"
+                  placeholder="Enter your email"
+                  class="appearance-none relative block w-full px-3 py-2 border border-[#735DA5] rounded-lg placeholder-[#735DA5] text-black focus:outline-none focus:ring-2 focus:ring-[#735DA5] focus:border-[#735DA5] focus:z-10 sm:text-sm"
+                >
+              </div>
+  
+              <!-- Password Field -->
+              <div>
+                <label for="password" class="block text-sm font-medium text-black mb-1">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  formControlName="password"
+                  placeholder="Enter your password"
+                  class="appearance-none relative block w-full px-3 py-2 border border-[#735DA5] rounded-lg placeholder-[#735DA5] text-black focus:outline-none focus:ring-2 focus:ring-[#735DA5] focus:border-[#735DA5] focus:z-10 sm:text-sm"
+                >
+              </div>
+  
+              <!-- Admin Code Field -->
+              <div>
+                <label for="adminCode" class="block text-sm font-medium text-black mb-1">
+                  Admin Code
+                </label>
+                <input
+                  id="adminCode"
+                  type="text"
+                  formControlName="adminCode"
+                  placeholder="Enter admin code"
+                  class="appearance-none relative block w-full px-3 py-2 border border-[#735DA5] rounded-lg placeholder-[#735DA5] text-black focus:outline-none focus:ring-2 focus:ring-[#735DA5] focus:border-[#735DA5] focus:z-10 sm:text-sm"
+                >
+              </div>
+            </div>
+  
+            <div>
+              <button
+                type="submit"
+                class="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#A981DE] hover:bg-[#735DA5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#417505] transition-all duration-200 ease-in-out"
+              >
+                Register
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+  
