@@ -1,0 +1,141 @@
+<div class="flex h-screen flex-col bg-white">
+    <app-sidenav (navToggled)="onNavToggled($event)" class="fixed top-0 left-0 h-full z-10"></app-sidenav>
+    <app-navbar class="relative z-20"></app-navbar>
+    <div class="content-area">
+        <div class="dashboard-container">
+            <div class="transition-all duration-300 z-1 mt-16" [class.lg:ml-64]="isNavOpen"
+                [class.lg:ml-20]="!isNavOpen">
+
+                <!-- Routines Section -->
+                <div class="p-6">
+                    <h2 class="text-xl font-semibold">Class Name:</h2>
+                    <div class="grid grid-cols-6 gap-4 mt-4">
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 3</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 4</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-green-500">✔️</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 5</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 6</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 7</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 8</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Routines Section -->
+                <div class="p-6">
+                    <h2 class="text-xl font-semibold">Class Name:</h2>
+                    <div class="grid grid-cols-6 gap-4 mt-4">
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 3</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 4</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-green-500">✔️</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 5</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 6</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 7</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 8</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Routines Section -->
+                <div class="p-6">
+                    <h2 class="text-xl font-semibold">Class Name:</h2>
+                    <div class="grid grid-cols-6 gap-4 mt-4">
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 3</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 4</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-green-500">✔️</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 5</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 6</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 7</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded-lg shadow">
+                            <h3 class="font-semibold">Jan 8</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>

@@ -8,260 +8,84 @@
             [class.lg:ml-20]="!isNavOpen">
             <div class="p-6">
 
+                <!-- Navigation Bar -->
+                <nav class="mt-6 flex space-x-4">
+                    <a (click)="showSection('All')" 
+                       [class.bg-[#417505]]="activeSection === 'blogs'" 
+                       class="bg-[#735DA5] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#A981DE] hover:scale-105 cursor-pointer">All</a>
+                    <a (click)="showSection('To Do')" 
+                       [class.bg-[#417505]]="activeSection === 'blogs'" 
+                       class="bg-[#735DA5] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#A981DE] hover:scale-105 cursor-pointer">To Do</a>
+                    <a (click)="showSection('Routine')" 
+                       [class.bg-[#417505]]="activeSection === 'vlogs'" 
+                       class="bg-[#735DA5] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#A981DE] hover:scale-105 cursor-pointer">Routines</a>
+                </nav>
 
-             <!-- Navigation Bar -->
-  <nav class="mt-6 flex justify-center space-x-4">
-      <a (click)="showSection('news')" 
-         [class.bg-[#417505]]="activeSection === 'news'" 
-         class="bg-[#93cb53] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#6ba330] hover:scale-105 cursor-pointer">News</a>
-      <a (click)="showSection('blogs')" 
-         [class.bg-[#417505]]="activeSection === 'blogs'" 
-         class="bg-[#93cb53] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#6ba330] hover:scale-105 cursor-pointer">Blogs</a>
-      <a (click)="showSection('vlogs')" 
-         [class.bg-[#417505]]="activeSection === 'vlogs'" 
-         class="bg-[#93cb53] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#6ba330] hover:scale-105 cursor-pointer">Vlogs</a>
-  </nav>
+                <!-- Tasks Section -->
+                <div class="mt-8">
+                    <h2 class="text-xl font-bold">Tasks</h2>
+                    <div class="bg-gray-200 p-4 rounded mt-4">
+                        <div class="flex justify-between">
+                            <div>
+                                <h3 class="font-semibold">Research</h3>
+                                <p>January 20, 2025</p>
+                            </div>
+                            <div class="text-green-500">✔️</div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-200 p-4 rounded mt-2">
+                        <div class="flex justify-between">
+                            <div>
+                                <h3 class="font-semibold">Capstone</h3>
+                                <p>March 28, 2025 6:00pm</p>
+                            </div>
+                            <div class="text-green-500">✔️</div>
+                        </div>
+                    </div>
+                </div>
 
-  <!-- News Section -->
-  <section id="news" class="mt-8 mb-4" [style.display]="activeSection === 'news' ? 'block' : 'none'">
-      <h3 class="text-2xl font-bold mb-4">Community News</h3>
-      
-      <!-- News Slider -->
-      <div class="relative overflow-hidden" *ngIf="!showNewsDetails">
-          <!-- Previous Button -->
-          <button *ngIf="currentNewsPage > 0"
-                  (click)="previousNewsPage()"
-                  class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-r transition-colors">
-              <i class="fas fa-chevron-left"></i>
-          </button>
+                <!-- Routines Section -->
+                <div class="mt-8">
+                    <h2 class="text-xl font-bold">Routines</h2>
+                    <div class="flex space-x-4 mt-4">
+                        <div class="bg-gray-200 p-4 rounded w-1/5">
+                            <h3 class="font-semibold">Jan 4</h3>
+                            <p>Task Routine</p>
+                            <p>Task Description</p>
+                            <div class="text-green-500">✔️</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded w-1/5">
+                            <h3 class="font-semibold">Jan 5</h3>
+                            <p>Another Routine</p>
+                            <p>Description here</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded w-1/4">
+                            <h3 class="font-semibold">Jan 6</h3>
+                            <p>Additional Routine</p>
+                            <p>More details here</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded w-1/5">
+                            <h3 class="font-semibold">Jan 7</h3>
+                            <p>Final Routine</p>
+                            <p>Final details here</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                        <div class="bg-gray-200 p-4 rounded w-1/5">
+                            <h3 class="font-semibold">Jan 8</h3>
+                            <p>Last Routine</p>
+                            <p>Last details here</p>
+                            <div class="text-gray-500">❌</div>
+                        </div>
+                    </div>
+                </div>
 
-          <!-- News Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-    <div *ngFor="let news of getVisibleItems(newsItems, currentNewsPage)"
-         (click)="viewNewsDetails(news)"
-         class="relative bg-white shadow-lg rounded-lg overflow-hidden animate-fade-in cursor-pointer group">
-        <img [src]="'http://localhost/DEMO2/demoproject/api/' + news.image"
-             [alt]="news.title"
-             class="w-full h-64 object-cover transition-all duration-300 group-hover:blur-sm"/>
-        <div class="absolute inset-0 bg-black/50 flex flex-col justify-end p-4">
-            <h4 class="text-xl font-bold text-white mb-2">{{news.title}}</h4>
-            <!-- <p class="text-gray-200">{{news.description}}</p> -->
-            <div class="flex justify-between items-center mt-2">
-                <span class="w-fit bg-yellow-500 text-white px-2 py-1 rounded-md">Featured</span>
-                <span class="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center">
-                    <i class="fas fa-eye mr-1"></i> View Details
-                </span>
             </div>
         </div>
     </div>
 </div>
 
-          <!-- Next Button -->
-          <button *ngIf="(currentNewsPage + 1) * 3 < newsItems.length"
-                  (click)="nextNewsPage()"
-                  class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-l transition-colors">
-              <i class="fas fa-chevron-right"></i>
-          </button>
-
-          <!-- Pagination Dots -->
-          <div class="flex justify-center mt-4 gap-2">
-              <button *ngFor="let _ of getPageArray(newsItems); let i = index"
-                      (click)="goToNewsPage(i)"
-                      class="w-2 h-2 rounded-full transition-colors"
-                      [ngClass]="currentNewsPage === i ? 'bg-blue-600' : 'bg-gray-300 hover:bg-gray-400'">
-              </button>
-          </div>
-      </div>
-
-      <!-- News Details View -->
-      <div *ngIf="showNewsDetails" 
-           class="bg-white rounded-lg shadow-lg p-6 animate-fade-in">
-          <div class="flex justify-between items-center mb-4">
-              <h4 class="text-2xl font-bold">{{selectedNews.title}}</h4>
-              <button (click)="closeNewsDetails()" 
-                      class="text-gray-600 hover:text-gray-800">
-                  <i class="fas fa-times"></i>
-              </button>
-          </div>
-          <div class="flex flex-col md:flex-row gap-6">
-              <div class="md:w-1/2">
-                  <img [src]="'http://localhost/DEMO2/demoproject/api/' + selectedNews.image" 
-                       [alt]="selectedNews.title" 
-                       class="w-full h-full object-cover rounded-lg"/>
-              </div>
-              <div class="md:w-1/2">
-                  <p class="text-gray-700 leading-relaxed">
-                      {{selectedNews.description}}
-                  </p>
-              </div>
-          </div>
-      </div>
-  </section>
-
-
-
-  
-  <!-- Blogs Section -->
-  <section id="blogs" class="mt-8 mb-4" [style.display]="activeSection === 'blogs' ? 'block' : 'none'">
-      <h3 class="text-2xl font-bold mb-4">Community Blogs</h3>
-      
-      <div class="relative overflow-hidden" *ngIf="!showBlogDetails">
-          <!-- Previous Button -->
-          <button *ngIf="currentBlogPage > 0"
-                  (click)="previousBlogPage()"
-                  class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-r transition-colors">
-              <i class="fas fa-chevron-left"></i>
-          </button>
-
-          <!-- Blogs Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-              <div *ngFor="let blog of getVisibleItems(blogItems, currentBlogPage)"
-                   (click)="viewBlogDetails(blog)"
-                   class="relative bg-white shadow-lg rounded-lg overflow-hidden animate-fade-in cursor-pointer group">
-                  <img [src]="'http://localhost/DEMO2/demoproject/api/' + blog.image" 
-                       [alt]="blog.title"
-                       class="w-full h-64 object-cover transition-all duration-300 group-hover:blur-sm"/>
-                  <div class="absolute inset-0 bg-black/50 flex flex-col justify-end p-4">
-                      <h4 class="text-xl font-bold text-white mb-2">{{blog.title}}</h4>
-                      <!-- <p class="text-gray-200">{{blog.content}}</p> -->
-                      <div class="flex justify-between items-center mt-2">
-                          <span class="w-fit bg-green-500 text-white px-2 py-1 rounded-md">Blog</span>
-                          <span class="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center">
-                              <i class="fas fa-eye mr-1"></i> View Details
-                          </span>
-                      </div>
-                  </div>
-              </div>
-          </div>
-
-          <!-- Next Button -->
-          <button *ngIf="(currentBlogPage + 1) * 3 < blogItems.length"
-                  (click)="nextBlogPage()"
-                  class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-l transition-colors">
-              <i class="fas fa-chevron-right"></i>
-          </button>
-
-          <!-- Pagination Dots -->
-          <div class="flex justify-center mt-4 gap-2">
-              <button *ngFor="let _ of getPageArray(blogItems); let i = index"
-                      (click)="goToBlogPage(i)"
-                      class="w-2 h-2 rounded-full transition-colors"
-                      [ngClass]="currentBlogPage === i ? 'bg-blue-600' : 'bg-gray-300 hover:bg-gray-400'">
-              </button>
-          </div>
-      </div>
-
-      <!-- Blog Details View -->
-      <div *ngIf="showBlogDetails" 
-           class="bg-white rounded-lg shadow-lg p-6 animate-fade-in">
-          <div class="flex justify-between items-center mb-4">
-              <h4 class="text-2xl font-bold">{{selectedBlog.title}}</h4>
-              <button (click)="closeBlogDetails()" 
-                      class="text-gray-600 hover:text-gray-800">
-                  <i class="fas fa-times"></i>
-              </button>
-          </div>
-          <div class="flex flex-col md:flex-row gap-6">
-              <div class="md:w-1/2">
-                  <img [src]="'http://localhost/DEMO2/demoproject/api/' + selectedBlog.image" 
-                       [alt]="selectedBlog.title" 
-                       class="w-full h-full object-cover rounded-lg"/>
-              </div>
-              <div class="md:w-1/2">
-                  <p class="text-gray-700 leading-relaxed">
-                      {{selectedBlog.content}}
-                  </p>
-              </div>
-          </div>
-      </div>
-  </section>
-
-  <!-- Vlogs Section -->
-  <section id="vlogs" class="mt-8" [style.display]="activeSection === 'vlogs' ? 'block' : 'none'">
-      <h3 class="text-2xl font-bold mb-4">Community Vlogs</h3>
-      
-      <div class="relative overflow-hidden" *ngIf="!showVlogDetails">
-          <!-- Previous Button -->
-          <button *ngIf="currentVlogPage > 0"
-                  (click)="previousVlogPage()"
-                  class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-r transition-colors">
-              <i class="fas fa-chevron-left"></i>
-          </button>
-
-          <!-- Vlogs Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-              <div *ngFor="let vlog of getVisibleItems(vlogItems, currentVlogPage)"
-                   (click)="viewVlogDetails(vlog)"
-                   class="relative bg-white shadow-lg rounded-lg overflow-hidden animate-fade-in cursor-pointer group">
-                  <!-- Thumbnail with Play Button Overlay -->
-                  <div class="relative">
-                      <img [src]="vlog.thumbnail_url" 
-                           [alt]="vlog.title"
-                           class="w-full h-64 object-cover transition-all duration-300 group-hover:blur-sm"/>
-                      <div class="absolute inset-0 flex items-center justify-center">
-                          <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <i class="fas fa-play text-white"></i>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="p-4">
-                      <h4 class="text-xl font-bold mb-2">{{vlog.title}}</h4>
-                      <p class="text-gray-600 line-clamp-2">{{vlog.description}}</p>
-                      <div class="mt-2 flex justify-between items-center">
-                          <span class="text-sm text-gray-500">By {{vlog.author}}</span>
-                          <span class="text-sm text-gray-500">{{vlog.publishDate | date}}</span>
-                      </div>
-                  </div>
-              </div>
-          </div>
-
-          <!-- Next Button -->
-          <button *ngIf="(currentVlogPage + 1) * 3 < vlogItems.length"
-                  (click)="nextVlogPage()"
-                  class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-l transition-colors">
-              <i class="fas fa-chevron-right"></i>
-          </button>
-
-          <!-- Pagination Dots -->
-          <div class="flex justify-center mt-4 gap-2">
-              <button *ngFor="let _ of getPageArray(vlogItems); let i = index"
-                      (click)="goToVlogPage(i)"
-                      class="w-2 h-2 rounded-full transition-colors"
-                      [ngClass]="currentVlogPage === i ? 'bg-blue-600' : 'bg-gray-300 hover:bg-gray-400'">
-              </button>
-          </div>
-      </div>
-
-      <!-- Vlog Details Modal -->
-      <div *ngIf="showVlogDetails" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div class="relative">
-                  <!-- Video Player -->
-                  <div class="aspect-video">
-                      <iframe [src]="selectedVlog.video_url | safe: 'resourceUrl'" 
-                              class="w-full h-full"
-                              frameborder="0" 
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                              allowfullscreen>
-                      </iframe>
-                  </div>
-                  <!-- Close Button -->
-                  <button (click)="closeVlogDetails()" 
-                          class="absolute top-2 right-2 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/70">
-                      <i class="fas fa-times"></i>
-                  </button>
-              </div>
-              <div class="p-6">
-                  <h2 class="text-2xl font-bold mb-2">{{selectedVlog.title}}</h2>
-                  <p class="text-gray-700 mb-4">{{selectedVlog.description}}</p>
-                  <div class="flex justify-between items-center text-sm text-gray-500">
-                      <span>By {{selectedVlog.author}}</span>
-                      <span>{{selectedVlog.created_at | date:'medium'}}</span>
-                  </div>
-              </div>
-          </div>
-      </div>
-  </section>
-  <!-- <app-chatbot></app-chatbot> -->
+<!-- <app-chatbot></app-chatbot> -->
 
 

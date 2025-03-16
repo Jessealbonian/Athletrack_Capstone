@@ -1,4 +1,68 @@
-<div class="flex h-screen flex-col">
+<div class="flex h-screen flex-col bg-white">
+  <app-sidenav (navToggled)="onNavToggled($event)" class="fixed top-0 left-0 h-full z-10"></app-sidenav>
+  <app-navbar class="relative z-20"></app-navbar>
+  <div class="content-area">
+      <div class="dashboard-container">
+          <div class="transition-all duration-300 z-1 mt-16" [class.lg:ml-64]="isNavOpen"
+              [class.lg:ml-20]="!isNavOpen">
+    
+    <div class="flex-1 p-6 mt-16">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">Tasks</h2>
+            <div class="flex items-center">
+                <button class="bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center" (click)="openModal()">
+                    <i class="fas fa-plus mr-2"></i> Add Task
+                </button>
+                <div class="relative ml-4">
+                    <input type="text" placeholder="Search" class="border rounded-lg px-3 py-2" />
+                    <button class="absolute right-2 top-2">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="bg-gray-200 p-4 rounded-lg shadow">
+                <h3 class="font-semibold">Task Title 1</h3>
+                <p>Task Due Date: January 20, 2025</p>
+                <p>Task Due Time: 6:00 PM</p>
+                <p>Status: <span class="text-green-500">✔️ Completed</span></p>
+            </div>
+            <div class="bg-gray-200 p-4 rounded-lg shadow">
+                <h3 class="font-semibold">Task Title 2</h3>
+                <p>Task Due Date: February 15, 2025</p>
+                <p>Task Due Time: 3:00 PM</p>
+                <p>Status: <span class="text-yellow-500">⚠️ In Progress</span></p>
+            </div>
+            <div class="bg-gray-200 p-4 rounded-lg shadow">
+                <h3 class="font-semibold">Task Title 3</h3>
+                <p>Task Due Date: March 10, 2025</p>
+                <p>Task Due Time: 1:00 PM</p>
+                <p>Status: <span class="text-red-500">❌ Pending</span></p>
+            </div>
+            <div class="bg-gray-200 p-4 rounded-lg shadow">
+                <h3 class="font-semibold">Task Title 4</h3>
+                <p>Task Due Date: April 5, 2025</p>
+                <p>Task Due Time: 2:00 PM</p>
+                <p>Status: <span class="text-green-500">✔️ Completed</span></p>
+            </div>
+            <div class="bg-gray-200 p-4 rounded-lg shadow">
+                <h3 class="font-semibold">Task Title 5</h3>
+                <p>Task Due Date: May 20, 2025</p>
+                <p>Task Due Time: 4:00 PM</p>
+                <p>Status: <span class="text-yellow-500">⚠️ In Progress</span></p>
+            </div>
+            <div class="bg-gray-200 p-4 rounded-lg shadow">
+                <h3 class="font-semibold">Task Title 6</h3>
+                <p>Task Due Date: June 30, 2025</p>
+                <p>Task Due Time: 5:00 PM</p>
+                <p>Status: <span class="text-red-500">❌ Pending</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+<!--<div class="flex h-screen flex-col">
   <app-sidenav (navToggled)="onNavToggled($event)" class="fixed top-0 left-0 h-full z-10"></app-sidenav>
   <app-navbar class="relative z-20"></app-navbar>
   <div class="dashboard-container">
@@ -13,17 +77,15 @@
               <i class="fas fa-plus mr-2"></i> New Request
             </button>
           </div>
-
-          <!-- Simple Card Layout -->
+ 
+          Simple Card Layout
           <div class="space-y-4">
-            <div *ngFor="let request of maintenanceRequests" 
+            <div *ngFor="let request of fetchmaintenancerequests" 
                  class="bg-white rounded-lg shadow p-4 border border-gray-200">
               <div class="flex items-start gap-4">
-                <!-- Request Icon -->
                 <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                   <i class="fas fa-tools text-gray-600 text-xl"></i>
                 </div>
-                <!-- Request Details -->
                 <div class="flex-1">
                   <div class="flex justify-between items-start">
                     <div>
@@ -49,7 +111,7 @@
   </div>
 </div>
 
-<!-- Modal -->
+Modal 
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
      [class.hidden]="!showModal">
   <div class="bg-white rounded-lg w-full max-w-md mx-4">
@@ -121,4 +183,4 @@
       </button>
     </div>
   </div>
-</div>
+</div>-->

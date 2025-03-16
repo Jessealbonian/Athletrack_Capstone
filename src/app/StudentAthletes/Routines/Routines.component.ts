@@ -7,10 +7,10 @@ import { CommonModule } from '@angular/common';
   selector: 'app-cmtyrules',
   //standalone: true, (need if may imports ang alam ko pero kayo na may lagay HAHAHAHHA)
   imports: [SidenavComponent,NavbarComponent, CommonModule],
-  templateUrl: './cmtyrules.component.html',
-  styleUrls: ['./cmtyrules.component.css']
+  templateUrl: './Routines.component.html',
+  styleUrls: ['./Routines.component.css']
 })
-export class CmtyrulesComponent {
+export class RoutinesComponent {
   isNavOpen = true;
   isModalOpen = false;
   uploadedDocuments = ['Document1.pdf', 'Document2.pdf', 'Document3.pdf'];

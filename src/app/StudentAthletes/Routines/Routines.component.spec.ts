@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CmtyrulesComponent } from './cmtyrules.component';
+import { RoutinesComponent } from './Routines.component';
 
-describe('CmtyrulesComponent', () => {
-  let component: CmtyrulesComponent;
-  let fixture: ComponentFixture<CmtyrulesComponent>;
+describe('RoutinesComponent', () => {
+  let component: RoutinesComponent;
+  let fixture: ComponentFixture<RoutinesComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CmtyrulesComponent]
+      imports: [RoutinesComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(CmtyrulesComponent);
+    fixture = TestBed.createComponent(RoutinesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
