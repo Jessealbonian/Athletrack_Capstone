@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './Coaches/home/home.component';
 import { EventsComponent } from './Coaches/events/events.component';
-import { MaintenanceComponent } from './Coaches/Routines/maintenance.component';
+import { ClassComponent } from './Coaches/Class/Class.component';
 import { CommunicationsComponent } from './Coaches/communications/communications.component';
 import { LoginAdminComponent } from './Coaches/login-admin/login-admin.component';
 import { authGuard } from './services/auth.guard';
@@ -22,7 +22,7 @@ import { CmntyeventsComponent } from './StudentAthletes/cmntyevents/cmntyevents.
 import { LoginComponent } from './StudentAthletes/login/login.component';
 import { RegisterComponent } from './StudentAthletes/register/register.component';
 import { taskComponent } from './StudentAthletes/tasks/task.component';
-import { ChatComponent } from './StudentAthletes/userchat/userchat.component';
+//import { ChatComponent } from './StudentAthletes/userchat/userchat.component';
 
 // import { UserduesComponent } from './StudentAthletes/userdues/userdues.component';
 //import { UserbusinessComponent } from './StudentAthletes/userbusiness/userbusiness.component';
@@ -35,9 +35,9 @@ export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full', },
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard], data: { title: 'Dashboard' } },
   { path: 'Routines', component: RoutinesComponent, canActivate: [authGuard], data: { title: 'Community Rules' } },
-  { path: 'task', component: taskComponent, canActivate: [authGuard], data: { title: 'Maintenance Requests' } },
+  { path: 'task', component: taskComponent, canActivate: [authGuard], data: { title: 'Routines Requests' } },
   { path: 'cmntyevents', component: CmntyeventsComponent,  data: { title: 'Community Events' } }, //canActivate: [authGuard],
-  { path: 'userchat', component: ChatComponent, canActivate: [authGuard], data: { title: 'Communications' } },
+  //{ path: 'userchat', component: ChatComponent, canActivate: [authGuard], data: { title: 'Communications' } },
   { path: 'login', component: LoginComponent, title: 'login' },
   { path: 'register', component: RegisterComponent, title: 'register' },
 
@@ -50,7 +50,7 @@ export const routes: Routes = [
   { path: '', redirectTo: 'admin_login', pathMatch: 'full', },
   { path: 'home', component: HomeComponent,  title: 'Home' }, //canActivate: [authGuard],
   { path: 'events', component: EventsComponent,  title: 'Events' },  //canActivate: [authGuard],
-  { path: 'maintenance', component: MaintenanceComponent,  title: 'Maintenance' }, //canActivate: [authGuard],
+  { path: 'Class', component: ClassComponent,  title: 'Class' }, //canActivate: [authGuard],
   { path: 'communications', component: CommunicationsComponent,  title: 'Communications' },  //canActivate: [authGuard],
   { path: 'admin_login', component: LoginAdminComponent, title: 'Admin Login' },
   { path: 'register_admin', component: RegisterAdminComponent, title: 'Admin Register' },

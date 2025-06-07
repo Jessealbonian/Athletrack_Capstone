@@ -48,7 +48,7 @@ export class LoginAdminComponent {
               timer: 1500,
               showConfirmButton: false
             });
-            this.router.navigate(['home']);
+            this.router.navigate(['Class']);
           },
           error: (error) => {
             Swal.fire({

@@ -8,7 +8,7 @@ import Swal from 'sweetalert2';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable'; // Import the autoTable plugin
 
-interface MaintenanceRequest {
+interface ClassRequest {
   id: number;
   address: string;
   resident_name: string;
@@ -19,7 +19,7 @@ interface MaintenanceRequest {
   assigned_to: string;
 }
 
-interface MaintenanceStats {
+interface ClassStats {
   total_requests: number;
   pending: number;
   in_progress: number;
@@ -32,17 +32,41 @@ interface ResidentAddress {
   name: string;
 }
 
+interface ClassRoutines {
+  monday: string;
+  tuesday: string;
+  wednesday: string;
+  thursday: string;
+  friday: string;
+  saturday: string;
+  sunday: string;
+}
+
+interface ClassData {
+  title: string;
+  description: string;
+  routines: ClassRoutines;
+}
+
+interface TaskData {
+  title: string;
+  dueDate: string;
+  dueTime: string;
+  status: 'Pending' | 'In Progress' | 'Completed';
+}
+
 @Component({
-  selector: 'app-maintenance',
+  selector: 'app-Class',
   standalone: true,
   imports: [CommonModule, FormsModule, SidenavComponent, NavbarComponent],
-  templateUrl: './maintenance.component.html',
-  styleUrl: './maintenance.component.css'
+  templateUrl: './Class.component.html',
+  styleUrl: './Class.component.css'
 })
-export class MaintenanceComponent implements OnInit {
-  maintenanceRequests: MaintenanceRequest[] = [];
+export class ClassComponent implements OnInit {
+  ClassRequests: ClassRequest[] = [];
   residentAddresses: ResidentAddress[] = [];
-  stats: MaintenanceStats = {
+  classes: any[] = [];
+  stats: ClassStats = {
     total_requests: 0,
     pending: 0,
     in_progress: 0,
@@ -50,7 +74,7 @@ export class MaintenanceComponent implements OnInit {
     high_priority_percentage: 0
   };
 
-  newRequest: MaintenanceRequest = {
+  newRequest: ClassRequest = {
     id: 0,
     address: '',
     resident_name: '',
@@ -70,28 +94,54 @@ export class MaintenanceComponent implements OnInit {
 
   isNavOpen = true;
 
-
+  showAddClassModal = false;
   
+  newClass: ClassData = {
+    title: '',
+    description: '',
+    routines: {
+      monday: '',
+      tuesday: '',
+      wednesday: '',
+      thursday: '',
+      friday: '',
+      saturday: '',
+      sunday: ''
+    }
+  };
+
+  showAddTaskModal = false;
+  showUploadModal = false;
+  uploadType: 'image' | 'video' = 'image';
+  selectedFile: File | null = null;
+  
+  newTask: TaskData = {
+    title: '',
+    dueDate: '',
+    dueTime: '',
+    status: 'Pending'
+  };
+
   onNavToggled(isOpen: boolean) {
     this.isNavOpen = isOpen;
   }
 
-  private apiUrl = 'http://localhost/demoproj1/api/modules';
+  private apiUrl = 'http://localhost/DEMO2/demoproject/api/';
 
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
-    this.loadMaintenanceRequests();
-    this.loadMaintenanceStats();
-    this.loadResidentAddresses();
+    this.loadClassRequests();
+    this.loadClassStats();
+    this.fetchClasses();
   }
 
-  loadMaintenanceRequests() {
-    this.http.get(`${this.apiUrl}/get.php?action=getMaintenance`).subscribe({
+  loadClassRequests() {
+    this.http.get(`${this.apiUrl}getClasses`).subscribe({
       next: (response: any) => {
-        console.log('Maintenance Requests:', response); // Debugging log
+        console.log('Class Requests:', response); // Debugging log
         // Map the response to ensure property names match the interface
-        this.maintenanceRequests = (response.data || []).map((item: any) => ({
+        this.ClassRequests = (response.data || []).map((item: any) => ({
           id: item.id,
           address: item.Address, // Map 'Address' to 'address'
           resident_name: item.resident_name,
@@ -104,7 +154,7 @@ export class MaintenanceComponent implements OnInit {
         this.calculateStats();
       },
       error: () => {
-        this.maintenanceRequests = [];
+        this.ClassRequests = [];
         this.calculateStats();
       }
     });
@@ -112,10 +162,10 @@ export class MaintenanceComponent implements OnInit {
   
 
   calculateStats() {
-    const total = this.maintenanceRequests.length;
-    const inProgress = this.maintenanceRequests.filter(r => r.status === 'In Progress').length;
-    const completed = this.maintenanceRequests.filter(r => r.status === 'Completed').length;
-    const highPriority = this.maintenanceRequests.filter(r => r.priority === 'High').length;
+    const total = this.ClassRequests.length;
+    const inProgress = this.ClassRequests.filter(r => r.status === 'In Progress').length;
+    const completed = this.ClassRequests.filter(r => r.status === 'Completed').length;
+    const highPriority = this.ClassRequests.filter(r => r.priority === 'High').length;
 
     this.stats = {
       total_requests: total,
@@ -126,22 +176,12 @@ export class MaintenanceComponent implements OnInit {
     };
   }
 
-  loadMaintenanceStats() {
+  loadClassStats() {
     this.calculateStats();
   }
 
-  loadResidentAddresses() {
-    this.http.get(`${this.apiUrl}/get.php?action=getResidentAddresses`).subscribe({
-      next: (response: any) => {
-        this.residentAddresses = response.data || [];
-      },
-      error: () => {
-        this.residentAddresses = [];
-      }
-    });
-  }
 
-  openModal(request?: MaintenanceRequest) {
+  openModal(request?: ClassRequest) {
     if (request) {
       this.newRequest = {
         id: request.id,
@@ -215,9 +255,9 @@ export class MaintenanceComponent implements OnInit {
         assigned_to: this.newRequest.assigned_to
       };
   
-      this.http.post(`${this.apiUrl}/post.php?action=updateMaintenanceStatus`, updatedRequest).subscribe({
+      this.http.post(`${this.apiUrl}addClass`, updatedRequest).subscribe({
         next: () => {
-          this.loadMaintenanceRequests();
+          this.loadClassRequests();
           this.resetForm();
   
           Swal.fire({
@@ -230,7 +270,7 @@ export class MaintenanceComponent implements OnInit {
         },
         error: () => {
           // Force success behavior
-          this.loadMaintenanceRequests();
+          this.loadClassRequests();
           this.resetForm();
   
           Swal.fire({
@@ -253,10 +293,10 @@ export class MaintenanceComponent implements OnInit {
         return;
       }
   
-      const endpoint = 'addMaintenance';
-      this.http.post(`${this.apiUrl}/post.php?action=${endpoint}`, this.newRequest).subscribe({
+      const endpoint = 'addClass';
+      this.http.post(`${this.apiUrl}${endpoint}`, this.newRequest).subscribe({
         next: () => {
-          this.loadMaintenanceRequests();
+          this.loadClassRequests();
           this.resetForm();
   
           Swal.fire({
@@ -269,7 +309,7 @@ export class MaintenanceComponent implements OnInit {
         },
         error: () => {
           // Force success behavior
-          this.loadMaintenanceRequests();
+          this.loadClassRequests();
           this.resetForm();
   
           Swal.fire({
@@ -295,10 +335,10 @@ export class MaintenanceComponent implements OnInit {
       confirmButtonText: 'Yes, delete it!'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.http.post(`${this.apiUrl}/post.php?action=deleteMaintenance`, { id }).subscribe({
+        this.http.post(`${this.apiUrl}deleteClass`, { id }).subscribe({
           next: () => {
-            this.loadMaintenanceRequests();
-            this.loadMaintenanceStats();
+            this.loadClassRequests();
+            this.loadClassStats();
   
             Swal.fire({
               title: 'Deleted!',
@@ -310,8 +350,8 @@ export class MaintenanceComponent implements OnInit {
           },
           error: () => {
             // Force success behavior
-            this.loadMaintenanceRequests();
-            this.loadMaintenanceStats();
+            this.loadClassRequests();
+            this.loadClassStats();
   
             Swal.fire({
               title: 'Deleted!',
@@ -328,7 +368,7 @@ export class MaintenanceComponent implements OnInit {
   
 
   get filteredRequests() {
-    return this.maintenanceRequests.filter(request => {
+    return this.ClassRequests.filter(request => {
       const matchesSearch = !this.searchText || 
         request.address.toLowerCase().includes(this.searchText.toLowerCase()) ||
         request.description.toLowerCase().includes(this.searchText.toLowerCase()) ||
@@ -347,11 +387,11 @@ export class MaintenanceComponent implements OnInit {
     const doc = new jsPDF();
   
     // Add title to the PDF
-    // doc.text('Maintenance Requests', 14, 16);
+    // doc.text('Class Requests', 14, 16);
   
     // Define columns for the table
     const columns: string[] = ['ID', 'Address', 'Resident Name', 'Description', 'Status', 'Priority', 'Request Date', 'Assigned To'];
-    const rows: (string | number)[][] = this.maintenanceRequests.map(request => [
+    const rows: (string | number)[][] = this.ClassRequests.map(request => [
       request.id, 
       request.address, 
       request.resident_name, 
@@ -369,8 +409,127 @@ export class MaintenanceComponent implements OnInit {
   
   
     // Save the PDF
-    doc.save('maintenance_requests.pdf');
+    doc.save('Class_requests.pdf');
   }
   
-  
+  openAddClassModal() {
+    this.showAddClassModal = true;
+  }
+
+  closeAddClassModal() {
+    this.showAddClassModal = false;
+    this.resetForm();
+  }
+
+  confirmAddClass() {
+    if (!this.newClass.title || !this.newClass.description) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Class name and description are required!'
+      });
+      return;
+    }
+
+    const classData = {
+      class_name: this.newClass.title,
+      description: this.newClass.description,
+      mondayRoutine: this.newClass.routines.monday || '',
+      tuesdayRoutine: this.newClass.routines.tuesday || '',
+      wednesdayRoutine: this.newClass.routines.wednesday || '',
+      thursdayRoutine: this.newClass.routines.thursday || '',
+      fridayRoutine: this.newClass.routines.friday || '',
+      saturdayRoutine: this.newClass.routines.saturday || '',
+      sundayRoutine: this.newClass.routines.sunday || ''
+    };
+
+    this.http.post(`${this.apiUrl}/addClass`, classData).subscribe({
+      next: (response: any) => {
+        if (response.status === 'success') {
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Class added successfully!'
+          });
+          this.closeAddClassModal();
+          this.fetchClasses(); // Refresh the class list
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: response.message || 'Failed to add class'
+          });
+        }
+      },
+      error: (error) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to add class. Please try again.'
+        });
+        console.error('Error adding class:', error);
+      }
+    });
+  }
+
+  fetchClasses() {
+    this.http.get(`${this.apiUrl}/getClasses`).subscribe({
+      next: (response: any) => {
+        if (response.status === 'success') {
+          this.classes = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching classes:', error);
+      }
+    });
+  }
+
+  openAddTaskModal() {
+    this.showAddTaskModal = true;
+  }
+
+  closeAddTaskModal() {
+    this.showAddTaskModal = false;
+    this.resetTaskForm();
+  }
+
+  confirmAddTask() {
+    // TODO: Implement the logic to save the task
+    console.log('New task data:', this.newTask);
+    this.closeAddTaskModal();
+  }
+
+  private resetTaskForm() {
+    this.newTask = {
+      title: '',
+      dueDate: '',
+      dueTime: '',
+      status: 'Pending'
+    };
+  }
+
+  openUploadModal() {
+    this.showUploadModal = true;
+  }
+
+  closeUploadModal() {
+    this.showUploadModal = false;
+    this.selectedFile = null;
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile = input.files[0];
+    }
+  }
+
+  confirmUpload() {
+    if (this.selectedFile) {
+      // TODO: Implement the logic to upload the file
+      console.log('Uploading file:', this.selectedFile);
+      this.closeUploadModal();
+    }
+  }
 }
