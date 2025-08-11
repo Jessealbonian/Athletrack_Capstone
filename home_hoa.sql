@@ -57,12 +57,19 @@ CREATE TABLE `class_routines` (
   `class_name` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
   `mondayRoutine` text DEFAULT NULL,
+  `mondayintensity` varchar(32) DEFAULT NULL,
   `tuesdayRoutine` text DEFAULT NULL,
+  `tuesdayintensity` varchar(32) DEFAULT NULL,
   `wednesdayRoutine` text DEFAULT NULL,
+  `wednesdayintensity` varchar(32) DEFAULT NULL,
   `thursdayRoutine` text DEFAULT NULL,
+  `thursdayintensity` varchar(32) DEFAULT NULL,
   `fridayRoutine` text DEFAULT NULL,
+  `fridayintensity` varchar(32) DEFAULT NULL,
   `saturdayRoutine` text DEFAULT NULL,
-  `sundayRoutine` text DEFAULT NULL
+  `saturdayintensity` varchar(32) DEFAULT NULL,
+  `sundayRoutine` text DEFAULT NULL,
+  `sundayintensity` varchar(32) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -223,210 +230,4 @@ CREATE TABLE `tripping_request` (
   `user_id` int(11) DEFAULT NULL,
   `name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `phone` varchar(50) NOT NULL,
-  `date` date NOT NULL,
-  `time` time NOT NULL,
-  `property_of_interest` varchar(255) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `status` enum('Pending','Approved','Rejected') DEFAULT 'Pending'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `tripping_request`
---
-
-INSERT INTO `tripping_request` (`id`, `user_id`, `name`, `email`, `phone`, `date`, `time`, `property_of_interest`, `created_at`, `status`) VALUES
-(3, NULL, 'Jomarie M. Del Rosario', 'jojo@gmail.com', '09566925077', '2024-12-24', '12:00:00', 'I want to know more abouth this house.', '2024-12-11 16:37:34', 'Pending'),
-(5, NULL, 'yoru', 'yoru@gmail.com', '345234', '2025-01-21', '15:29:00', 'gergergerg', '2025-01-05 07:27:32', 'Pending'),
-(6, 4, 'jomarie del rosario', 'jomariedr@gmail.com', '09566925077', '2025-01-10', '00:28:00', 'Interest', '2025-01-08 16:24:15', 'Pending');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `users`
---
-
-CREATE TABLE `users` (
-  `user_id` int(11) NOT NULL,
-  `username` varchar(50) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `password` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `users`
---
-
-INSERT INTO `users` (`user_id`, `username`, `email`, `password`) VALUES
-(3, 'Min Yoon Gi', 'suga@gmail.com', '$2y$10$Fzh3CUA1Z.LPiM9HBWcid./iIUjg7ld5tbd0fk2u1.ZLno0CsTP4u'),
-(4, 'jomarie del rosario', 'jomariedr@gmail.com', '$2y$10$U5DBKc1MPpLCJihm3sQobuMckwS/Z8/6XUT72rHWVoYezrOFHgbE.');
-
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `admins`
---
-ALTER TABLE `admins`
-  ADD PRIMARY KEY (`admin_id`),
-  ADD UNIQUE KEY `email` (`email`);
-
---
--- Indexes for table `class_routines`
---
-ALTER TABLE `class_routines`
-  ADD PRIMARY KEY (`class_id`),
-  ADD KEY `admin_id` (`admin_id`);
-
---
--- Indexes for table `codegen`
---
-ALTER TABLE `codegen`
-  ADD PRIMARY KEY (`code_id`),
-  ADD KEY `class_id` (`class_id`);
-
---
--- Indexes for table `events`
---
-ALTER TABLE `events`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `hoa_admins`
---
-ALTER TABLE `hoa_admins`
-  ADD PRIMARY KEY (`admin_id`);
-
---
--- Indexes for table `hoa_users`
---
-ALTER TABLE `hoa_users`
-  ADD PRIMARY KEY (`user_id`);
-
---
--- Indexes for table `messages`
---
-ALTER TABLE `messages`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `sender_user_id` (`sender_user_id`),
-  ADD KEY `sender_admin_id` (`sender_admin_id`),
-  ADD KEY `recipient_user_id` (`recipient_user_id`),
-  ADD KEY `recipient_admin_id` (`recipient_admin_id`);
-
---
--- Indexes for table `task`
---
-ALTER TABLE `task`
-  ADD PRIMARY KEY (`task_id`),
-  ADD KEY `user_id` (`user_id`);
-
---
--- Indexes for table `tripping_request`
---
-ALTER TABLE `tripping_request`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_user_id` (`user_id`) USING BTREE;
-
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`user_id`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `admins`
---
-ALTER TABLE `admins`
-  MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `class_routines`
---
-ALTER TABLE `class_routines`
-  MODIFY `class_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `codegen`
---
-ALTER TABLE `codegen`
-  MODIFY `code_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `events`
---
-ALTER TABLE `events`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
-
---
--- AUTO_INCREMENT for table `hoa_admins`
---
-ALTER TABLE `hoa_admins`
-  MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT for table `hoa_users`
---
-ALTER TABLE `hoa_users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
-
---
--- AUTO_INCREMENT for table `messages`
---
-ALTER TABLE `messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
-
---
--- AUTO_INCREMENT for table `task`
---
-ALTER TABLE `task`
-  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `tripping_request`
---
-ALTER TABLE `tripping_request`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `class_routines`
---
-ALTER TABLE `class_routines`
-  ADD CONSTRAINT `class_routines_ibfk_1` FOREIGN KEY (`admin_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `codegen`
---
-ALTER TABLE `codegen`
-  ADD CONSTRAINT `codegen_ibfk_1` FOREIGN KEY (`class_id`) REFERENCES `class_routines` (`class_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `task`
---
-ALTER TABLE `task`
-  ADD CONSTRAINT `task_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
-
---
--- Constraints for table `tripping_request`
---
-ALTER TABLE `tripping_request`
-  ADD CONSTRAINT `fk_tripping_request_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
-COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+  `

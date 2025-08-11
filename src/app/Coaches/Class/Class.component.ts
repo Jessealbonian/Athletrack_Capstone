@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../auth.service';
 import { SidenavComponent } from '../sidenav/sidenav.component';
 import { NavbarComponent } from '../navbar/navbar.component';
 import Swal from 'sweetalert2';
@@ -40,6 +41,27 @@ interface ClassRoutines {
   friday: string;
   saturday: string;
   sunday: string;
+  mondayIntensityEasy: boolean;
+  mondayIntensityMedium: boolean;
+  mondayIntensityHard: boolean;
+  tuesdayIntensityEasy: boolean;
+  tuesdayIntensityMedium: boolean;
+  tuesdayIntensityHard: boolean;
+  wednesdayIntensityEasy: boolean;
+  wednesdayIntensityMedium: boolean;
+  wednesdayIntensityHard: boolean;
+  thursdayIntensityEasy: boolean;
+  thursdayIntensityMedium: boolean;
+  thursdayIntensityHard: boolean;
+  fridayIntensityEasy: boolean;
+  fridayIntensityMedium: boolean;
+  fridayIntensityHard: boolean;
+  saturdayIntensityEasy: boolean;
+  saturdayIntensityMedium: boolean;
+  saturdayIntensityHard: boolean;
+  sundayIntensityEasy: boolean;
+  sundayIntensityMedium: boolean;
+  sundayIntensityHard: boolean;
 }
 
 interface ClassData {
@@ -66,6 +88,7 @@ export class ClassComponent implements OnInit {
   ClassRequests: ClassRequest[] = [];
   residentAddresses: ResidentAddress[] = [];
   classes: any[] = [];
+  currentAdminId: number | null = null;
   stats: ClassStats = {
     total_requests: 0,
     pending: 0,
@@ -106,7 +129,28 @@ export class ClassComponent implements OnInit {
       thursday: '',
       friday: '',
       saturday: '',
-      sunday: ''
+      sunday: '',
+      mondayIntensityEasy: false,
+      mondayIntensityMedium: false,
+      mondayIntensityHard: false,
+      tuesdayIntensityEasy: false,
+      tuesdayIntensityMedium: false,
+      tuesdayIntensityHard: false,
+      wednesdayIntensityEasy: false,
+      wednesdayIntensityMedium: false,
+      wednesdayIntensityHard: false,
+      thursdayIntensityEasy: false,
+      thursdayIntensityMedium: false,
+      thursdayIntensityHard: false,
+      fridayIntensityEasy: false,
+      fridayIntensityMedium: false,
+      fridayIntensityHard: false,
+      saturdayIntensityEasy: false,
+      saturdayIntensityMedium: false,
+      saturdayIntensityHard: false,
+      sundayIntensityEasy: false,
+      sundayIntensityMedium: false,
+      sundayIntensityHard: false
     }
   };
 
@@ -122,18 +166,27 @@ export class ClassComponent implements OnInit {
     status: 'Pending'
   };
 
+  showClassDetailsModal = false;
+  selectedClass: any = null;
+  isEditingClassDetails = false;
+
   onNavToggled(isOpen: boolean) {
     this.isNavOpen = isOpen;
   }
 
   private apiUrl = 'http://localhost/DEMO2/demoproject/api/';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private auth: AuthService) {}
 
   ngOnInit() {
+    // Capture current admin id from auth (same source used by navbar)
+    this.auth.getCurrentUser().subscribe((user: any) => {
+      this.currentAdminId = user?.id ?? null;
+      // Once we have admin id, load classes filtered to this admin
+      this.fetchClasses();
+    });
     this.loadClassRequests();
     this.loadClassStats();
-    this.fetchClasses();
   }
 
   loadClassRequests() {
@@ -418,7 +471,84 @@ export class ClassComponent implements OnInit {
 
   closeAddClassModal() {
     this.showAddClassModal = false;
-    this.resetForm();
+    this.resetClassForm();
+  }
+
+  private resetClassForm() {
+    this.newClass = {
+      title: '',
+      description: '',
+      routines: {
+        monday: '',
+        tuesday: '',
+        wednesday: '',
+        thursday: '',
+        friday: '',
+        saturday: '',
+        sunday: '',
+        mondayIntensityEasy: false,
+        mondayIntensityMedium: false,
+        mondayIntensityHard: false,
+        tuesdayIntensityEasy: false,
+        tuesdayIntensityMedium: false,
+        tuesdayIntensityHard: false,
+        wednesdayIntensityEasy: false,
+        wednesdayIntensityMedium: false,
+        wednesdayIntensityHard: false,
+        thursdayIntensityEasy: false,
+        thursdayIntensityMedium: false,
+        thursdayIntensityHard: false,
+        fridayIntensityEasy: false,
+        fridayIntensityMedium: false,
+        fridayIntensityHard: false,
+        saturdayIntensityEasy: false,
+        saturdayIntensityMedium: false,
+        saturdayIntensityHard: false,
+        sundayIntensityEasy: false,
+        sundayIntensityMedium: false,
+        sundayIntensityHard: false
+      }
+    };
+  }
+
+  private getIntensityFromFlags(easy: boolean, medium: boolean, hard: boolean): string {
+    if (easy) return 'Easy';
+    if (medium) return 'Medium';
+    if (hard) return 'Hard';
+    return '';
+  }
+
+  // Ensure only one checkbox per day is selected in Add Class modal
+  onIntensityChange(day: 'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday'|'sunday', level: 'Easy'|'Medium'|'Hard') {
+    const routines = this.newClass.routines;
+    const keys = {
+      Easy: `${day}IntensityEasy`,
+      Medium: `${day}IntensityMedium`,
+      Hard: `${day}IntensityHard`
+    } as const;
+
+    // Turn off the other two when one is set to true
+    if ((routines as any)[keys[level]]) {
+      if (level !== 'Easy') (routines as any)[`${day}IntensityEasy`] = false;
+      if (level !== 'Medium') (routines as any)[`${day}IntensityMedium`] = false;
+      if (level !== 'Hard') (routines as any)[`${day}IntensityHard`] = false;
+    }
+  }
+
+  // Ensure only one checkbox per day in Class Details modal when editing
+  onDetailsIntensityChange(day: 'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday'|'sunday', level: 'Easy'|'Medium'|'Hard') {
+    const obj = this.selectedClass;
+    if (!obj) return;
+    const keys = {
+      Easy: `${day}IntensityEasy`,
+      Medium: `${day}IntensityMedium`,
+      Hard: `${day}IntensityHard`
+    } as const;
+    if (obj[keys[level]]) {
+      if (level !== 'Easy') obj[`${day}IntensityEasy`] = false;
+      if (level !== 'Medium') obj[`${day}IntensityMedium`] = false;
+      if (level !== 'Hard') obj[`${day}IntensityHard`] = false;
+    }
   }
 
   confirmAddClass() {
@@ -434,16 +564,54 @@ export class ClassComponent implements OnInit {
     const classData = {
       class_name: this.newClass.title,
       description: this.newClass.description,
+      admin_id: this.currentAdminId,
       mondayRoutine: this.newClass.routines.monday || '',
       tuesdayRoutine: this.newClass.routines.tuesday || '',
       wednesdayRoutine: this.newClass.routines.wednesday || '',
       thursdayRoutine: this.newClass.routines.thursday || '',
       fridayRoutine: this.newClass.routines.friday || '',
       saturdayRoutine: this.newClass.routines.saturday || '',
-      sundayRoutine: this.newClass.routines.sunday || ''
+      sundayRoutine: this.newClass.routines.sunday || '',
+      mondayintensity: this.getIntensityFromFlags(
+        this.newClass.routines.mondayIntensityEasy,
+        this.newClass.routines.mondayIntensityMedium,
+        this.newClass.routines.mondayIntensityHard
+      ),
+      tuesdayintensity: this.getIntensityFromFlags(
+        this.newClass.routines.tuesdayIntensityEasy,
+        this.newClass.routines.tuesdayIntensityMedium,
+        this.newClass.routines.tuesdayIntensityHard
+      ),
+      wednesdayintensity: this.getIntensityFromFlags(
+        this.newClass.routines.wednesdayIntensityEasy,
+        this.newClass.routines.wednesdayIntensityMedium,
+        this.newClass.routines.wednesdayIntensityHard
+      ),
+      thursdayintensity: this.getIntensityFromFlags(
+        this.newClass.routines.thursdayIntensityEasy,
+        this.newClass.routines.thursdayIntensityMedium,
+        this.newClass.routines.thursdayIntensityHard
+      ),
+      fridayintensity: this.getIntensityFromFlags(
+        this.newClass.routines.fridayIntensityEasy,
+        this.newClass.routines.fridayIntensityMedium,
+        this.newClass.routines.fridayIntensityHard
+      ),
+      saturdayintensity: this.getIntensityFromFlags(
+        this.newClass.routines.saturdayIntensityEasy,
+        this.newClass.routines.saturdayIntensityMedium,
+        this.newClass.routines.saturdayIntensityHard
+      ),
+      sundayintensity: this.getIntensityFromFlags(
+        this.newClass.routines.sundayIntensityEasy,
+        this.newClass.routines.sundayIntensityMedium,
+        this.newClass.routines.sundayIntensityHard
+      )
     };
 
-    this.http.post(`${this.apiUrl}/addClass`, classData).subscribe({
+    console.log('Sending class data to API:', classData);
+
+    this.http.post(`${this.apiUrl}addClass`, classData).subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
           Swal.fire({
@@ -476,7 +644,10 @@ export class ClassComponent implements OnInit {
     this.http.get(`${this.apiUrl}/getClasses`).subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
-          this.classes = response.data;
+          const all = response.data || [];
+          this.classes = this.currentAdminId != null
+            ? all.filter((c: any) => Number(c.admin_id) === Number(this.currentAdminId))
+            : all;
         }
       },
       error: (error) => {
@@ -531,5 +702,107 @@ export class ClassComponent implements OnInit {
       console.log('Uploading file:', this.selectedFile);
       this.closeUploadModal();
     }
+  }
+
+  openClassDetailsModal(classObj: any) {
+    this.selectedClass = {
+      ...classObj,
+      enrolledStudents: classObj.enrolledStudents || []
+    };
+
+    // Map intensity strings from DB to checkbox booleans for display/editing
+    const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+    for (const day of days) {
+      const intensityString: string = (classObj[`${day}intensity`] || '').toString();
+      const normalized = intensityString.trim().toLowerCase();
+      this.selectedClass[`${day}IntensityEasy`] = normalized === 'easy';
+      this.selectedClass[`${day}IntensityMedium`] = normalized === 'medium';
+      this.selectedClass[`${day}IntensityHard`] = normalized === 'hard';
+    }
+    this.showClassDetailsModal = true;
+    this.isEditingClassDetails = false;
+  }
+
+  closeClassDetailsModal() {
+    this.showClassDetailsModal = false;
+    this.selectedClass = null;
+    this.isEditingClassDetails = false;
+  }
+
+  confirmEditClassDetails() {
+    if (!this.selectedClass) {
+      return;
+    }
+
+    const payload = {
+      class_id: this.selectedClass.class_id,
+      mondayRoutine: this.selectedClass.mondayRoutine || '',
+      tuesdayRoutine: this.selectedClass.tuesdayRoutine || '',
+      wednesdayRoutine: this.selectedClass.wednesdayRoutine || '',
+      thursdayRoutine: this.selectedClass.thursdayRoutine || '',
+      fridayRoutine: this.selectedClass.fridayRoutine || '',
+      saturdayRoutine: this.selectedClass.saturdayRoutine || '',
+      sundayRoutine: this.selectedClass.sundayRoutine || '',
+      mondayintensity: this.getIntensityFromFlags(
+        !!this.selectedClass.mondayIntensityEasy,
+        !!this.selectedClass.mondayIntensityMedium,
+        !!this.selectedClass.mondayIntensityHard
+      ),
+      tuesdayintensity: this.getIntensityFromFlags(
+        !!this.selectedClass.tuesdayIntensityEasy,
+        !!this.selectedClass.tuesdayIntensityMedium,
+        !!this.selectedClass.tuesdayIntensityHard
+      ),
+      wednesdayintensity: this.getIntensityFromFlags(
+        !!this.selectedClass.wednesdayIntensityEasy,
+        !!this.selectedClass.wednesdayIntensityMedium,
+        !!this.selectedClass.wednesdayIntensityHard
+      ),
+      thursdayintensity: this.getIntensityFromFlags(
+        !!this.selectedClass.thursdayIntensityEasy,
+        !!this.selectedClass.thursdayIntensityMedium,
+        !!this.selectedClass.thursdayIntensityHard
+      ),
+      fridayintensity: this.getIntensityFromFlags(
+        !!this.selectedClass.fridayIntensityEasy,
+        !!this.selectedClass.fridayIntensityMedium,
+        !!this.selectedClass.fridayIntensityHard
+      ),
+      saturdayintensity: this.getIntensityFromFlags(
+        !!this.selectedClass.saturdayIntensityEasy,
+        !!this.selectedClass.saturdayIntensityMedium,
+        !!this.selectedClass.saturdayIntensityHard
+      ),
+      sundayintensity: this.getIntensityFromFlags(
+        !!this.selectedClass.sundayIntensityEasy,
+        !!this.selectedClass.sundayIntensityMedium,
+        !!this.selectedClass.sundayIntensityHard
+      )
+    };
+
+    console.log('Updating class data:', payload);
+
+    this.http.post(`${this.apiUrl}editClass`, payload).subscribe({
+      next: (response: any) => {
+        if (response.status === 'success') {
+          Swal.fire({ icon: 'success', title: 'Updated', text: 'Class updated successfully!' });
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: response.message || 'Failed to update class' });
+        }
+        this.showClassDetailsModal = false;
+        this.selectedClass = null;
+        this.isEditingClassDetails = false;
+        this.fetchClasses();
+      },
+      error: (error) => {
+        console.error('Error updating class:', error);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update class. Please try again.' });
+      }
+    });
+  }
+
+  generateToken() {
+    // TODO: Implement token generation logic
+    alert('Generate Token feature coming soon!');
   }
 }

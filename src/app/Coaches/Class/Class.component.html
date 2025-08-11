@@ -30,7 +30,7 @@
 
           <!-- Class Cards Grid -->
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div *ngFor="let class of classes" class="bg-gray-300 p-4 rounded-lg">
+            <div *ngFor="let class of classes" class="bg-gray-300 p-4 rounded-lg cursor-pointer hover:bg-gray-400" (click)="openClassDetailsModal(class)">
               <h3 class="text-lg font-semibold">{{class.class_name}}</h3>
               <p class="text-sm text-gray-600">{{class.description}}</p>
               <div class="flex justify-between items-center mt-4">
@@ -49,7 +49,7 @@
 
     <!-- Add Class Modal -->
     <div *ngIf="showAddClassModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-gray-500 p-6 rounded-lg w-[500px]">
+      <div class="bg-gray-500 p-6 rounded-lg w-[900px] max-w-[90vw]">
         <h2 class="text-xl text-white mb-4">Add Class</h2>
         
         <!-- Class Title -->
@@ -67,16 +67,45 @@
         <!-- Class Routines -->
         <div class="mb-4">
           <label class="block text-white mb-2">Class Routines:</label>
+
+          <!-- Datalist for routine options -->
+          <datalist id="routineOptions">
+            <option value="Distance"></option>
+            <option value="Sprint"></option>
+            <option value="Fartlek"></option>
+          </datalist>
           
           <!-- Monday and Tuesday -->
           <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label class="block text-white mb-1">Monday</label>
-              <input type="text" [(ngModel)]="newClass.routines.monday" placeholder="Routine Description" class="w-full p-2 rounded">
+              <input list="routineOptions" type="text" [(ngModel)]="newClass.routines.monday" placeholder="Routine Description" class="w-full p-2 rounded mb-2">
+              <div class="flex gap-2">
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.mondayIntensityEasy" (change)="onIntensityChange('monday','Easy')"> <span>Easy</span>
+                </label>
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.mondayIntensityMedium" (change)="onIntensityChange('monday','Medium')"> <span>Medium</span>
+                </label>
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.mondayIntensityHard" (change)="onIntensityChange('monday','Hard')"> <span>Hard</span>
+                </label>
+              </div>
             </div>
             <div>
               <label class="block text-white mb-1">Tuesday</label>
-              <input type="text" [(ngModel)]="newClass.routines.tuesday" placeholder="Routine Description" class="w-full p-2 rounded">
+              <input list="routineOptions" type="text" [(ngModel)]="newClass.routines.tuesday" placeholder="Routine Description" class="w-full p-2 rounded mb-2">
+              <div class="flex gap-2">
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.tuesdayIntensityEasy" (change)="onIntensityChange('tuesday','Easy')"> <span>Easy</span>
+                </label>
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.tuesdayIntensityMedium" (change)="onIntensityChange('tuesday','Medium')"> <span>Medium</span>
+                </label>
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.tuesdayIntensityHard" (change)="onIntensityChange('tuesday','Hard')"> <span>Hard</span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -84,11 +113,33 @@
           <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label class="block text-white mb-1">Wednesday</label>
-              <input type="text" [(ngModel)]="newClass.routines.wednesday" placeholder="Routine Description" class="w-full p-2 rounded">
+              <input list="routineOptions" type="text" [(ngModel)]="newClass.routines.wednesday" placeholder="Routine Description" class="w-full p-2 rounded mb-2">
+              <div class="flex gap-2">
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.wednesdayIntensityEasy" (change)="onIntensityChange('wednesday','Easy')"> <span>Easy</span>
+                </label>
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.wednesdayIntensityMedium" (change)="onIntensityChange('wednesday','Medium')"> <span>Medium</span>
+                </label>
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.wednesdayIntensityHard" (change)="onIntensityChange('wednesday','Hard')"> <span>Hard</span>
+                </label>
+              </div>
             </div>
             <div>
               <label class="block text-white mb-1">Thursday</label>
-              <input type="text" [(ngModel)]="newClass.routines.thursday" placeholder="Routine Description" class="w-full p-2 rounded">
+              <input list="routineOptions" type="text" [(ngModel)]="newClass.routines.thursday" placeholder="Routine Description" class="w-full p-2 rounded mb-2">
+              <div class="flex gap-2">
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.thursdayIntensityEasy" (change)="onIntensityChange('thursday','Easy')"> <span>Easy</span>
+                </label>
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.thursdayIntensityMedium" (change)="onIntensityChange('thursday','Medium')"> <span>Medium</span>
+                </label>
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.thursdayIntensityHard" (change)="onIntensityChange('thursday','Hard')"> <span>Hard</span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -96,18 +147,51 @@
           <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label class="block text-white mb-1">Friday</label>
-              <input type="text" [(ngModel)]="newClass.routines.friday" placeholder="Routine Description" class="w-full p-2 rounded">
+              <input list="routineOptions" type="text" [(ngModel)]="newClass.routines.friday" placeholder="Routine Description" class="w-full p-2 rounded mb-2">
+              <div class="flex gap-2">
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.fridayIntensityEasy" (change)="onIntensityChange('friday','Easy')"> <span>Easy</span>
+                </label>
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.fridayIntensityMedium" (change)="onIntensityChange('friday','Medium')"> <span>Medium</span>
+                </label>
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.fridayIntensityHard" (change)="onIntensityChange('friday','Hard')"> <span>Hard</span>
+                </label>
+              </div>
             </div>
             <div>
               <label class="block text-white mb-1">Saturday</label>
-              <input type="text" [(ngModel)]="newClass.routines.saturday" placeholder="Routine Description" class="w-full p-2 rounded">
+              <input list="routineOptions" type="text" [(ngModel)]="newClass.routines.saturday" placeholder="Routine Description" class="w-full p-2 rounded mb-2">
+              <div class="flex gap-2">
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.saturdayIntensityEasy" (change)="onIntensityChange('saturday','Easy')"> <span>Easy</span>
+                </label>
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.saturdayIntensityMedium" (change)="onIntensityChange('saturday','Medium')"> <span>Medium</span>
+                </label>
+                <label class="flex items-center gap-1 text-white text-sm">
+                  <input type="checkbox" [(ngModel)]="newClass.routines.saturdayIntensityHard" (change)="onIntensityChange('saturday','Hard')"> <span>Hard</span>
+                </label>
+              </div>
             </div>
           </div>
 
           <!-- Sunday -->
           <div class="mb-4">
             <label class="block text-white mb-1">Sunday</label>
-            <input type="text" [(ngModel)]="newClass.routines.sunday" placeholder="Routine Description" class="w-full p-2 rounded">
+            <input list="routineOptions" type="text" [(ngModel)]="newClass.routines.sunday" placeholder="Routine Description" class="w-full p-2 rounded mb-2">
+            <div class="flex gap-2">
+              <label class="flex items-center gap-1 text-white text-sm">
+                <input type="checkbox" [(ngModel)]="newClass.routines.sundayIntensityEasy" (change)="onIntensityChange('sunday','Easy')"> <span>Easy</span>
+              </label>
+              <label class="flex items-center gap-1 text-white text-sm">
+                <input type="checkbox" [(ngModel)]="newClass.routines.sundayIntensityMedium" (change)="onIntensityChange('sunday','Medium')"> <span>Medium</span>
+              </label>
+              <label class="flex items-center gap-1 text-white text-sm">
+                <input type="checkbox" [(ngModel)]="newClass.routines.sundayIntensityHard" (change)="onIntensityChange('sunday','Hard')"> <span>Hard</span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -181,6 +265,88 @@
         <div class="flex justify-end gap-4">
           <button (click)="confirmUpload()" class="bg-white text-gray-800 px-4 py-2 rounded">Upload</button>
           <button (click)="closeUploadModal()" class="bg-white text-gray-800 px-4 py-2 rounded">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Class Details Modal -->
+    <div *ngIf="showClassDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white shadow-lg p-8 rounded-lg w-[900px] max-w-full" style="min-height: 500px; min-width: 800px;">
+        <div class="flex flex-row items-start mb-6">
+          <div class="flex-1">
+            <h2 class="text-2xl text-black font-bold mb-2">{{selectedClass.class_name}}</h2>
+            <div class="text-gray-700 mb-2">{{selectedClass.description}}</div>
+          </div>
+          <div class="ml-8 flex flex-col items-start">
+            <span class="font-semibold text-black mb-2 text-lg">Intensity Chart</span>
+            <div class="flex flex-col gap-1">
+              <span class="text-600 font-semibold">Easy: Conditioning</span>
+              <span class="text-600 font-semibold">Medium: 50% to 70% power</span>
+              <span class="text-600 font-semibold">Hard: Full heavy Workout</span>
+            </div>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-black font-semibold mb-2">Class Routines & Intensity:</label>
+          <div class="grid grid-cols-4 gap-4 mb-2">
+            <div *ngFor="let day of ['Monday','Tuesday','Wednesday','Thursday']">
+              <label class="block text-black mb-1">{{day}}</label>
+              <input list="jargons" type="text" [(ngModel)]="selectedClass[day.toLowerCase()+'Routine']" class="w-full p-2 rounded border border-gray-300 mb-2" [readonly]="!isEditingClassDetails">
+              <div class="flex gap-2">
+                <label class="flex items-center gap-1">
+                  <input type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityEasy']" (change)="onDetailsIntensityChange($any(day.toLowerCase()),'Easy')" [disabled]="!isEditingClassDetails"> <span>Easy</span>
+                </label>
+                <label class="flex items-center gap-1">
+                  <input type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityMedium']" (change)="onDetailsIntensityChange($any(day.toLowerCase()),'Medium')" [disabled]="!isEditingClassDetails"> <span>Medium</span>
+                </label>
+                <label class="flex items-center gap-1">
+                  <input type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityHard']" (change)="onDetailsIntensityChange($any(day.toLowerCase()),'Hard')" [disabled]="!isEditingClassDetails"> <span>Hard</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-4 mb-2">
+            <div *ngFor="let day of ['Friday','Saturday','Sunday']">
+              <label class="block text-black mb-1">{{day}}</label>
+              <input list="jargons" type="text" [(ngModel)]="selectedClass[day.toLowerCase()+'Routine']" class="w-full p-2 rounded border border-gray-300 mb-2" [readonly]="!isEditingClassDetails">
+              <div class="flex gap-2">
+                <label class="flex items-center gap-1">
+                  <input type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityEasy']" [disabled]="!isEditingClassDetails"> <span>Easy</span>
+                </label>
+                <label class="flex items-center gap-1">
+                  <input type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityMedium']" [disabled]="!isEditingClassDetails"> <span>Medium</span>
+                </label>
+                <label class="flex items-center gap-1">
+                  <input type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityHard']" [disabled]="!isEditingClassDetails"> <span>Hard</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <datalist id="jargons">
+            <option value="fartlek (sprint straight, walk curve)"></option>
+            <option value="sprint"></option>
+            <option value="distance 3k"></option>
+            <option value="distance 5k"></option>
+          </datalist>
+        </div>
+        <div class="mb-4">
+          <h3 class="text-black font-semibold mb-2">Class Lists</h3>
+          <div class="grid grid-cols-4 gap-4">
+            <div *ngFor="let student of selectedClass.enrolledStudents">
+              <div class="bg-gray-100 rounded p-2 mb-2 border border-gray-300">
+                Name: {{student.name}}<br>
+                Code Redeemed: {{student.codeRedeemed}}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-between items-center mt-6">
+          <button class="px-4 py-2 rounded transition-colors duration-150" style="background:#735DA5;color:white" (click)="generateToken()" [ngClass]="'hover:bg-[#5a4785]'">Generate Token</button>
+          <div class="flex gap-2">
+            <button *ngIf="!isEditingClassDetails" (click)="isEditingClassDetails = true" class="px-4 py-2 rounded transition-colors duration-150" style="background:#735DA5;color:white" [ngClass]="'hover:bg-[#5a4785]'">Edit</button>
+            <button *ngIf="isEditingClassDetails" (click)="confirmEditClassDetails()" class="px-4 py-2 rounded transition-colors duration-150" style="background:#735DA5;color:white" [ngClass]="'hover:bg-[#5a4785]'">Confirm</button>
+            <button (click)="closeClassDetailsModal()" class="px-4 py-2 rounded transition-colors duration-150" style="background:gray;color:white" [ngClass]="'hover:bg-gray-700'">Cancel</button>
+          </div>
         </div>
       </div>
     </div>
