@@ -292,7 +292,7 @@
             <div *ngFor="let day of ['Monday','Tuesday','Wednesday','Thursday']">
               <label class="block text-black mb-1">{{day}}</label>
               <input list="jargons" type="text" [(ngModel)]="selectedClass[day.toLowerCase()+'Routine']" class="w-full p-2 rounded border border-gray-300 mb-2" [readonly]="!isEditingClassDetails">
-              <div class="flex gap-2">
+              <div class="flex gap-2 intensity-group">
                 <label class="flex items-center gap-1">
                   <input type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityEasy']" (change)="onDetailsIntensityChange($any(day.toLowerCase()),'Easy')" [disabled]="!isEditingClassDetails"> <span>Easy</span>
                 </label>
@@ -341,12 +341,72 @@
           </div>
         </div>
         <div class="flex justify-between items-center mt-6">
-          <button class="px-4 py-2 rounded transition-colors duration-150" style="background:#735DA5;color:white" (click)="generateToken()" [ngClass]="'hover:bg-[#5a4785]'">Generate Token</button>
+          <button class="px-4 py-2 rounded transition-colors duration-150" style="background:#735DA5;color:white" (click)="openTokenModal()" [ngClass]="'hover:bg-[#5a4785]'">Generate Token</button>
           <div class="flex gap-2">
             <button *ngIf="!isEditingClassDetails" (click)="isEditingClassDetails = true" class="px-4 py-2 rounded transition-colors duration-150" style="background:#735DA5;color:white" [ngClass]="'hover:bg-[#5a4785]'">Edit</button>
             <button *ngIf="isEditingClassDetails" (click)="confirmEditClassDetails()" class="px-4 py-2 rounded transition-colors duration-150" style="background:#735DA5;color:white" [ngClass]="'hover:bg-[#5a4785]'">Confirm</button>
             <button (click)="closeClassDetailsModal()" class="px-4 py-2 rounded transition-colors duration-150" style="background:gray;color:white" [ngClass]="'hover:bg-gray-700'">Cancel</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Token Generation Modal -->
+    <div *ngIf="showTokenModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white shadow-lg p-8 rounded-lg w-[600px] max-w-[90vw]">
+        <h2 class="text-2xl text-black font-bold mb-6">Generate Tokens</h2>
+        
+        <!-- Token Count Input -->
+        <div class="mb-6">
+          <label class="block text-black font-semibold mb-2">How many tokens would you like to generate?</label>
+          <input 
+            type="number" 
+            [(ngModel)]="tokenCount" 
+            min="1" 
+            max="100" 
+            class="w-full p-3 rounded border border-gray-300 text-lg"
+            placeholder="Enter number (1-100)">
+        </div>
+
+        <!-- Generate Button -->
+        <div class="mb-6">
+          <button 
+            (click)="generateTokens()" 
+            [disabled]="isGeneratingTokens || tokenCount < 1 || tokenCount > 100"
+            class="w-full px-6 py-3 rounded transition-colors duration-150 text-white font-semibold"
+            [ngClass]="{
+              'bg-[#735DA5] hover:bg-[#5a4785]': !isGeneratingTokens && tokenCount >= 1 && tokenCount <= 100,
+              'bg-gray-400 cursor-not-allowed': isGeneratingTokens || tokenCount < 1 || tokenCount > 100
+            }">
+            <span *ngIf="!isGeneratingTokens">Generate Tokens</span>
+            <span *ngIf="isGeneratingTokens">Generating...</span>
+          </button>
+        </div>
+
+        <!-- Generated Tokens Display -->
+        <div *ngIf="generatedTokens.length > 0" class="mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg text-black font-semibold">Generated Tokens:</h3>
+            <button 
+              (click)="copyAllTokensToClipboard()"
+              class="px-4 py-2 bg-[#735DA5] text-white rounded hover:bg-[#5a4785] transition-colors duration-150">
+              Copy All
+            </button>
+          </div>
+          <div class="space-y-2">
+            <div *ngFor="let token of generatedTokens" class="flex items-center justify-between p-3 bg-gray-100 rounded border border-gray-300">
+              <span class="font-mono text-lg text-black">{{token}}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Close Button -->
+        <div class="flex justify-end">
+          <button 
+            (click)="closeTokenModal()" 
+            class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors duration-150">
+            Close
+          </button>
         </div>
       </div>
     </div>

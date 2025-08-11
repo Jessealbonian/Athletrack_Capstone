@@ -170,6 +170,12 @@ export class ClassComponent implements OnInit {
   selectedClass: any = null;
   isEditingClassDetails = false;
 
+  // Token generation properties
+  showTokenModal = false;
+  tokenCount = 1;
+  generatedTokens: string[] = [];
+  isGeneratingTokens = false;
+
   onNavToggled(isOpen: boolean) {
     this.isNavOpen = isOpen;
   }
@@ -789,10 +795,10 @@ export class ClassComponent implements OnInit {
         } else {
           Swal.fire({ icon: 'error', title: 'Error', text: response.message || 'Failed to update class' });
         }
-        this.showClassDetailsModal = false;
-        this.selectedClass = null;
-        this.isEditingClassDetails = false;
-        this.fetchClasses();
+    this.showClassDetailsModal = false;
+    this.selectedClass = null;
+    this.isEditingClassDetails = false;
+    this.fetchClasses();
       },
       error: (error) => {
         console.error('Error updating class:', error);
@@ -804,5 +810,160 @@ export class ClassComponent implements OnInit {
   generateToken() {
     // TODO: Implement token generation logic
     alert('Generate Token feature coming soon!');
+  }
+
+  // Token generation methods
+  openTokenModal() {
+    this.showTokenModal = true;
+    this.tokenCount = 1;
+    this.generatedTokens = [];
+  }
+
+  closeTokenModal() {
+    this.showTokenModal = false;
+    this.tokenCount = 1;
+    this.generatedTokens = [];
+  }
+
+  generateTokens() {
+    if (!this.selectedClass || !this.currentAdminId) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Please select a class and ensure you are logged in.'
+      });
+      return;
+    }
+
+    if (this.tokenCount < 1 || this.tokenCount > 100) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Please enter a valid number between 1 and 100.'
+      });
+      return;
+    }
+
+    // First confirmation
+    Swal.fire({
+      icon: 'question',
+      title: 'Generate tokens?',
+      text: `Generate ${this.tokenCount} token(s) for this class?`,
+      showCancelButton: true,
+      confirmButtonText: 'Yes',
+      cancelButtonText: 'No'
+    }).then(first => {
+      if (!first.isConfirmed) return;
+
+      // Second confirmation
+      Swal.fire({
+        icon: 'warning',
+        title: 'Are you absolutely sure?',
+        html: `This will create <b>${this.tokenCount}</b> token(s).<br/>Proceed?`,
+        showCancelButton: true,
+        confirmButtonText: 'Confirm',
+        cancelButtonText: 'Cancel'
+      }).then(second => {
+        if (!second.isConfirmed) return;
+
+        this.isGeneratingTokens = true;
+        const tokenData = {
+          count: this.tokenCount,
+          class_id: this.selectedClass.class_id,
+          admin_id: this.currentAdminId
+        };
+
+        this.http.post(`${this.apiUrl}generateTokens`, tokenData).subscribe({
+          next: (response: any) => {
+            this.isGeneratingTokens = false;
+            if (response.status === 'success') {
+              this.generatedTokens = response.tokens;
+              Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: `${response.count} tokens generated successfully!`
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: response.message || 'Failed to generate tokens'
+              });
+            }
+          },
+          error: (error) => {
+            this.isGeneratingTokens = false;
+            console.error('Error generating tokens:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Failed to generate tokens. Please try again.'
+            });
+          }
+        });
+      });
+    });
+  }
+
+  copyTokenToClipboard(token: string) {
+    navigator.clipboard.writeText(token).then(() => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Copied!',
+        text: 'Token copied to clipboard',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    }).catch(() => {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = token;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Copied!',
+        text: 'Token copied to clipboard',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    });
+  }
+
+  copyAllTokensToClipboard() {
+    if (!this.generatedTokens || this.generatedTokens.length === 0) {
+      Swal.fire({ icon: 'info', title: 'No tokens', text: 'There are no tokens to copy yet.' });
+      return;
+    }
+
+    const text = this.generatedTokens.join('\n');
+
+    navigator.clipboard.writeText(text).then(() => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Copied!',
+        text: 'All tokens copied to clipboard',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    }).catch(() => {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Copied!',
+        text: 'All tokens copied to clipboard',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    });
   }
 }
