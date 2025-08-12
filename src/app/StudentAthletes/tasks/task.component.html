@@ -25,42 +25,32 @@
             </div>
         </div>
 
+        <!-- Filter Buttons -->
+        <div class="flex gap-2 mb-4">
+          <button (click)="setFilter('Pending')" [class.bg-[#735DA5]]="activeFilter==='Pending'" class="px-3 py-1 rounded text-white bg-gray-400">Pending</button>
+          <button (click)="setFilter('In Progress')" [class.bg-[#735DA5]]="activeFilter==='In Progress'" class="px-3 py-1 rounded text-white bg-gray-400">In Progress</button>
+          <button (click)="setFilter('Completed')" [class.bg-[#735DA5]]="activeFilter==='Completed'" class="px-3 py-1 rounded text-white bg-gray-400">Completed</button>
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="bg-gray-200 p-4 rounded-lg shadow">
-                <h3 class="font-semibold">Task Title 1</h3>
-                <p>Task Due Date: January 20, 2025</p>
-                <p>Task Due Time: 6:00 PM</p>
-                <p>Status: <span class="text-green-500">✔️ Completed</span></p>
-            </div>
-            <div class="bg-gray-200 p-4 rounded-lg shadow">
-                <h3 class="font-semibold">Task Title 2</h3>
-                <p>Task Due Date: February 15, 2025</p>
-                <p>Task Due Time: 3:00 PM</p>
-                <p>Status: <span class="text-yellow-500">⚠️ In Progress</span></p>
-            </div>
-            <div class="bg-gray-200 p-4 rounded-lg shadow">
-                <h3 class="font-semibold">Task Title 3</h3>
-                <p>Task Due Date: March 10, 2025</p>
-                <p>Task Due Time: 1:00 PM</p>
-                <p>Status: <span class="text-red-500">❌ Pending</span></p>
-            </div>
-            <div class="bg-gray-200 p-4 rounded-lg shadow">
-                <h3 class="font-semibold">Task Title 4</h3>
-                <p>Task Due Date: April 5, 2025</p>
-                <p>Task Due Time: 2:00 PM</p>
-                <p>Status: <span class="text-green-500">✔️ Completed</span></p>
-            </div>
-            <div class="bg-gray-200 p-4 rounded-lg shadow">
-                <h3 class="font-semibold">Task Title 5</h3>
-                <p>Task Due Date: May 20, 2025</p>
-                <p>Task Due Time: 4:00 PM</p>
-                <p>Status: <span class="text-yellow-500">⚠️ In Progress</span></p>
-            </div>
-            <div class="bg-gray-200 p-4 rounded-lg shadow">
-                <h3 class="font-semibold">Task Title 6</h3>
-                <p>Task Due Date: June 30, 2025</p>
-                <p>Task Due Time: 5:00 PM</p>
-                <p>Status: <span class="text-red-500">❌ Pending</span></p>
+            <div class="bg-gray-200 p-4 rounded-lg shadow transition-colors duration-150 hover:bg-gray-300 cursor-pointer" *ngFor="let task of filteredTasks">
+                <h3 class="font-semibold">{{ task.title }}</h3>
+                <p>Task Due Date: {{ task.date_due | date: 'MMMM d, y' }}</p>
+                <p>Task Due Time: {{ task.time_due }}</p>
+                <p>
+                  Status:
+                  <span [ngClass]="{
+                      'text-red-500': task.status === 'Pending',
+                      'text-yellow-500': task.status === 'In Progress',
+                      'text-green-500': task.status === 'Completed'
+                    }"
+                  >
+                    {{ task.status }}
+                  </span>
+                </p>
+                <div class="mt-2">
+                  <button class="text-sm text-white bg-[#735DA5] px-3 py-1 rounded" (click)="$event.stopPropagation(); openEditTask(task)">Edit Status</button>
+                </div>
             </div>
         </div>
     </div>
@@ -79,16 +69,22 @@
       <input type="text" [(ngModel)]="newTask.title" class="w-full p-2 rounded">
     </div>
 
+    <!-- Task Description -->
+    <div class="mb-4">
+      <label class="block text-white mb-2">Task Description</label>
+      <textarea [(ngModel)]="newTask.description" rows="4" class="w-full p-2 rounded"></textarea>
+    </div>
+
     <!-- Task Due Date -->
     <div class="mb-4">
       <label class="block text-white mb-2">Task Due Date</label>
-      <input type="date" [(ngModel)]="newTask.dueDate" class="w-full p-2 rounded">
+      <input type="date" [(ngModel)]="newTask.date_due" class="w-full p-2 rounded">
     </div>
 
     <!-- Task Due Time -->
     <div class="mb-4">
       <label class="block text-white mb-2">Task Due Time</label>
-      <input type="time" [(ngModel)]="newTask.dueTime" class="w-full p-2 rounded">
+      <input type="time" [(ngModel)]="newTask.time_due" class="w-full p-2 rounded">
     </div>
 
     <!-- Task Status -->
@@ -105,6 +101,32 @@
     <div class="flex justify-end gap-4">
       <button (click)="confirmAddTask()" class="bg-white text-gray-800 px-4 py-2 rounded">Confirm</button>
       <button (click)="closeAddTaskModal()" class="bg-white text-gray-800 px-4 py-2 rounded">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Status Modal -->
+<div *ngIf="showEditStatusModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-gray-500 p-6 rounded-lg w-[500px]">
+    <h2 class="text-xl text-white mb-4">Update Task Status</h2>
+
+    <div class="mb-4">
+      <label class="block text-white mb-2">Status</label>
+      <select [(ngModel)]="editStatus" class="w-full p-2 rounded">
+        <option value="Pending">Pending</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Completed">Completed</option>
+      </select>
+    </div>
+
+    <div class="mb-4" *ngIf="editStatus === 'Completed'">
+      <label class="block text-white mb-2">Upload Screenshot (required)</label>
+      <input type="file" accept="image/*" (change)="onEditFileChange($event)" class="w-full p-2 rounded bg-white" />
+    </div>
+
+    <div class="flex justify-end gap-4">
+      <button (click)="submitEditStatus()" class="bg-white text-gray-800 px-4 py-2 rounded">Save</button>
+      <button (click)="cancelEdit()" class="bg-white text-gray-800 px-4 py-2 rounded">Cancel</button>
     </div>
   </div>
 </div>

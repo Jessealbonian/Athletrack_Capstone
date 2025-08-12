@@ -6,6 +6,7 @@ import { CommunicationsComponent } from './Coaches/communications/communications
 import { LoginAdminComponent } from './Coaches/login-admin/login-admin.component';
 import { authGuard } from './services/auth.guard';
 import { RegisterAdminComponent } from './Coaches/register-admin/register-admin.component';
+import { RoutinehistoryComponent } from './Coaches/Routinehistory/Routinehistory.component';
 
 //import { ResidentsComponent } from './Coaches/residents/residents.component';
 //import { PaymentComponent } from './Coaches/payment/payment.component';
@@ -52,6 +53,7 @@ export const routes: Routes = [
   { path: 'events', component: EventsComponent,  title: 'Events' },  //canActivate: [authGuard],
   { path: 'Class', component: ClassComponent,  title: 'Class' }, //canActivate: [authGuard],
   { path: 'communications', component: CommunicationsComponent,  title: 'Communications' },  //canActivate: [authGuard],
+  { path: 'routinehistory', component: RoutinehistoryComponent,  title: 'Routine History' },
   { path: 'admin_login', component: LoginAdminComponent, title: 'Admin Login' },
   { path: 'register_admin', component: RegisterAdminComponent, title: 'Admin Register' },
 

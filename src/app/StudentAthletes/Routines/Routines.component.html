@@ -7,131 +7,261 @@
                 [class.lg:ml-20]="!isNavOpen">
 
                 <!-- Routines Section -->
-                <div class="p-6">
+                <div class="px-10">
                     <div class="flex justify-between items-center mb-6">
-                      <h1 class="text-2xl font-bold">Training Program for : (sport) Under Coach : (Coach name):</h1>
+                        <div>
+                            <h1 class="text-2xl font-bold" *ngIf="selectedClass">
+                                Class by Coach {{ selectedClass.coach_username }}
+                            </h1>
+                            <p class="text-gray-600 mt-1" *ngIf="selectedClass">
+                                {{ selectedClass.title }}
+                            </p>
+                            <p class="text-gray-500 text-sm" *ngIf="selectedClass && selectedClassDescription">
+                                {{ selectedClassDescription }}
+                            </p>
+                            <h1 class="text-2xl font-bold text-gray-400" *ngIf="!selectedClass">
+                                No classes enrolled yet
+                            </h1>
+                    </div>
+                        <!-- Copied layout from tasks: button + search -->
+                        <div class="flex items-center">
+                            <button class="bg-[#735DA5] text-white px-4 py-2 rounded-lg flex items-center gap-2" (click)="openEnrollmentModal()">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                            </svg>
+                                Add Classes
+                            </button>
+                            <div class="relative ml-4">
+                                <input type="text" placeholder="Search" class="border rounded-lg px-3 py-2" [(ngModel)]="searchTerm" />
+                                <button class="absolute right-2 top-2">
+                                    <i class="fas fa-search"></i>
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
-                    <!-- Routines Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <!-- Routine Card 1 -->
-                      <div class="bg-gray-300 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold">Jan 3</h3>
-                        <p class="text-sm text-gray-600">Task Routine</p>
-                        <p class="text-sm text-gray-600">Task Description</p>
-                        <div class="flex justify-between items-center mt-4">
-                          <span class="text-sm">Status:</span>
-                          <button (click)="openUploadModal()" class="text-gray-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                          </button>
+                    <!-- Weekly Routine Layout -->
+                    <div *ngIf="selectedClass && weekly" class="mt-6">
+                        <div class="flex justify-between items-start mb-6">
+                            <h3 class="font-semibold text-xl">Class Routines & Intensity:</h3>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="text-gray-800 font-semibold mb-2">Intensity Chart</div>
+                                <div class="text-sm text-gray-700">Easy: Conditioning</div>
+                                <div class="text-sm text-gray-700">Medium: 50% to 70% power</div>
+                                <div class="text-sm text-gray-700">Hard: Full heavy Workout</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Daily Routines Grid - Full Width -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 w-full">
+                            <div *ngFor="let day of ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']" 
+                                 class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-center mb-3">
+                                    <div class="text-gray-800 font-semibold text-lg">{{ day }}</div>
+                                    <button 
+                                        *ngIf="weekly[day] && weekly[day].task && !isRoutineCompletedToday(day)"
+                                        (click)="openRoutineCompletionModal(day, weekly[day])"
+                                        class="text-green-600 hover:text-green-700 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+                                    <div *ngIf="isRoutineCompletedToday(day)" class="text-green-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                        <input 
+                                        class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-50 text-gray-700" 
+                                        [value]="weekly[day] ? weekly[day].task : 'No routine'" 
+                                            readonly />
+                                    </div>
+                                    
+                                        <div class="space-y-2">
+                                    <label class="purple-checkbox flex items-center">
+                                        <input type="checkbox" [checked]="weekly[day] && weekly[day].intensity==='Easy'" disabled/>
+                                        <span class="ml-2 text-sm">Easy</span>
+                                            </label>
+                                    <label class="purple-checkbox flex items-center">
+                                        <input type="checkbox" [checked]="weekly[day] && weekly[day].intensity==='Medium'" disabled/>
+                                        <span class="ml-2 text-sm">Medium</span>
+                                            </label>
+                                    <label class="purple-checkbox flex items-center">
+                                        <input type="checkbox" [checked]="weekly[day] && weekly[day].intensity==='Hard'" disabled/>
+                                        <span class="ml-2 text-sm">Hard</span>
+                                            </label>
+                                        </div>
+                                
+                                <!-- Completion Status -->
+                                <div class="mt-3 pt-3 border-t border-gray-100">
+                                    <div *ngIf="isRoutineCompletedToday(day)" class="text-green-600 text-sm font-medium flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Completed Today
+                                    </div>
+                                    <div *ngIf="!isRoutineCompletedToday(day) && weekly[day] && weekly[day].task" class="text-gray-500 text-sm">
+                                        Click check icon to complete
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                       </div>
 
-                      <!-- Routine Card 2 -->
-                      <div class="bg-gray-300 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold">Jan 4</h3>
-                        <p class="text-sm text-gray-600">Task Routine</p>
-                        <p class="text-sm text-gray-600">Task Description</p>
-                        <div class="flex justify-between items-center mt-4">
-                          <span class="text-sm">Status:</span>
-                          <button (click)="openUploadModal()" class="text-gray-600">
+                    <!-- Fallback: list routines as cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" *ngIf="selectedClass && !weekly && classRoutines.length > 0">
+                        <div 
+                            *ngFor="let routine of classRoutines" 
+                            class="bg-gray-100 p-4 rounded-lg border-l-4"
+                            [class.border-green-500]="isRoutineCompletedToday(routine.id)"
+                            [class.border-yellow-500]="!isRoutineCompletedToday(routine.id)">
+                            
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-semibold">{{ routine.task_title }}</h3>
+                                <span 
+                                    class="px-2 py-1 text-xs rounded-full"
+                                    [class.bg-green-100]="isRoutineCompletedToday(routine.id)"
+                                    [class.text-green-800]="isRoutineCompletedToday(routine.id)"
+                                    [class.bg-yellow-100]="!isRoutineCompletedToday(routine.id)"
+                                    [class.text-yellow-800]="!isRoutineCompletedToday(routine.id)">
+                                    {{ getRoutineStatus(routine) }}
+                                </span>
+                      </div>
+
+                            <p class="text-sm text-gray-600 mb-2">{{ routine.task_description }}</p>
+                            <p class="text-sm text-gray-500 mb-3">Due: {{ routine.due_date }}</p>
+                            
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Status:</span>
+                                <button *ngIf="!isRoutineCompletedToday(routine.id)" (click)="openUploadModal(routine)" class="text-green-600 hover:text-green-700">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
                           </button>
+                                <span 
+                                    *ngIf="isRoutineCompletedToday(routine.id)"
+                                    class="text-green-600 text-sm font-medium">
+                                    ✓ Completed Today
+                                </span>
+                        </div>
                         </div>
                       </div>
 
-                      <!-- Routine Card 3 -->
-                      <div class="bg-gray-300 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold">Jan 5</h3>
-                        <p class="text-sm text-gray-600">Task Routine</p>
-                        <p class="text-sm text-gray-600">Task Description</p>
-                        <div class="flex justify-between items-center mt-4">
-                          <span class="text-sm">Status:</span>
-                          <button (click)="openUploadModal()" class="text-gray-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                          </button>
+                    <!-- No Classes Message -->
+                    <div *ngIf="enrolledClasses.length === 0" class="text-center py-8">
+                        <p class="text-gray-500 mb-4">You haven't enrolled in any classes yet.</p>
+                        <p class="text-gray-400 text-sm">Click "Add Classes" to get started with your training program.</p>
                         </div>
                       </div>
-
-                      <!-- Routine Card 4 -->
-                      <div class="bg-gray-300 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold">Jan 6</h3>
-                        <p class="text-sm text-gray-600">Task Routine</p>
-                        <p class="text-sm text-gray-600">Task Description</p>
-                        <div class="flex justify-between items-center mt-4">
-                          <span class="text-sm">Status:</span>
-                          <button (click)="openUploadModal()" class="text-gray-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-
-                      <!-- Routine Card 5 -->
-                      <div class="bg-gray-300 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold">Jan 7</h3>
-                        <p class="text-sm text-gray-600">Task Routine</p>
-                        <p class="text-sm text-gray-600">Task Description</p>
-                        <div class="flex justify-between items-center mt-4">
-                          <span class="text-sm">Status:</span>
-                          <button (click)="openUploadModal()" class="text-gray-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-
-                      <!-- Routine Card 6 -->
-                      <div class="bg-gray-300 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold">Jan 8</h3>
-                        <p class="text-sm text-gray-600">Task Routine</p>
-                        <p class="text-sm text-gray-600">Task Description</p>
-                        <div class="flex justify-between items-center mt-4">
-                          <span class="text-sm">Status:</span>
-                          <button (click)="openUploadModal()" class="text-gray-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                          </button>
                         </div>
                       </div>
                     </div>
                 </div>
                 
+<!-- Class Enrollment Modal -->
+<div *ngIf="showEnrollmentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg w-[400px]">
+        <h2 class="text-xl font-bold mb-4">Enroll in Class</h2>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Enter 7-Digit Token</label>
+            <input 
+                type="text" 
+                [(ngModel)]="enrollmentToken"
+                maxlength="7"
+                placeholder="Enter token here"
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <p class="text-xs text-gray-500 mt-1">Enter the 7-digit token provided by your coach</p>
             </div>
+
+        <div class="flex justify-end gap-3">
+            <button 
+                (click)="closeEnrollmentModal()" 
+                class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+                Cancel
+            </button>
+            <button 
+                (click)="enrollInClass()" 
+                [disabled]="isEnrolling || enrollmentToken.length !== 7"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ isEnrolling ? 'Enrolling...' : 'Enroll' }}
+            </button>
         </div>
     </div>
 </div>
 
-<!-- Upload Modal -->
-<div *ngIf="showUploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-gray-500 p-6 rounded-lg w-[500px]">
-    <h2 class="text-xl text-white mb-4">Upload Media</h2>
+<!-- Routine Completion Modal -->
+<div *ngIf="showRoutineCompletionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg w-[500px]">
+        <h2 class="text-xl font-bold mb-4">Complete Routine</h2>
     
     <div class="mb-4">
-      <label class="block text-white mb-2">Select File Type</label>
-      <select [(ngModel)]="uploadType" class="w-full p-2 rounded mb-4">
-        <option value="image">Image</option>
-        <option value="video">Video</option>
-      </select>
-
-      <input type="file" 
-             [accept]="uploadType === 'image' ? 'image/*' : 'video/*'"
-             (change)="onFileSelected($event)"
-             class="w-full p-2 rounded bg-white">
+            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                <h3 class="font-semibold text-lg mb-2">{{ selectedDay }}</h3>
+                <p class="text-gray-700 mb-2"><strong>Routine:</strong> {{ selectedRoutineData?.task }}</p>
+                <p class="text-gray-600"><strong>Intensity:</strong> {{ selectedRoutineData?.intensity }}</p>
+            </div>
+            
+            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Completion Image</label>
+            <input 
+                type="file" 
+                accept="image/*"
+                (change)="onFileSelected($event)"
+                class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50">
+            <p class="text-xs text-gray-500 mt-1">Upload an image to prove you completed this routine</p>
     </div>
 
-    <div class="flex justify-end gap-4">
-      <button (click)="confirmUpload()" class="bg-white text-gray-800 px-4 py-2 rounded">Upload</button>
-      <button (click)="closeUploadModal()" class="bg-white text-gray-800 px-4 py-2 rounded">Cancel</button>
+        <div class="flex justify-end gap-3">
+            <button 
+                (click)="closeRoutineCompletionModal()" 
+                class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+                Cancel
+            </button>
+            <button 
+                (click)="confirmRoutineCompletion()" 
+                [disabled]="!selectedFile"
+                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                Complete Routine
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Modal (Legacy) -->
+<div *ngIf="showUploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg w-[500px]">
+        <h2 class="text-xl font-bold mb-4">Complete Routine</h2>
+    
+    <div class="mb-4">
+            <p class="text-sm text-gray-600 mb-3">
+                <strong>{{ selectedRoutine?.task_title }}</strong><br>
+                {{ selectedRoutine?.task_description }}
+            </p>
+            
+            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Completion Image</label>
+            <input 
+                type="file" 
+                accept="image/*"
+             (change)="onFileSelected($event)"
+                class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50">
+            <p class="text-xs text-gray-500 mt-1">Upload an image to prove you completed this routine</p>
+    </div>
+
+        <div class="flex justify-end gap-3">
+            <button 
+                (click)="closeUploadModal()" 
+                class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+                Cancel
+            </button>
+            <button 
+                (click)="confirmUpload()" 
+                [disabled]="!selectedFile"
+                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                Complete Routine
+            </button>
     </div>
   </div>
 </div>

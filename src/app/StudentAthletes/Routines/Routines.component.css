@@ -18,7 +18,7 @@ body {
 
 .content-area {
     flex: 1;
-    padding: 20px;
+    padding: 10px;
     background-color: #f7fafc;
     display: flex;
     justify-content: center;
@@ -52,4 +52,46 @@ body {
 
 p {
     margin-top: 0.25rem;
+}
+
+/* Purple checkbox styling */
+.purple-checkbox input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #d1d5db;
+    border-radius: 3px;
+    background-color: white;
+    cursor: pointer;
+    position: relative;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+.purple-checkbox input[type="checkbox"]:checked {
+    background-color: #735DA5;
+    border-color: #735DA5;
+}
+
+.purple-checkbox input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: -2px;
+    left: 1px;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.purple-checkbox input[type="checkbox"]:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.purple-checkbox label {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
 }

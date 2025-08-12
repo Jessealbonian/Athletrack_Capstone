@@ -1,0 +1,157 @@
+<div class="flex h-screen flex-col bg-white">
+  <app-sidenav (navToggled)="onNavToggled($event)" class="fixed top-0 left-0 h-full z-10"></app-sidenav>
+  <app-navbar class="relative z-20"></app-navbar>
+  <div class="content-area">
+    <div class="dashboard-container">
+      <div class="transition-all duration-300 z-1 mt-16" [class.lg:ml-64]="isNavOpen" [class.lg:ml-20]="!isNavOpen">
+
+        <div class="p-6">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+            <h1 class="text-2xl font-bold">Routine History</h1>
+            <div class="flex items-center gap-3">
+              <input
+                [(ngModel)]="searchTerm"
+                type="text"
+                placeholder="Search by class, description or date"
+                class="border rounded-lg px-3 py-2"
+              />
+            </div>
+          </div>
+
+          <div *ngIf="isLoading" class="text-gray-600">Loading...</div>
+          <div *ngIf="!isLoading && errorMessage" class="text-red-600">{{ errorMessage }}</div>
+
+          <div *ngIf="!isLoading && !errorMessage">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div class="bg-gray-200 p-4 rounded-lg shadow hover:bg-gray-300 flex flex-col" *ngFor="let r of filteredRoutines">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 class="font-semibold">{{ r.class_name || 'Class' }} <span class="text-sm opacity-70">#{{ r.class_id }}</span></h3>
+                    <p class="text-sm text-gray-700" *ngIf="r.description">{{ r.description }}</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button class="text-sm underline" (click)="toggleExpand(r.class_id)">{{ expanded[r.class_id || 0] ? 'Hide' : 'View' }} details</button>
+                    <button class="text-sm text-white bg-[#735DA5] px-3 py-1 rounded" (click)="openMonthModal(r)">Open Month</button>
+                  </div>
+                </div>
+
+                <div class="mt-3 text-sm" *ngIf="expanded[r.class_id || 0]">
+                  <div class="grid grid-cols-1 gap-2">
+                    <div class="bg-white rounded p-2">
+                      <div class="font-semibold mb-1">Monday</div>
+                      <div class="text-gray-800">{{ r.mondayRoutine || '-' }}</div>
+                      <div class="text-xs text-gray-500">Intensity: {{ r.mondayintensity || '-' }}</div>
+                    </div>
+                    <div class="bg-white rounded p-2">
+                      <div class="font-semibold mb-1">Tuesday</div>
+                      <div class="text-gray-800">{{ r.tuesdayRoutine || '-' }}</div>
+                      <div class="text-xs text-gray-500">Intensity: {{ r.tuesdayintensity || '-' }}</div>
+                    </div>
+                    <div class="bg-white rounded p-2">
+                      <div class="font-semibold mb-1">Wednesday</div>
+                      <div class="text-gray-800">{{ r.wednesdayRoutine || '-' }}</div>
+                      <div class="text-xs text-gray-500">Intensity: {{ r.wednesdayintensity || '-' }}</div>
+                    </div>
+                    <div class="bg-white rounded p-2">
+                      <div class="font-semibold mb-1">Thursday</div>
+                      <div class="text-gray-800">{{ r.thursdayRoutine || '-' }}</div>
+                      <div class="text-xs text-gray-500">Intensity: {{ r.thursdayintensity || '-' }}</div>
+                    </div>
+                    <div class="bg-white rounded p-2">
+                      <div class="font-semibold mb-1">Friday</div>
+                      <div class="text-gray-800">{{ r.fridayRoutine || '-' }}</div>
+                      <div class="text-xs text-gray-500">Intensity: {{ r.fridayintensity || '-' }}</div>
+                    </div>
+                    <div class="bg-white rounded p-2">
+                      <div class="font-semibold mb-1">Saturday</div>
+                      <div class="text-gray-800">{{ r.saturdayRoutine || '-' }}</div>
+                      <div class="text-xs text-gray-500">Intensity: {{ r.saturdayintensity || '-' }}</div>
+                    </div>
+                    <div class="bg-white rounded p-2">
+                      <div class="font-semibold mb-1">Sunday</div>
+                      <div class="text-gray-800">{{ r.sundayRoutine || '-' }}</div>
+                      <div class="text-xs text-gray-500">Intensity: {{ r.sundayintensity || '-' }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="filteredRoutines.length === 0" class="text-gray-600 mt-8">
+              No routines found.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Month Modal -->
+<div *ngIf="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg w-[95vw] max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div class="flex items-center justify-between p-4 border-b">
+      <div>
+        <div class="text-lg font-semibold">{{ selectedClass?.class_name || 'Class' }} — Month View</div>
+        <div class="text-sm text-gray-600">{{ selectedYear }}-{{ selectedMonth < 10 ? '0' + selectedMonth : selectedMonth }}</div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button *ngIf="selectedDay" class="text-sm text-white bg-[#735DA5] px-3 py-1 rounded" (click)="openAttendeesModal()">View Attendees</button>
+        <button *ngIf="selectedDay" class="text-sm text-white bg-[#735DA5] px-3 py-1 rounded" (click)="generateMonthlyReport()">Create Report (Day)</button>
+        <button class="text-sm text-white bg-[#735DA5] px-3 py-1 rounded" (click)="generateWholeMonthReport()">Whole Month Report</button>
+        <button class="text-sm px-3 py-1 rounded border" (click)="closeMonthModal()">Close</button>
+      </div>
+    </div>
+
+    <div class="p-4 overflow-auto">
+      <div class="grid grid-cols-7 gap-2">
+        <button
+          *ngFor="let d of daysInMonth"
+          class="aspect-square min-h-[60px] rounded border flex items-center justify-center hover:bg-gray-100"
+          [class.bg-indigo-100]="selectedDay === d"
+          (click)="selectDay(d)"
+        >
+          {{ d }}
+        </button>
+      </div>
+
+      <div class="mt-4">
+        <div class="text-sm text-gray-700" *ngIf="!selectedDay">Select a day to view attendees.</div>
+        <div *ngIf="selectedDay">
+          <div class="flex items-center justify-between mb-2">
+            <div class="font-semibold">Attendees for {{ selectedYear }}-{{ selectedMonth < 10 ? '0' + selectedMonth : selectedMonth }}-{{ selectedDay && selectedDay < 10 ? ('0' + selectedDay) : selectedDay }}</div>
+          </div>
+          <div *ngIf="isLoadingAttendees" class="text-gray-600">Loading attendees...</div>
+          <div *ngIf="!isLoadingAttendees && attendeesForSelectedDay.length === 0" class="text-gray-600">No attendees recorded.</div>
+          <div *ngIf="!isLoadingAttendees && attendeesForSelectedDay.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <div class="flex items-center gap-3 p-2 border rounded" *ngFor="let a of attendeesForSelectedDay">
+              <img *ngIf="a.image" [src]="a.image" alt="photo" class="w-10 h-10 rounded-full object-cover" />
+              <div class="text-sm">{{ a.name }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Attendees Modal -->
+<div *ngIf="isAttendeesModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg w-[90vw] max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+    <div class="flex items-center justify-between p-4 border-b">
+      <div class="text-lg font-semibold">Attendees — {{ selectedYear }}-{{ selectedMonth < 10 ? '0' + selectedMonth : selectedMonth }}-{{ selectedDay && selectedDay < 10 ? ('0' + selectedDay) : selectedDay }}</div>
+      <button class="text-sm px-3 py-1 rounded border" (click)="closeAttendeesModal()">Close</button>
+    </div>
+    <div class="p-4 overflow-auto">
+      <div *ngIf="attendeesForSelectedDay.length === 0" class="text-gray-600">No attendees.</div>
+      <div *ngIf="attendeesForSelectedDay.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div class="border rounded p-3 flex flex-col items-center" *ngFor="let a of attendeesForSelectedDay">
+          <img *ngIf="a.image" [src]="a.image" alt="photo" class="w-24 h-24 rounded object-cover mb-2" />
+          <div class="text-sm text-center">{{ a.name }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

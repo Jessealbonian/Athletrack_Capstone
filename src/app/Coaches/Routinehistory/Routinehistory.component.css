@@ -1,0 +1,23 @@
+.content-area {
+  min-height: 100vh;
+}
+
+.dashboard-container {
+  width: 100%;
+}
+
+/* Rely on template's [class.lg:ml-64]/[class.lg:ml-20] for left spacing; no extra margin here */
+
+.aspect-square {
+  position: relative;
+}
+.aspect-square::before {
+  content: '';
+  display: block;
+  padding-top: 100%;
+}
+.aspect-square > * {
+  position: absolute;
+  inset: 0;
+}
+

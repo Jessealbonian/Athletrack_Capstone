@@ -1,20 +1,24 @@
 
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { SidenavComponent } from '../sidenav/sidenav.component';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { HttpClient } from '@angular/common/http';
-import { finalize } from 'rxjs';
 import { CommonModule } from '@angular/common';
-import { EventService } from './event.service';
-import { SafePipe } from './safe.pipe';
+import { FormsModule } from '@angular/forms';
+import { environment } from '../../../environments/environment';
+import { RoutinesService, ClassInfo, RoutineHistory } from '../../services/routines.service';
+import Swal from 'sweetalert2';
+import { finalize } from 'rxjs';
 
-
-interface NewsItem {
-  id?: number;
+interface TaskData {
+  task_id?: number;
+  user_id?: number | null;
   title: string;
-  description: string;
-  fullContent: string; // MUST DO - ADD IN MODAL DETIALS IN TABLES
-  image: string;
+  date_due: string;
+  time_due: string;
+  status: 'Pending' | 'In Progress' | 'Completed';
+  description?: string | null;
+  image?: string | null;
 }
 
 interface Event {
@@ -40,40 +44,47 @@ interface Vlog {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, SafePipe, SidenavComponent],
+  imports: [CommonModule, FormsModule, NavbarComponent, SidenavComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-
-export class DashboardComponent {
-  constructor(private http: HttpClient, private eventService: EventService) {}
-  activeSection: string = 'news';
-  showNewsDetails: boolean = false;
-  showBlogDetails: boolean = false;
-  showVlogDetails: boolean = false;
-  showEventDetails: boolean = false;
-  selectedNews: any = null;
-  selectedBlog: any = null;
-  selectedVlog: any = null;
-  selectedEvent: any = null;
+export class DashboardComponent implements OnInit {
   isNavOpen = true;
-
-  newsItems: NewsItem[] = [];
-  blogItems: any[] = [];
-  vlogItems: Vlog[] = [];
-  eventItems: any[] = [];
-  currentNewsPage = 0;
-  currentEventPage = 0;
-  currentBlogPage = 0;
-  currentVlogPage = 0;
-
-  isLoading = false;
+  activeSection: string = 'overview';
+  
+  // Task related properties
+  tasks: TaskData[] = [];
+  activeFilter: 'Pending' | 'In Progress' | 'Completed' = 'Pending';
+  
+  // Routine related properties
+  enrolledClasses: ClassInfo[] = [];
+  routineHistory: RoutineHistory[] = [];
+  studentUsername = '';
+  studentUserId: number | null = null;
+  
+  // Event related properties
   events: Event[] = [];
+  isLoading = false;
   defaultImageUrl = 'https://placehold.co/400x300?text=No+Image';
   apiBaseUrl = 'http://localhost/demoproj1';
 
+  constructor(
+    private http: HttpClient, 
+    private routinesService: RoutinesService
+  ) {}
+
   ngOnInit() {
-    this.fetchMediaData();
+    // Get user info from localStorage
+    const storedUsername = localStorage.getItem('username');
+    if (storedUsername && storedUsername.trim().length > 0) {
+      this.studentUsername = storedUsername;
+  }
+    const storedId = localStorage.getItem('hoa_user_id');
+    this.studentUserId = storedId ? Number(storedId) : null;
+    
+    // Load all data
+    this.fetchTasks();
+    this.loadEnrolledClasses();
     this.loadEvents();
   }
  
@@ -81,15 +92,109 @@ export class DashboardComponent {
     this.isNavOpen = isOpen;
   }
 
+  showSection(section: string) {
+    this.activeSection = section;
+  }
+
+  // Task Methods (from task.component.ts)
+  private fetchTasks() {
+    const url = `${environment.apiUrl}/routes.php?request=getTasks`;
+    console.log('Fetching tasks from:', url);
+    this.http.get<{ status?: string; payload?: TaskData[] } | any>(url).subscribe({
+      next: (res: any) => {
+        const raw = Array.isArray(res)
+          ? (res as TaskData[])
+          : (res?.payload ?? []);
+        this.tasks = this.sortByStatusPriority(raw);
+        console.log('Fetched tasks:', this.tasks);
+      },
+      error: (err) => {
+        console.error('Failed to load tasks', err);
+        this.tasks = [];
+      }
+    });
+  }
+
+  get filteredTasks(): TaskData[] {
+    const filtered = this.tasks.filter(t => this.activeFilter === t.status);
+    return this.sortByStatusPriority(filtered);
+  }
+
+  setFilter(filter: 'Pending' | 'In Progress' | 'Completed') {
+    this.activeFilter = filter;
+  }
+
+  private sortByStatusPriority(tasks: TaskData[]): TaskData[] {
+    const priority: Record<string, number> = { 'Pending': 1, 'In Progress': 2, 'Completed': 3 };
+    return [...tasks].sort((a, b) => {
+      const pa = priority[a.status] ?? 999;
+      const pb = priority[b.status] ?? 999;
+      if (pa !== pb) return pa - pb;
+      const ad = a.date_due ?? '';
+      const bd = b.date_due ?? '';
+      if (ad !== bd) return ad.localeCompare(bd);
+      const at = a.time_due ?? '';
+      const bt = b.time_due ?? '';
+      return at.localeCompare(bt);
+    });
+  }
+
+  // Routine Methods (from Routines.component.ts)
+  async loadEnrolledClasses() {
+    console.log('Loading classes for user_id:', this.studentUserId);
+    
+    try {
+      if (!this.studentUserId) {
+        throw new Error('Missing user_id');
+      }
+      const response = await this.routinesService.getEnrolledClassesById(this.studentUserId).toPromise();
+      
+      if (response && response.payload) {
+        this.enrolledClasses = response.payload || [];
+        console.log('Classes loaded successfully:', this.enrolledClasses);
+        this.loadRoutineHistory();
+      } else {
+        this.enrolledClasses = [];
+      }
+    } catch (error: any) {
+      console.error('Error loading classes:', error);
+      this.enrolledClasses = [];
+    }
+  }
+
+  async loadRoutineHistory() {
+    try {
+      const response = await this.routinesService.getRoutineHistory(this.studentUsername).toPromise();
+      if (response && response.payload) {
+        this.routineHistory = response.payload || [];
+      } else {
+        this.routineHistory = [];
+      }
+    } catch (error) {
+      console.error('Error loading history:', error);
+      this.routineHistory = [];
+    }
+  }
+
+  // Check if routine is completed today
+  isRoutineCompletedToday(classId: number): boolean {
+    const today = new Date().toDateString();
+    return this.routineHistory.some(history => 
+      history.class_id === classId && 
+      new Date(history.date_of_submission).toDateString() === today
+    );
+  }
+
+  // Event Methods (from dashboard.component.ts)
   loadEvents() {
     this.isLoading = true;
-    this.eventService.getEvents().pipe(
+    this.http.get(`${this.apiBaseUrl}/api/routes.php?request=getEvents`).pipe(
       finalize(() => {
         this.isLoading = false;
       })
     ).subscribe(response => {
-      if (response.status === 'success') {
-        this.events = (response.data || []).map((event: Event) => {
+      if (response && (response as any).status === 'success') {
+        this.events = ((response as any).data || []).map((event: Event) => {
           const imageUrl = event.image 
             ? (event.image.startsWith('http') ? event.image : `${this.apiBaseUrl}/api/uploads/events/${event.image}`)
             : this.defaultImageUrl;
@@ -98,164 +203,29 @@ export class DashboardComponent {
             image: imageUrl
           };
         });
-        
       }
     });
   }
 
-  
-
-
-  fetchMediaData() {
-    this.http.get('http://localhost/DEMO2/demoproject/api/get_media/news').subscribe((data: any) => {
-      this.newsItems = data.payload;
-    });
-
-    this.http.get('http://localhost/DEMO2/demoproject/api/get_media/events').subscribe((data: any) => {
-      this.eventItems = data.payload;
-    });
-
-    this.http.get('http://localhost/DEMO2/demoproject/api/get_media/blogs').subscribe((data: any) => {
-      this.blogItems = data.payload;
-    });
-
-    this.http.get('http://localhost/DEMO2/demoproject/api/get_media/vlogs').subscribe((data: any) => {
-      this.vlogItems = data.payload;
-    });
+  // Utility methods
+  getTaskCount(status: 'Pending' | 'In Progress' | 'Completed'): number {
+    return this.tasks.filter(task => task.status === status).length;
   }
 
-  showSection(section: string) {
-    this.activeSection = section;
+  getCompletedRoutinesToday(): number {
+    const today = new Date().toDateString();
+    return this.routineHistory.filter(history => 
+      new Date(history.date_of_submission).toDateString() === today
+    ).length;
   }
 
-  viewNewsDetails(news: any) {
-    this.selectedNews = news;
-    this.showNewsDetails = true;
+  getUpcomingEvents(): Event[] {
+    const today = new Date();
+    return this.events.filter(event => new Date(event.date) > today).slice(0, 3);
   }
 
-  viewBlogDetails(blog: any) {
-    this.selectedBlog = blog;
-    this.showBlogDetails = true;
-  }
-
-  viewVlogDetails(vlog: any) {
-    this.selectedVlog = vlog;
-    this.showVlogDetails = true;
-  }
-
-  viewEventDetails(event: any) {
-    this.selectedEvent = event;
-    this.showEventDetails = true;
-  }
-
-  closeNewsDetails() {
-    this.showNewsDetails = false;
-    this.selectedNews = null;
-  }
-
-  closeBlogDetails() {
-    this.showBlogDetails = false;
-    this.selectedBlog = null;
-  }
-
-  closeVlogDetails() {
-    this.showVlogDetails = false;
-    this.selectedVlog = null;
-  }
-
-  closeEventDetails() {
-    this.showEventDetails = false;
-    this.selectedEvent = null;
-  }
-
-  getVisibleItems(items: any[], currentPage: number): any[] {
-    const itemsPerPage = 3;
-    const startIndex = currentPage * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return items.slice(startIndex, endIndex);
-  }
-
-  nextNewsPage() {
-    if ((this.currentNewsPage + 1) * 3 < this.newsItems.length) {
-      this.currentNewsPage++;
-    }
-  }
-
-
-  getPageArray(items: any[]): number[] {
-    return Array(Math.ceil(items.length / 3)).fill(0);
-  }
-
-  goToNewsPage(pageIndex: number) {
-    this.currentNewsPage = pageIndex;
-  }
-
-  previousNewsPage() {
-    if (this.currentNewsPage > 0) {
-      this.currentNewsPage--;
-    }
-  }
-
-  previousEventPage() {
-    if (this.currentEventPage > 0) this.currentEventPage--;
-  }
-
-  nextEventPage() {
-    if ((this.currentEventPage + 1) * 3 < this.eventItems.length) this.currentEventPage++;
-  }
-
-  goToEventPage(page: number) {
-    this.currentEventPage = page;
-  }
-
-  previousBlogPage() {
-    if (this.currentBlogPage > 0) this.currentBlogPage--;
-  }
-
-  nextBlogPage() {
-    if ((this.currentBlogPage + 1) * 3 < this.blogItems.length) this.currentBlogPage++;
-  }
-
-  goToBlogPage(page: number) {
-    this.currentBlogPage = page;
-  }
-
-  previousVlogPage() {
-    if (this.currentVlogPage > 0) this.currentVlogPage--;
-  }
-
-  nextVlogPage() {
-    if ((this.currentVlogPage + 1) * 3 < this.vlogItems.length) this.currentVlogPage++;
-  }
-
-  goToVlogPage(page: number) {
-    this.currentVlogPage = page;
-  }
-
-  fetchVlogs() {
-    this.http.get('http://localhost/DEMO2/demoproject/api/get_vlogs')
-      .subscribe({
-        next: (response: any) => {
-          if (response.status === 'success') {
-            this.vlogItems = response.payload.map((vlog: any) => ({
-              ...vlog,
-              thumbnail_url: `https://img.youtube.com/vi/${this.getYoutubeId(vlog.video_url)}/maxresdefault.jpg`,
-              video_url: this.getEmbedUrl(vlog.video_url)
-            }));
-          }
-        },
-        error: (error) => console.error('Error fetching vlogs:', error)
-      });
-  }
-
-  private getYoutubeId(url: string): string {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : '';
-  }
-
-  private getEmbedUrl(url: string): string {
-    const videoId = this.getYoutubeId(url);
-    return `https://www.youtube.com/embed/${videoId}`;
+  // Get routine history for a specific class
+  getRoutineHistoryForClass(classId: number): RoutineHistory[] {
+    return this.routineHistory.filter(history => history.class_id === classId).slice(0, 3);
   }
 }

@@ -31,6 +31,10 @@ export class NavbarComponent implements OnInit {
         console.log("This is the User Id", user);
         this.userId = user.id;
         console.log("This is the User Id", this.userId);
+        // Export HOA user id for other components
+        try {
+          localStorage.setItem('hoa_user_id', String(this.userId));
+        } catch (e) {}
         this.getProfile(this.userId);
       } else {
         this.profile = null; // No user logged in
@@ -61,8 +65,14 @@ export class NavbarComponent implements OnInit {
           this.profile = resp.data[0];
           this.email = this.profile.email; // Store email instead of username
           localStorage.setItem('email', this.email); // Store email in localStorage
+          // Export username for use in other components (e.g., class enrollment)
+          this.name = this.profile.username;
+          if (this.name) {
+            localStorage.setItem('username', this.name);
+          }
           console.log("Profile data:", this.profile);
           console.log("Email:", this.email);
+          console.log("Username exported to localStorage:", this.name);
         } else {
           console.error("No profile data found for userId:", userId);
         }
