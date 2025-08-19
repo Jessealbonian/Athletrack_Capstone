@@ -10,7 +10,8 @@ import { isLocalStorageAvailable } from './environment.utils';
 })
 export class AuthService {
 // private baseUrl = 'http://localhost/todolistapi/api';
-private baseUrl = 'http://localhost/DEMO2/demoproject/api';
+//private baseUrl = 'http://localhost/DEMO2/demoproject/api';
+private baseUrl = 'https://capstonebackend-9wrj.onrender.com'; // Updated to match your local setup
 private tokenKey = 'jwt';
 private currentUserSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
   apiUrl: any;

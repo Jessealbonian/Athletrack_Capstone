@@ -180,7 +180,7 @@ export class ClassComponent implements OnInit {
     this.isNavOpen = isOpen;
   }
 
-  private apiUrl = 'http://localhost/DEMO2/demoproject/api/';
+  private apiUrl = 'https://capstonebackend-9wrj.onrender.com';
 
   constructor(private http: HttpClient, private auth: AuthService) {}
 
