@@ -617,7 +617,7 @@ export class ClassComponent implements OnInit {
 
     console.log('Sending class data to API:', classData);
 
-    this.http.post(`${this.apiUrl}addClass`, classData).subscribe({
+    this.http.post(`${this.apiUrl}/addClass`, classData).subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
           Swal.fire({
@@ -873,7 +873,7 @@ export class ClassComponent implements OnInit {
           admin_id: this.currentAdminId
         };
 
-        this.http.post(`${this.apiUrl}generateTokens`, tokenData).subscribe({
+        this.http.post(`${this.apiUrl}/generateTokens`, tokenData).subscribe({
           next: (response: any) => {
             this.isGeneratingTokens = false;
             if (response.status === 'success') {
