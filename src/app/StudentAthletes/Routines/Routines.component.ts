@@ -46,6 +46,8 @@ export class RoutinesComponent implements OnInit {
   // Loading states
   isLoading = false;
   isEnrolling = false;
+  isLoadingClasses = false;
+  isLoadingRoutines = false;
 
   constructor(private routinesService: RoutinesService) {}
 
@@ -86,7 +88,12 @@ export class RoutinesComponent implements OnInit {
     
     if (!this.enrollmentToken || this.enrollmentToken.length !== 7) {
       console.log('❌ Token validation failed - invalid length or empty');
-      alert('Please enter a valid 7-digit token');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Token',
+        text: 'Please enter a valid 7-digit token',
+        confirmButtonColor: '#735DA5'
+      });
       return;
     }
     
@@ -118,16 +125,19 @@ export class RoutinesComponent implements OnInit {
           text: 'Are you sure you want to redeem this one-time token?',
           showCancelButton: true,
           confirmButtonText: 'Yes, redeem',
-          cancelButtonText: 'Cancel'
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#735DA5',
+          cancelButtonColor: '#6B7280'
         });
         if (confirmSwal.isConfirmed) {
           console.log('✅ User confirmed enrollment');
           await Swal.fire({
             icon: 'success',
-            title: 'Enrolled',
-            text: 'Successfully enrolled in class!',
-            timer: 1600,
-            showConfirmButton: false
+            title: 'Enrolled Successfully!',
+            text: 'You have been enrolled in the class!',
+            timer: 2000,
+            showConfirmButton: false,
+            confirmButtonColor: '#735DA5'
           });
           this.closeEnrollmentModal();
           this.loadEnrolledClasses();
@@ -139,8 +149,9 @@ export class RoutinesComponent implements OnInit {
         console.log('❌ Error message:', result.message);
         await Swal.fire({
           icon: 'error',
-          title: 'Enrollment failed',
+          title: 'Enrollment Failed',
           text: result.message || 'Invalid token or enrollment failed',
+          confirmButtonColor: '#735DA5'
         });
       }
     } catch (error: any) {
@@ -160,8 +171,21 @@ export class RoutinesComponent implements OnInit {
         console.log('- Nested error message:', error.error?.message);
       }
       
-      const msg = 'Enrollment failed. Please try again.';
-      await Swal.fire({ icon: 'error', title: 'Error', text: msg });
+      let errorMessage = 'Enrollment failed. Please try again.';
+      if (error?.status === 0) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error?.status === 404) {
+        errorMessage = 'Service not found. Please contact support.';
+      } else if (error?.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      
+      await Swal.fire({ 
+        icon: 'error', 
+        title: 'Connection Error', 
+        text: errorMessage,
+        confirmButtonColor: '#735DA5'
+      });
     } finally {
       this.isEnrolling = false;
       console.log('=== enrollInClass END ===');
@@ -172,6 +196,8 @@ export class RoutinesComponent implements OnInit {
   async loadEnrolledClasses() {
     console.log('=== loadEnrolledClasses START ===');
     console.log('Loading classes for user_id:', this.studentUserId);
+    
+    this.isLoadingClasses = true;
     
     try {
       console.log('🚀 Making API call to getEnrolledClasses...');
@@ -204,18 +230,36 @@ export class RoutinesComponent implements OnInit {
       console.log('- Error type:', typeof error);
       console.log('- Error message:', error?.message);
       this.enrolledClasses = [];
-      const msg = 'Failed to load classes';
-      if (typeof (window as any).Swal !== 'undefined') {
-        (window as any).Swal.fire({ icon: 'error', title: 'Error', text: msg });
+      
+      // Don't show error for CORS issues - just log them
+      if (error?.status === 0 || error?.message?.includes('CORS')) {
+        console.log('CORS or network error detected - not showing user error');
+      } else {
+        let errorMessage = 'Failed to load classes';
+        if (error?.status === 404) {
+          errorMessage = 'Classes service not found';
+        } else if (error?.status === 500) {
+          errorMessage = 'Server error loading classes';
+        }
+        
+        Swal.fire({ 
+          icon: 'error', 
+          title: 'Loading Error', 
+          text: errorMessage,
+          confirmButtonColor: '#735DA5'
+        });
       }
+    } finally {
+      this.isLoadingClasses = false;
+      console.log('=== loadEnrolledClasses END ===');
     }
-    
-    console.log('=== loadEnrolledClasses END ===');
   }
 
   // Select a class and load its routines
   async selectClass(classInfo: ClassInfo) {
     this.selectedClass = classInfo;
+    this.isLoadingRoutines = true;
+    
     try {
       // fetch class meta (title/description/coach)
       const meta = await this.routinesService.getClassInfo(classInfo.id).toPromise();
@@ -243,6 +287,16 @@ export class RoutinesComponent implements OnInit {
       console.error('Error loading routines:', error);
       this.classRoutines = [];
       this.weekly = null;
+      
+      // Show user-friendly error
+      Swal.fire({
+        icon: 'warning',
+        title: 'Routines Unavailable',
+        text: 'Unable to load routines for this class. Please try again later.',
+        confirmButtonColor: '#735DA5'
+      });
+    } finally {
+      this.isLoadingRoutines = false;
     }
   }
 
@@ -281,7 +335,8 @@ export class RoutinesComponent implements OnInit {
       Swal.fire({
         icon: 'warning',
         title: 'Missing Information',
-        text: 'Please select a file and ensure routine data is available.'
+        text: 'Please select a file and ensure routine data is available.',
+        confirmButtonColor: '#735DA5'
       });
       return;
     }
@@ -310,7 +365,8 @@ export class RoutinesComponent implements OnInit {
         title: 'Routine Completed!',
         text: `${this.selectedDay} routine completed successfully!`,
         timer: 2000,
-        showConfirmButton: false
+        showConfirmButton: false,
+        confirmButtonColor: '#735DA5'
       });
       
       this.closeRoutineCompletionModal();
@@ -320,7 +376,8 @@ export class RoutinesComponent implements OnInit {
       await Swal.fire({
         icon: 'error',
         title: 'Upload Failed',
-        text: 'Failed to complete routine. Please try again.'
+        text: 'Failed to complete routine. Please try again.',
+        confirmButtonColor: '#735DA5'
       });
     }
   }
@@ -384,7 +441,12 @@ export class RoutinesComponent implements OnInit {
 
   async confirmUpload() {
     if (!this.selectedFile || !this.selectedRoutine) {
-      alert('Please select a file and routine');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Information',
+        text: 'Please select a file and routine',
+        confirmButtonColor: '#735DA5'
+      });
       return;
     }
 
@@ -396,12 +458,24 @@ export class RoutinesComponent implements OnInit {
         this.studentUserId
       ).toPromise();
       
-      alert('Routine completed successfully!');
+      await Swal.fire({
+        icon: 'success',
+        title: 'Routine Completed!',
+        text: 'Routine completed successfully!',
+        timer: 2000,
+        showConfirmButton: false,
+        confirmButtonColor: '#735DA5'
+      });
       this.closeUploadModal();
       this.loadRoutineHistory();
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to complete routine. Please try again.');
+      await Swal.fire({
+        icon: 'error',
+        title: 'Upload Failed',
+        text: 'Failed to complete routine. Please try again.',
+        confirmButtonColor: '#735DA5'
+      });
     }
   }
 
@@ -411,5 +485,15 @@ export class RoutinesComponent implements OnInit {
       return 'Completed';
     }
     return 'Pending';
+  }
+
+  // Get filtered classes based on search term
+  get filteredClasses(): ClassInfo[] {
+    if (!this.searchTerm) return this.enrolledClasses;
+    return this.enrolledClasses.filter(cls => 
+      cls.title?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      cls.coach_username?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      cls.sport?.toLowerCase().includes(this.searchTerm.toLowerCase())
+    );
   }
 }
