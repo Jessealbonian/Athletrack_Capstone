@@ -101,6 +101,6 @@ export class RoutinesService {
          }
 
   getAllEnrolledClasses() {
-    return this.http.get<any>('https://capstonebackend-9wrj.onrender.com/api/enrolled-classes');
+    return this.http.get<any>('https://capstonebackend-9wrj.onrender.com/api/routes.php?request=getAllEnrolledClasses');
   }
 }
