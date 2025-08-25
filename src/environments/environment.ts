@@ -1,7 +1,7 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://capstonebackend-9wrj.onrender.com/api',
-  //apiUrl: 'http://localhost/DEMO2/demoproject/api',  
+  //apiUrl: 'https://capstonebackend-9wrj.onrender.com/api',
+  apiUrl: 'http://localhost/DEMO2/demoproject/api',  
   
   // Updated to match your local setup
   // Appwrite Cloud configuration for connectivity checks and SDK initialization

@@ -216,9 +216,7 @@ export class RoutinesComponent implements OnInit {
       
       // Filter by userId on the frontend
       if (response && response.payload) {
-        this.enrolledClasses = response.payload.filter(
-          (cls: any) => cls.user_id === this.studentUserId
-        );
+        this.enrolledClasses = response.payload || [];
         console.log('✅ Classes loaded successfully:', this.enrolledClasses);
         if (this.enrolledClasses.length > 0) {
           // Auto-load first class (no dropdown)
