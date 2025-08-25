@@ -204,7 +204,8 @@ export class RoutinesComponent implements OnInit {
       if (!this.studentUserId) {
         throw new Error('Missing user_id');
       }
-      const response = await this.routinesService.getAllEnrolledClasses().toPromise();
+      const response = await this.routinesService.getEnrolledClassesById(this.studentUserId).toPromise();
+      //const response = await this.routinesService.getAllEnrolledClasses().toPromise();
       
       console.log('📥 API Response for enrolled classes:');
       console.log('- Full response:', response);
