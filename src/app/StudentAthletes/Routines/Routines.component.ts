@@ -204,7 +204,7 @@ export class RoutinesComponent implements OnInit {
       if (!this.studentUserId) {
         throw new Error('Missing user_id');
       }
-      const response = await this.routinesService.getEnrolledClassesById(this.studentUserId).toPromise();
+      const response = await this.routinesService.getAllEnrolledClasses().toPromise();
       
       console.log('📥 API Response for enrolled classes:');
       console.log('- Full response:', response);
@@ -213,8 +213,11 @@ export class RoutinesComponent implements OnInit {
       console.log('- Payload type:', typeof response?.payload);
       console.log('- Payload length:', response?.payload?.length);
       
+      // Filter by userId on the frontend
       if (response && response.payload) {
-        this.enrolledClasses = response.payload || [];
+        this.enrolledClasses = response.payload.filter(
+          (cls: any) => cls.user_id === this.studentUserId
+        );
         console.log('✅ Classes loaded successfully:', this.enrolledClasses);
         if (this.enrolledClasses.length > 0) {
           // Auto-load first class (no dropdown)
