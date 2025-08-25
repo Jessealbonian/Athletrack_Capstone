@@ -53,27 +53,32 @@ export class RoutinesService {
            });
          }
 
-           // Get enrolled classes for a student
+           // Get all enrolled classes (router-based)
+         getAllEnrolledClasses(): Observable<any> {
+           return this.http.get<any>(`${this.apiUrl}/routes.php?request=getAllEnrolledClasses`);
+         }
+
+           // Get enrolled classes by user ID (router-based)
          getEnrolledClassesById(userId: number): Observable<any> {
-           return this.http.get<any>(`${this.apiUrl}/enrolled-classes/id/${userId}`);
+           return this.http.get<any>(`${this.apiUrl}/routes.php?request=enrolled-classes/id/${userId}`);
          }
 
          getUserClassRoutinesById(userId: number): Observable<any> {
-           return this.http.get<any>(`${this.apiUrl}/user-class-routines/id/${userId}`);
+           return this.http.get<any>(`${this.apiUrl}/routes.php?request=user-class-routines/id/${userId}`);
          }
        
-         // Get routines for a specific class
+         // Get routines for a specific class (router-based)
          getClassRoutines(classId: number): Observable<any> {
-           return this.http.get<any>(`${this.apiUrl}/class-routines/${classId}`);
+           return this.http.get<any>(`${this.apiUrl}/routes.php?request=class-routines/${classId}`);
           }
 
          getClassInfo(classId: number): Observable<any> {
-           return this.http.get<any>(`${this.apiUrl}/class-info/${classId}`);
+           return this.http.get<any>(`${this.apiUrl}/routes.php?request=class-info/${classId}`);
          }
        
-         // Get routine history for a student
+         // Get routine history for a student (router-based)
          getRoutineHistory(studentUsername: string): Observable<any> {
-           return this.http.get<any>(`${this.apiUrl}/routine-history/${studentUsername}`);
+           return this.http.get<any>(`${this.apiUrl}/routes.php?request=routine-history/${studentUsername}`);
          }
 
            // Submit routine completion
@@ -100,7 +105,4 @@ export class RoutinesService {
            return this.http.get<any>(`${this.apiUrl}/check-today/${routineId}/${studentUsername}`);
          }
 
-  getAllEnrolledClasses() {
-    return this.http.get<any>('https://capstonebackend-9wrj.onrender.com/api/routes.php?request=getAllEnrolledClasses');
-  }
 }
