@@ -80,6 +80,10 @@ export class LoginComponent implements OnInit {
     this.router.navigate(['/register']);
   }
 
+  navigateToAdmin() {
+    this.router.navigate(['/login-admin']);
+  }
+
   openForgotPasswordModal() {
     this.showForgotPasswordModal = true;
   }
