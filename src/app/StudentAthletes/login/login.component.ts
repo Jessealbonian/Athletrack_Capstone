@@ -23,6 +23,8 @@ export class LoginComponent implements OnInit {
   resetEmail: string = '';
   error: string = '';
   successMessage: string = '';
+  showBuffer = false;
+  bufferMessage = '';
 
   constructor(
     private router: Router,
@@ -81,7 +83,7 @@ export class LoginComponent implements OnInit {
   }
 
   navigateToAdmin() {
-    this.router.navigate(['/login-admin']);
+    this.router.navigate(['/login_admin']);
   }
 
   openForgotPasswordModal() {
@@ -91,5 +93,23 @@ export class LoginComponent implements OnInit {
   onResetPasswordSubmit() {
     console.log('Password reset requested for:', this.resetEmail);
     this.showForgotPasswordModal = false;
+  }
+
+  showAdminBuffer() {
+    this.showBuffer = true;
+    this.bufferMessage = 'Switching to admin...';
+    setTimeout(() => {
+      this.showBuffer = false;
+      this.router.navigate(['/login_admin']);
+    }, Math.floor(Math.random() * 3000) + 2000); // 2-5 seconds
+  }
+
+  showRegisterBuffer() {
+    this.showBuffer = true;
+    this.bufferMessage = 'Switching to register...';
+    setTimeout(() => {
+      this.showBuffer = false;
+      this.router.navigate(['/register']);
+    }, Math.floor(Math.random() * 3000) + 2000); // 2-5 seconds
   }
 }
