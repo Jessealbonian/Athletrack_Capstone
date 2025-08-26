@@ -18,7 +18,7 @@ export class LoginAdminComponent {
   showPassword: boolean = false;
   showBuffer = false;
   bufferMessage = '';
-  
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -70,6 +70,19 @@ export class LoginAdminComponent {
           }
         });
     }
+  }
+
+  navigateToRegister() {
+    this.router.navigate(['/register_admin']);
+  }
+
+  showRegisterBuffer() {
+    this.showBuffer = true;
+    this.bufferMessage = 'Switching to register...';
+    setTimeout(() => {
+      this.showBuffer = false;
+      this.router.navigate(['/register_admin']);
+    }, Math.floor(Math.random() * 3000) + 2000); // 2-5 seconds
   }
 
   showStudentBuffer() {
