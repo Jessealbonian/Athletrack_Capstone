@@ -18,7 +18,7 @@ export class LoginAdminComponent {
   showPassword: boolean = false;
   showBuffer = false;
   bufferMessage = '';
-
+  
   constructor(
     private fb: FormBuilder,
     private router: Router,

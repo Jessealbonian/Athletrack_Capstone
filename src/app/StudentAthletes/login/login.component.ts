@@ -100,7 +100,7 @@ export class LoginComponent implements OnInit {
     this.bufferMessage = 'Switching to admin...';
     setTimeout(() => {
       this.showBuffer = false;
-      this.router.navigate(['/login_admin']);
+      this.router.navigate(['/admin_login']);
     }, Math.floor(Math.random() * 3000) + 2000); // 2-5 seconds
   }
 
