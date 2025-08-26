@@ -16,6 +16,8 @@ export class LoginAdminComponent {
   error: string = '';
   loading = false;
   showPassword: boolean = false;
+  showBuffer = false;
+  bufferMessage = '';
 
   constructor(
     private fb: FormBuilder,
@@ -68,5 +70,14 @@ export class LoginAdminComponent {
           }
         });
     }
+  }
+
+  showStudentBuffer() {
+    this.showBuffer = true;
+    this.bufferMessage = 'Switching to student...';
+    setTimeout(() => {
+      this.showBuffer = false;
+      this.router.navigate(['/login']);
+    }, Math.floor(Math.random() * 3000) + 2000); // 2-5 seconds
   }
 }  

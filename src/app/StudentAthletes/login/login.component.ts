@@ -83,7 +83,7 @@ export class LoginComponent implements OnInit {
   }
 
   navigateToAdmin() {
-    this.router.navigate(['/login_admin']);
+    this.router.navigate(['/admin_login']);
   }
 
   openForgotPasswordModal() {
