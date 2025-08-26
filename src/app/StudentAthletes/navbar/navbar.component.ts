@@ -52,7 +52,7 @@ export class NavbarComponent implements OnInit {
   }
 
   getProfile(userId: number) {
-    const url = `https://capstonebackend-9wrj.onrender.com/api/getHoaUserProf/${userId}`;
+    const url = `https://capstonebackend-9wrj.onrender.com/api/getHoaUserProf?userId=${userId}`;
     this.http.get(url).pipe(
       catchError(error => {
         console.error("Error fetching profile:", error);
