@@ -373,9 +373,8 @@ export class RoutinesComponent implements OnInit {
       });
       const response = await this.routinesService.submitRoutineCompletion(
         this.selectedClass.id,
-        this.studentUsername,
-        this.selectedFile,
         this.studentUserId,
+        this.selectedFile,
         `${this.selectedDay}: ${this.selectedRoutineData?.task}`,
         dbIntensity
       ).toPromise();
@@ -496,9 +495,8 @@ export class RoutinesComponent implements OnInit {
       });
       const response = await this.routinesService.submitRoutineCompletion(
         this.selectedRoutine.id,
-        this.studentUsername,
-        this.selectedFile,
-        this.studentUserId
+        this.studentUserId,
+        this.selectedFile
       ).toPromise();
       console.log('[Routine Upload] API response:', response);
       if (response && response.status !== 'success') {

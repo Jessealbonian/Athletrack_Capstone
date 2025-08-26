@@ -82,11 +82,12 @@ export class RoutinesService {
          }
 
            // Submit routine completion
-         submitRoutineCompletion(routineId: number, studentUsername: string, imageFile: File, userId?: number | null, routine?: string, intensity?: string): Observable<any> {
+         submitRoutineCompletion(routineId: number, userId?: number | null, imageFile?: File, routine?: string, intensity?: string): Observable<any> {
            const formData = new FormData();
            formData.append('routine_id', routineId.toString());
-           formData.append('image', imageFile);
-           formData.append('student_username', studentUsername);
+           if (imageFile) {
+             formData.append('image', imageFile);
+           }
            if (userId != null) {
              formData.append('user_id', String(userId));
            }
