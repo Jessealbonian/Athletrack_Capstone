@@ -221,25 +221,41 @@ export class taskComponent implements OnInit {
       return;
     }
 
-    // When image is provided, use FormData for upload
-    if (this.editImage) {
-      const form = new FormData();
-      form.append('task_id', String(this.editingTaskId || ''));
-      form.append('status', this.editStatus);
-      form.append('image', this.editImage);
-      this.http.post(url, form).subscribe({
-        next: (res) => {
-          console.log('Status update with image response:', res);
-          this.cancelEdit();
-          this.fetchTasks();
-          Swal.fire({
-            icon: 'success',
-            title: 'Task completed',
-            text: 'Screenshot uploaded successfully.',
-            timer: 1400,
-            showConfirmButton: false
-          });
-        },
+            // When image is provided, use FormData for upload
+        if (this.editImage) {
+          const form = new FormData();
+          form.append('task_id', String(this.editingTaskId || ''));
+          form.append('status', this.editStatus);
+          form.append('image', this.editImage);
+          this.http.post(url, form).subscribe({
+            next: (res: any) => {
+              console.log('Status update with image response:', res);
+              this.cancelEdit();
+              this.fetchTasks();
+              
+              // Show success message with image if available
+              if (res.image_url) {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Task completed',
+                  text: 'Screenshot uploaded successfully!',
+                  imageUrl: res.image_url,
+                  imageWidth: 300,
+                  imageHeight: 200,
+                  imageAlt: 'Uploaded Task Image',
+                  timer: 3000,
+                  showConfirmButton: false
+                });
+              } else {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Task completed',
+                  text: 'Screenshot uploaded successfully.',
+                  timer: 1400,
+                  showConfirmButton: false
+                });
+              }
+            },
         error: (err) => {
           console.error('Failed to update task status with image', err);
           Swal.fire({
@@ -283,5 +299,18 @@ export class taskComponent implements OnInit {
     this.editingTaskId = null;
     this.editStatus = 'Pending';
     this.editImage = null;
+  }
+
+  // Open image modal to display uploaded task screenshots
+  openImageModal(imageUrl: string, taskTitle: string) {
+    Swal.fire({
+      title: `Screenshot for: ${taskTitle}`,
+      imageUrl: imageUrl,
+      imageWidth: 600,
+      imageHeight: 400,
+      imageAlt: `Task completion screenshot for ${taskTitle}`,
+      confirmButtonText: 'Close',
+      confirmButtonColor: '#735DA5'
+    });
   }
 }

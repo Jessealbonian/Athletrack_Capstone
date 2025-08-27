@@ -305,7 +305,7 @@ export class RoutinesComponent implements OnInit {
         this.weekly = null;
       }
     } catch (error) {
-      console.error('Error loading routines:', error);  
+      console.error('Error loading routines:', error);
       this.classRoutines = [];
       this.weekly = null;
       
@@ -401,11 +401,16 @@ export class RoutinesComponent implements OnInit {
       if (response && response.status !== 'success') {
         throw new Error(response.message || 'Unknown error from API');
       }
+      // Show success message with uploaded image
       await Swal.fire({
         icon: 'success',
         title: 'Routine Completed!',
         text: `${this.selectedDay} routine completed successfully!`,
-        timer: 2000,
+        imageUrl: response.image_url || null,
+        imageWidth: 300,
+        imageHeight: 200,
+        imageAlt: 'Uploaded Routine Image',
+        timer: 3000,
         showConfirmButton: false,
         confirmButtonColor: '#735DA5'
       });
@@ -533,11 +538,16 @@ export class RoutinesComponent implements OnInit {
       if (response && response.status !== 'success') {
         throw new Error(response.message || 'Unknown error from API');
       }
+      // Show success message with uploaded image
       await Swal.fire({
         icon: 'success',
         title: 'Routine Completed!',
         text: 'Routine completed successfully!',
-        timer: 2000,
+        imageUrl: response.image_url || null,
+        imageWidth: 300,
+        imageHeight: 200,
+        imageAlt: 'Uploaded Routine Image',
+        timer: 3000,
         showConfirmButton: false,
         confirmButtonColor: '#735DA5'
       });
