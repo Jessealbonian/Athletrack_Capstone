@@ -59,6 +59,8 @@ export class taskComponent implements OnInit {
   }
 
   openAddTaskModal() {
+    const storedUserId = localStorage.getItem('hoa_user_id');
+    this.newTask.user_id = storedUserId ? Number(storedUserId) : null;
     this.showAddTaskModal = true;
     this.isEditing = false;
     this.editingTaskId = null;
@@ -126,6 +128,7 @@ export class taskComponent implements OnInit {
   }
 
   private resetTaskForm() {
+    const storedUserId = localStorage.getItem('hoa_user_id');
     this.newTask = {
       title: '',
       date_due: '',
@@ -133,12 +136,17 @@ export class taskComponent implements OnInit {
       status: 'Pending',
       description: null,
       image: null,
-      user_id: null
+      user_id: storedUserId ? Number(storedUserId) : null
     };
   }
 
   private fetchTasks() {
-    const url = `${environment.apiUrl}/routes.php?request=getTasks`;
+    const storedUserId = localStorage.getItem('hoa_user_id');
+    const userId = storedUserId ? Number(storedUserId) : null;
+    let url = `${environment.apiUrl}/routes.php?request=getTasks`;
+    if (userId) {
+      url += `&user_id=${userId}`;
+    }
     console.log('Fetching tasks from:', url);
     this.http.get<{ status?: string; payload?: TaskData[] } | any>(url).subscribe({
       next: (res: any) => {
