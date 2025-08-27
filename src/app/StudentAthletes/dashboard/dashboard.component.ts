@@ -98,7 +98,16 @@ export class DashboardComponent implements OnInit {
 
   // Task Methods (from task.component.ts)
   private fetchTasks() {
-    const url = `${environment.apiUrl}/routes.php?request=getTasks`;
+    const storedUserId = localStorage.getItem('hoa_user_id');
+    const userId = storedUserId ? Number(storedUserId) : null;
+    
+    if (!userId) {
+      console.error('No user ID found in localStorage');
+      this.tasks = [];
+      return;
+    }
+    
+    const url = `${environment.apiUrl}/routes.php?request=getTasks&user_id=${userId}`;
     console.log('Fetching tasks from:', url);
     this.http.get<{ status?: string; payload?: TaskData[] } | any>(url).subscribe({
       next: (res: any) => {
@@ -178,7 +187,11 @@ export class DashboardComponent implements OnInit {
 
   // Check if routine is completed today
   isRoutineCompletedToday(classId: number): boolean {
-    const today = new Date().toDateString();
+    // Get current date in Philippine timezone (UTC+8)
+    const philippineTime = new Date();
+    philippineTime.setHours(philippineTime.getHours() + 8); // Adjust to Philippine time
+    const today = philippineTime.toDateString();
+    
     return this.routineHistory.some(history => 
       history.class_id === classId && 
       new Date(history.date_of_submission).toDateString() === today
@@ -213,7 +226,11 @@ export class DashboardComponent implements OnInit {
   }
 
   getCompletedRoutinesToday(): number {
-    const today = new Date().toDateString();
+    // Get current date in Philippine timezone (UTC+8)
+    const philippineTime = new Date();
+    philippineTime.setHours(philippineTime.getHours() + 8); // Adjust to Philippine time
+    const today = philippineTime.toDateString();
+    
     return this.routineHistory.filter(history => 
       new Date(history.date_of_submission).toDateString() === today
     ).length;
@@ -229,3 +246,4 @@ export class DashboardComponent implements OnInit {
     return this.routineHistory.filter(history => history.class_id === classId).slice(0, 3);
   }
 }
+
