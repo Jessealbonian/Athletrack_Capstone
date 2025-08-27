@@ -444,24 +444,36 @@ export class RoutinesComponent implements OnInit {
 
   // Check if routine is completed today (for weekly structure)
   isRoutineCompletedToday(dayOrId: string | number): boolean {
-    const today = new Date().toDateString();
+    // Get current date in Philippine timezone (UTC+8)
+    const philippineTime = new Date();
+    philippineTime.setHours(philippineTime.getHours() + 8); // Adjust to Philippine time
+    const today = philippineTime.toDateString();
     
     if (typeof dayOrId === 'string') {
       // For weekly structure, check by day name - we need to check if this specific day's routine was completed today
       if (!this.selectedClass) return false;
       return this.routineHistory.some(history => {
-        const historyDate = new Date(history.date_of_submission).toDateString();
+        // Convert history date to Philippine timezone for comparison
+        const historyDate = new Date(history.date_of_submission);
+        historyDate.setHours(historyDate.getHours() + 8); // Adjust to Philippine time
+        const historyDateString = historyDate.toDateString();
+        
         // Check if the routine was completed today for this class and includes the day name
-        return historyDate === today && 
+        return historyDateString === today && 
                history.class_id === this.selectedClass?.id && 
                history.routine.includes(dayOrId);
       });
     } else {
       // For individual routines, check by class ID
-      return this.routineHistory.some(history => 
-        history.class_id === dayOrId && 
-        new Date(history.date_of_submission).toDateString() === today
-      );
+      return this.routineHistory.some(history => {
+        // Convert history date to Philippine timezone for comparison
+        const historyDate = new Date(history.date_of_submission);
+        historyDate.setHours(historyDate.getHours() + 8); // Adjust to Philippine time
+        const historyDateString = historyDate.toDateString();
+        
+        return history.class_id === dayOrId && 
+               historyDateString === today;
+      });
     }
   }
 
