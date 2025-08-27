@@ -143,10 +143,14 @@ export class taskComponent implements OnInit {
   private fetchTasks() {
     const storedUserId = localStorage.getItem('hoa_user_id');
     const userId = storedUserId ? Number(storedUserId) : null;
-    let url = `${environment.apiUrl}/routes.php?request=getTasks`;
-    if (userId) {
-      url += `&user_id=${userId}`;
+    
+    if (!userId) {
+      console.error('No user ID found in localStorage');
+      this.tasks = [];
+      return;
     }
+    
+    const url = `${environment.apiUrl}/routes.php?request=getTasks&user_id=${userId}`;
     console.log('Fetching tasks from:', url);
     this.http.get<{ status?: string; payload?: TaskData[] } | any>(url).subscribe({
       next: (res: any) => {
