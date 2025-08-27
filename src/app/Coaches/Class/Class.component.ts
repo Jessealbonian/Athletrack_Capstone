@@ -788,7 +788,7 @@ export class ClassComponent implements OnInit {
 
     console.log('Updating class data:', payload);
 
-    this.http.post(`${this.apiUrl}editClass`, payload).subscribe({
+    this.http.post(`${this.apiUrl}/routes.php?request=editClass`, payload).subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
           Swal.fire({ icon: 'success', title: 'Updated', text: 'Class updated successfully!' });
