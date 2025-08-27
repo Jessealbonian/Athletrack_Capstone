@@ -73,7 +73,7 @@ export class RoutinesService {
           }
 
          getClassInfo(classId: number): Observable<any> {
-           return this.http.get<any>(`${this.apiUrl}/routes.php?request=getClassInfoById/${classId}`);
+           return this.http.get<any>(`${this.apiUrl}/routes.php?request=class-info/${classId}`);
          }
        
          // Get routine history for a student (router-based)
