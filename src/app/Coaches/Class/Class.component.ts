@@ -196,7 +196,7 @@ export class ClassComponent implements OnInit {
   }
 
   loadClassRequests() {
-    this.http.get(`${this.apiUrl}getClasses`).subscribe({
+    this.http.get(`${this.apiUrl}/routes.php?request=getClasses`).subscribe({
       next: (response: any) => {
         console.log('Class Requests:', response); // Debugging log
         // Map the response to ensure property names match the interface
@@ -647,7 +647,7 @@ export class ClassComponent implements OnInit {
   }
 
   fetchClasses() {
-    this.http.get(`${this.apiUrl}/getClasses`).subscribe({
+    this.http.get(`${this.apiUrl}/routes.php?request=getClasses`).subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
           const all = response.data || [];
