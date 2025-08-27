@@ -267,7 +267,26 @@ export class RoutinesComponent implements OnInit {
       const meta = await this.routinesService.getClassInfo(classInfo.id).toPromise();
       if (meta?.payload) {
         const p = meta.payload;
-        this.selectedClass = { ...(this.selectedClass || {} as any), title: p.title, coach_username: p.coach_username } as any;
+        
+        // Resolve coach username from ID if it's a numeric value
+        let coachUsername = p.coach_username;
+        if (p.coach_username && !isNaN(Number(p.coach_username))) {
+          try {
+            const coachInfo = await this.routinesService.getCoachUsername(Number(p.coach_username)).toPromise();
+            if (coachInfo?.payload?.username) {
+              coachUsername = coachInfo.payload.username;
+            }
+          } catch (coachError) {
+            console.warn('Failed to resolve coach username:', coachError);
+            // Keep the original coach_username if resolution fails
+          }
+        }
+        
+        this.selectedClass = { 
+          ...(this.selectedClass || {} as any), 
+          title: p.title, 
+          coach_username: coachUsername 
+        } as any;
         (this as any).selectedClassDescription = p.description || '';
       }
 
@@ -286,7 +305,7 @@ export class RoutinesComponent implements OnInit {
         this.weekly = null;
       }
     } catch (error) {
-      console.error('Error loading routines:', error);
+      console.error('Error loading routines:', error);  
       this.classRoutines = [];
       this.weekly = null;
       

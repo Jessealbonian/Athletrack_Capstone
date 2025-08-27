@@ -75,6 +75,11 @@ export class RoutinesService {
          getClassInfo(classId: number): Observable<any> {
            return this.http.get<any>(`${this.apiUrl}/routes.php?request=class-info/${classId}`);
          }
+
+         // Get coach username by ID
+         getCoachUsername(coachId: number): Observable<any> {
+           return this.http.get<any>(`${this.apiUrl}/routes.php?request=getCoachUsername/${coachId}`);
+         }
        
          // Get routine history for a student (router-based)
          getRoutineHistory(studentUsername: string): Observable<any> {
