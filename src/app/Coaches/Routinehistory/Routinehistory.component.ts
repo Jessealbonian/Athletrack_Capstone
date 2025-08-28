@@ -7,6 +7,7 @@ import { NavbarComponent } from '../navbar/navbar.component';
 import { environment } from '../../../environments/environment';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { AuthService } from '../../auth.service';
 
 interface RoutineClassRecord {
   class_id?: number;
@@ -47,6 +48,7 @@ export class RoutinehistoryComponent implements OnInit {
   isNavOpen = true;
   isLoading = false;
   errorMessage: string | null = null;
+  currentAdminId: number | null = null;
 
   searchTerm = '';
   routines: RoutineClassRecord[] = [];
@@ -66,10 +68,15 @@ export class RoutinehistoryComponent implements OnInit {
   // Attendees modal
   isAttendeesModalOpen = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private auth: AuthService) {}
 
   ngOnInit(): void {
-    this.fetchRoutineHistory();
+    // Capture current admin id from auth (same source used by navbar)
+    this.auth.getCurrentUser().subscribe((user: any) => {
+      this.currentAdminId = user?.id ?? null;
+      // Once we have admin id, load classes filtered to this admin
+      this.fetchRoutineHistory();
+    });
   }
 
   onNavToggled(isOpen: boolean) {
@@ -106,6 +113,8 @@ export class RoutinehistoryComponent implements OnInit {
     this.attendeesForSelectedDay = [];
     this.monthlyAttendanceCache.clear();
     this.isModalOpen = true;
+    // Prevent background scrolling
+    document.body.classList.add('modal-open');
   }
 
   closeMonthModal() {
@@ -114,6 +123,8 @@ export class RoutinehistoryComponent implements OnInit {
     this.selectedDay = null;
     this.attendeesForSelectedDay = [];
     this.monthlyAttendanceCache.clear();
+    // Restore background scrolling
+    document.body.classList.remove('modal-open');
   }
 
   private computeDaysInMonth(year: number, month: number): number[] {
@@ -161,10 +172,14 @@ export class RoutinehistoryComponent implements OnInit {
   openAttendeesModal() {
     if (!this.selectedDay) return;
     this.isAttendeesModalOpen = true;
+    // Prevent background scrolling
+    document.body.classList.add('modal-open');
   }
 
   closeAttendeesModal() {
     this.isAttendeesModalOpen = false;
+    // Restore background scrolling
+    document.body.classList.remove('modal-open');
   }
 
   private async toDataURL(url: string): Promise<string> {
@@ -345,7 +360,14 @@ export class RoutinehistoryComponent implements OnInit {
   private fetchRoutineHistory(): void {
     this.isLoading = true;
     this.errorMessage = null;
-    const url = `${environment.apiUrl}/routes.php?request=getClasses`;
+    
+    if (!this.currentAdminId) {
+      this.errorMessage = 'Could not load admin ID. Please log in.';
+      this.isLoading = false;
+      return;
+    }
+    
+    const url = `${environment.apiUrl}/routes.php?request=getClasses&admin_id=${this.currentAdminId}`;
     this.http.get<any>(url).subscribe({
       next: (res) => {
         const raw = Array.isArray(res) ? res : (res?.data ?? res?.payload ?? []);

@@ -62,6 +62,7 @@ interface ClassRoutines {
   sundayIntensityEasy: boolean;
   sundayIntensityMedium: boolean;
   sundayIntensityHard: boolean;
+  [key: string]: string | boolean; // Add index signature for dynamic access
 }
 
 interface ClassData {
@@ -647,13 +648,14 @@ export class ClassComponent implements OnInit {
   }
 
   fetchClasses() {
-    this.http.get(`${this.apiUrl}/routes.php?request=getClasses`).subscribe({
+    const adminIdParam = this.currentAdminId ? `&admin_id=${this.currentAdminId}` : '';
+    
+    this.http.get(`${this.apiUrl}/routes.php?request=getClasses${adminIdParam}`).subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
           const all = response.data || [];
-          this.classes = this.currentAdminId != null
-            ? all.filter((c: any) => Number(c.admin_id) === Number(this.currentAdminId))
-            : all;
+          // No need to filter here since backend now handles it
+          this.classes = all;
         }
       },
       error: (error) => {
@@ -713,7 +715,7 @@ export class ClassComponent implements OnInit {
   openClassDetailsModal(classObj: any) {
     this.selectedClass = {
       ...classObj,
-      enrolledStudents: classObj.enrolledStudents || []
+      enrolledStudents: [] // Initialize as empty array
     };
 
     // Map intensity strings from DB to checkbox booleans for display/editing
@@ -725,8 +727,44 @@ export class ClassComponent implements OnInit {
       this.selectedClass[`${day}IntensityMedium`] = normalized === 'medium';
       this.selectedClass[`${day}IntensityHard`] = normalized === 'hard';
     }
+    
+    // Fetch enrolled students for this class
+    this.fetchEnrolledStudentsForClass(classObj.class_id);
+    
     this.showClassDetailsModal = true;
     this.isEditingClassDetails = false;
+  }
+
+  // New method: Fetch enrolled students for a specific class
+  fetchEnrolledStudentsForClass(classId: number) {
+    if (!classId) return;
+    
+    console.log('Fetching enrolled students for class:', classId);
+    
+    const adminIdParam = this.currentAdminId ? `&admin_id=${this.currentAdminId}` : '';
+    
+    this.http.get(`${this.apiUrl}/routes.php?request=getEnrolledStudentsForClass&class_id=${classId}${adminIdParam}`).subscribe({
+      next: (response: any) => {
+        console.log('Raw response from backend:', response);
+        
+        // Check if response has the expected structure
+        if (response && response.status && response.status.remarks === 'success' && response.payload) {
+          this.selectedClass.enrolledStudents = response.payload;
+          console.log('Enrolled students loaded:', this.selectedClass.enrolledStudents);
+        } else if (response && response.status && response.status.remarks === 'success' && Array.isArray(response.payload)) {
+          // Handle case where payload is an array
+          this.selectedClass.enrolledStudents = response.payload;
+          console.log('Enrolled students loaded (payload array):', this.selectedClass.enrolledStudents);
+        } else {
+          console.error('Unexpected response structure:', response);
+          this.selectedClass.enrolledStudents = [];
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching enrolled students:', error);
+        this.selectedClass.enrolledStudents = [];
+      }
+    });
   }
 
   closeClassDetailsModal() {
