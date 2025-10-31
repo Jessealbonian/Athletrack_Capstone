@@ -11,7 +11,7 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2 sm:gap-0">
             <h1 class="text-xl sm:text-2xl font-bold">Class</h1>
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
-              <button (click)="openAddClassModal()" class="bg-[#735DA5] text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto">
+              <button (click)="openAddClassModal()" class="text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                 </svg>
@@ -111,7 +111,7 @@
 
         <!-- Buttons -->
         <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
-          <button (click)="confirmAddClass()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#735DA5" [ngClass]="'hover:bg-[#5a4785]'">Add Class</button>
+          <button (click)="confirmAddClass()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'">Add Class</button>
           <button (click)="closeAddClassModal()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:gray" [ngClass]="'hover:bg-gray-700'">Cancel</button>
         </div>
       </div>
@@ -258,10 +258,10 @@
           </div>
         </div>
         <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mt-6 gap-4">
-          <button class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#735DA5" [ngClass]="'hover:bg-[#5a4785]'" (click)="openTokenModal()">Generate Token</button>
+          <button class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'" (click)="openTokenModal()">Generate Token</button>
           <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <button *ngIf="!isEditingClassDetails" (click)="isEditingClassDetails = true" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#735DA5" [ngClass]="'hover:bg-[#5a4785]'">Edit</button>
-            <button *ngIf="isEditingClassDetails" (click)="confirmEditClassDetails()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#735DA5" [ngClass]="'hover:bg-[#5a4785]'">Confirm</button>
+            <button *ngIf="!isEditingClassDetails" (click)="isEditingClassDetails = true" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'">Edit</button>
+            <button *ngIf="isEditingClassDetails" (click)="confirmEditClassDetails()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'">Confirm</button>
             <button (click)="closeClassDetailsModal()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:gray" [ngClass]="'hover:bg-gray-700'">Cancel</button>
           </div>
         </div>
@@ -291,9 +291,11 @@
             (click)="generateTokens()" 
             [disabled]="isGeneratingTokens || tokenCount < 1 || tokenCount > 100"
             class="w-full px-6 py-3 rounded transition-colors duration-150 text-white font-semibold"
+            [style.background-color]="!isGeneratingTokens && tokenCount >= 1 && tokenCount <= 100 ? '#0A7664' : '#9CA3AF'"
+            (mouseover)="!isGeneratingTokens && tokenCount >= 1 && tokenCount <= 100 && (($any($event.target)).style.backgroundColor = '#22473F')"
+            (mouseout)="!isGeneratingTokens && tokenCount >= 1 && tokenCount <= 100 && (($any($event.target)).style.backgroundColor = '#0A7664')"
             [ngClass]="{
-              'bg-[#735DA5] hover:bg-[#5a4785]': !isGeneratingTokens && tokenCount >= 1 && tokenCount <= 100,
-              'bg-gray-400 cursor-not-allowed': isGeneratingTokens || tokenCount < 1 || tokenCount > 100
+              'cursor-not-allowed': isGeneratingTokens || tokenCount < 1 || tokenCount > 100
             }">
             <span *ngIf="!isGeneratingTokens">Generate Tokens</span>
             <span *ngIf="isGeneratingTokens">Generating...</span>
@@ -306,7 +308,7 @@
             <h3 class="text-base sm:text-lg text-black font-semibold">Generated Tokens:</h3>
             <button 
               (click)="copyAllTokensToClipboard()"
-              class="px-4 py-2 bg-[#735DA5] text-white rounded hover:bg-[#5a4785] transition-colors duration-150 w-full sm:w-auto">
+              class="px-4 py-2 text-white rounded transition-colors duration-150 w-full sm:w-auto" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'">
               Copy All
             </button>
           </div>
@@ -315,7 +317,7 @@
               <span class="font-mono text-base sm:text-lg text-black break-all">{{token}}</span>
               <button 
                 (click)="copyTokenToClipboard(token)"
-                class="ml-2 px-2 py-1 bg-[#735DA5] text-white rounded hover:bg-[#5a4785] transition-colors duration-150 text-xs sm:text-sm">
+                class="ml-2 px-2 py-1 text-white rounded transition-colors duration-150 text-xs sm:text-sm" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'">
                 Copy
               </button>
             </div>

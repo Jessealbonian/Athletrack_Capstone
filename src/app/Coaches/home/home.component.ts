@@ -1,4 +1,4 @@
-import { Component, AfterViewInit } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy } from '@angular/core';
 import { SidenavComponent } from '../sidenav/sidenav.component';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { Chart, registerables } from 'chart.js';
@@ -15,6 +15,7 @@ import Swal from 'sweetalert2';
 import { catchError, finalize } from 'rxjs';
 import { AuthService } from '../../auth.service';
 import { ResidentsService } from '../services/residents.service';
+import { environment } from '../../../environments/environment';
 
 Chart.register(...registerables); // Register Chart.js components
 
@@ -63,7 +64,7 @@ interface MaintenanceRequest {
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
-export class HomeComponent implements AfterViewInit {
+export class HomeComponent implements AfterViewInit, OnDestroy {
   isNavOpen = true;
   upcomingEvents: Event[] = [];
   completedEvents: Event[] = [];
@@ -118,6 +119,15 @@ export class HomeComponent implements AfterViewInit {
   inProgressRequests: MaintenanceRequest[] = [];
   completedRequests: MaintenanceRequest[] = [];
 
+  // Dashboard stats properties
+  totalStudents: number = 0;
+  totalClasses: number = 0;
+  dailyActivityData: any[] = [];
+  classCompletionStats: any[] = [];
+  private lineChart: Chart | null = null;
+  private pieCharts: Map<number, Chart> = new Map();
+  currentAdminId: number | null = null;
+
   constructor(
     private eventService: EventService,
     private paymentService: PaymentService,
@@ -149,14 +159,15 @@ export class HomeComponent implements AfterViewInit {
       if (user) {
         console.log("This is the User Id", user)
         this.userId = user.id;
+        this.currentAdminId = user.id;
         console.log("This is the User Id", this.userId)
         this.getProfile(this.userId);
+        this.loadDashboardData();
       } else {
         console.log("User not found");
       }
     })
 
-    this.createChart();
     this.filterEvents();
     this.checkEventStatusInterval = setInterval(() => {
       if (this.events) {
@@ -215,29 +226,104 @@ export class HomeComponent implements AfterViewInit {
     });
   }
 
-  private createChart() {
+  loadDashboardData() {
+    if (!this.currentAdminId) return;
+    
+    const adminIdParam = `&admin_id=${this.currentAdminId}`;
+    
+    // Load total students
+    this.http.get(`${environment.apiUrl}/routes.php?request=getTotalStudents${adminIdParam}`).subscribe({
+      next: (response: any) => {
+        if (response.status?.remarks === 'success' && response.payload) {
+          this.totalStudents = response.payload.total_students || 0;
+        }
+      },
+      error: (error) => console.error('Error fetching total students:', error)
+    });
+
+    // Load total classes
+    this.http.get(`${environment.apiUrl}/routes.php?request=getClasses${adminIdParam}`).subscribe({
+      next: (response: any) => {
+        if (response.status === 'success' && response.data) {
+          this.totalClasses = response.data.length || 0;
+        }
+      },
+      error: (error) => console.error('Error fetching classes:', error)
+    });
+
+    // Load daily activity
+    this.http.get(`${environment.apiUrl}/routes.php?request=getDailyStudentActivity${adminIdParam}&days=7`).subscribe({
+      next: (response: any) => {
+        if (response.status?.remarks === 'success' && response.payload) {
+          this.dailyActivityData = response.payload;
+          this.createLineChart();
+        }
+      },
+      error: (error) => console.error('Error fetching daily activity:', error)
+    });
+
+    // Load completion stats
+    this.http.get(`${environment.apiUrl}/routes.php?request=getClassRoutineCompletionStats${adminIdParam}`).subscribe({
+      next: (response: any) => {
+        if (response.status?.remarks === 'success' && response.payload) {
+          this.classCompletionStats = response.payload;
+          setTimeout(() => this.createPieCharts(), 100);
+        }
+      },
+      error: (error) => console.error('Error fetching completion stats:', error)
+    });
+  }
+
+  private createLineChart() {
     const ctx = document.getElementById('lineChart') as HTMLCanvasElement;
+    if (!ctx) return;
+    
+    // Destroy existing chart if it exists
+    if (this.lineChart) {
+      this.lineChart.destroy();
+    }
+
     const context = ctx.getContext('2d');
     if (context) {
-      const lineChart = new Chart(context, {
+      const labels = this.dailyActivityData.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      });
+      const data = this.dailyActivityData.map(item => item.active_students);
+
+      this.lineChart = new Chart(context, {
         type: 'line',
         data: {
-          labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+          labels: labels,
           datasets: [{
-            label: 'Data Trends',
-            data: [65, 59, 80, 81, 56, 55, 40],
-            borderColor: 'rgba(75, 192, 192, 1)',
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            borderWidth: 1,
+            label: 'Active Students',
+            data: data,
+            borderColor: '#15957F',
+            backgroundColor: 'rgba(21, 149, 127, 0.2)',
+            borderWidth: 2,
             fill: true,
+            tension: 0.4,
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: 'Student Activity Over the Last 7 Days'
+            }
+          },
           scales: {
             y: {
-              beginAtZero: true
+              beginAtZero: true,
+              ticks: {
+                stepSize: 1
+              }
             }
           }
         }
@@ -245,6 +331,58 @@ export class HomeComponent implements AfterViewInit {
     } else {
       console.error('Failed to get canvas context');
     }
+  }
+
+  private createPieCharts() {
+    // Destroy existing pie charts
+    this.pieCharts.forEach((chart, classId) => {
+      chart.destroy();
+    });
+    this.pieCharts.clear();
+
+    this.classCompletionStats.forEach((stat, index) => {
+      const canvasId = `pieChart-${stat.class_id}`;
+      const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
+      if (!canvas) return;
+
+      const context = canvas.getContext('2d');
+      if (!context) return;
+
+      const pieChart = new Chart(context, {
+        type: 'pie',
+        data: {
+          labels: ['Completed', 'Not Completed'],
+          datasets: [{
+            data: [stat.completed, stat.not_completed],
+            backgroundColor: [
+              '#15957F',
+              '#E5E7EB'
+            ],
+            borderColor: [
+              '#0A7664',
+              '#D1D5DB'
+            ],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+            },
+            title: {
+              display: true,
+              text: stat.class_name || `Class ${stat.class_id}`
+            }
+          }
+        }
+      });
+
+      this.pieCharts.set(stat.class_id, pieChart);
+    });
   }
 
   // private loadUpcomingEvents() {
@@ -931,7 +1069,23 @@ export class HomeComponent implements AfterViewInit {
         },
         error: (error) => console.error('Error loading residents:', error)
     });
-}
+  }
+
+  ngOnDestroy() {
+    // Clean up charts
+    if (this.lineChart) {
+      this.lineChart.destroy();
+    }
+    this.pieCharts.forEach((chart) => {
+      chart.destroy();
+    });
+    this.pieCharts.clear();
+    
+    // Clear intervals
+    if (this.checkEventStatusInterval) {
+      clearInterval(this.checkEventStatusInterval);
+    }
+  }
 
 
   // loadResidents() {

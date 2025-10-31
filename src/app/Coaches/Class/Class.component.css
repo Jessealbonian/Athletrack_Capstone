@@ -535,11 +535,11 @@ body {
 
 /* Checkbox accent color for this component */
 input[type="checkbox"] {
-  accent-color: #735DA5 !important;
+  accent-color: #0A7664 !important;
 }
 
 input[type="checkbox"]:focus {
-  outline: 2px solid rgba(115, 93, 165, 0.35);
+  outline: 2px solid rgba(10, 118, 100, 0.35);
   outline-offset: 2px;
 }
 

@@ -19,7 +19,7 @@
           </div>
   
           <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="mt-8 space-y-6">
-            <div *ngIf="successMessage" class="mb-4 p-4 bg-[#735DA5]/20 text-[#417505] rounded-md">
+            <div *ngIf="successMessage" class="mb-4 p-4 rounded-md" style="background-color: rgba(10, 118, 100, 0.2); color: #417505;">
               {{ successMessage }}
             </div>
             <div *ngIf="error" class="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
@@ -37,7 +37,10 @@
                   type="text"
                   formControlName="username"
                   placeholder="Enter your username"
-                  class="appearance-none relative block w-full px-3 py-2 border border-[#735DA5] rounded-lg placeholder-[#735DA5] text-black focus:outline-none focus:ring-2 focus:ring-[#735DA5] focus:border-[#735DA5] focus:z-10 sm:text-sm"
+                  class="appearance-none relative block w-full px-3 py-2 border rounded-lg text-black focus:outline-none focus:ring-2 focus:z-10 sm:text-sm"
+                  style="border-color: #0A7664; placeholder-color: #0A7664;"
+                  onfocus="this.style.borderColor='#22473F'; this.style.outlineColor='#22473F';"
+                  onblur="this.style.borderColor='#0A7664';"
                 >
               </div>
   
@@ -51,7 +54,10 @@
                   type="email"
                   formControlName="email"
                   placeholder="Enter your email"
-                  class="appearance-none relative block w-full px-3 py-2 border border-[#735DA5] rounded-lg placeholder-[#735DA5] text-black focus:outline-none focus:ring-2 focus:ring-[#735DA5] focus:border-[#735DA5] focus:z-10 sm:text-sm"
+                  class="appearance-none relative block w-full px-3 py-2 border rounded-lg text-black focus:outline-none focus:ring-2 focus:z-10 sm:text-sm"
+                  style="border-color: #0A7664; placeholder-color: #0A7664;"
+                  onfocus="this.style.borderColor='#22473F'; this.style.outlineColor='#22473F';"
+                  onblur="this.style.borderColor='#0A7664';"
                 >
               </div>
   
@@ -65,7 +71,10 @@
                   type="password"
                   formControlName="password"
                   placeholder="Enter your password"
-                  class="appearance-none relative block w-full px-3 py-2 border border-[#735DA5] rounded-lg placeholder-[#735DA5] text-black focus:outline-none focus:ring-2 focus:ring-[#735DA5] focus:border-[#735DA5] focus:z-10 sm:text-sm"
+                  class="appearance-none relative block w-full px-3 py-2 border rounded-lg text-black focus:outline-none focus:ring-2 focus:z-10 sm:text-sm"
+                  style="border-color: #0A7664; placeholder-color: #0A7664;"
+                  onfocus="this.style.borderColor='#22473F'; this.style.outlineColor='#22473F';"
+                  onblur="this.style.borderColor='#0A7664';"
                 >
               </div>
   
@@ -79,7 +88,10 @@
                   type="text"
                   formControlName="adminCode"
                   placeholder="Enter admin code"
-                  class="appearance-none relative block w-full px-3 py-2 border border-[#735DA5] rounded-lg placeholder-[#735DA5] text-black focus:outline-none focus:ring-2 focus:ring-[#735DA5] focus:border-[#735DA5] focus:z-10 sm:text-sm"
+                  class="appearance-none relative block w-full px-3 py-2 border rounded-lg text-black focus:outline-none focus:ring-2 focus:z-10 sm:text-sm"
+                  style="border-color: #0A7664; placeholder-color: #0A7664;"
+                  onfocus="this.style.borderColor='#22473F'; this.style.outlineColor='#22473F';"
+                  onblur="this.style.borderColor='#0A7664';"
                 >
               </div>
             </div>
@@ -87,7 +99,11 @@
             <div>
               <button
                 type="submit"
-                class="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#A981DE] hover:bg-[#735DA5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#417505] transition-all duration-200 ease-in-out"
+                class="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 ease-in-out"
+                style="background-color: #0A7664;"
+                onmouseover="this.style.backgroundColor='#22473F'"
+                onmouseout="this.style.backgroundColor='#0A7664'"
+                onfocus="this.style.outlineColor='#0A7664';"
               >
                 Register
               </button>

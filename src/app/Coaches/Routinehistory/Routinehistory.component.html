@@ -30,7 +30,7 @@
                   </div>
                   <div class="flex gap-2 mt-2 sm:mt-0">
                     <button class="text-sm underline" (click)="toggleExpand(r.class_id)">{{ expanded[r.class_id || 0] ? 'Hide' : 'View' }} details</button>
-                    <button class="text-sm text-white bg-[#735DA5] px-3 py-1 rounded" (click)="openMonthModal(r)">Open Month</button>
+                    <button class="text-sm text-white px-3 py-1 rounded transition-colors duration-150" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'" (click)="openMonthModal(r)">Open Month</button>
                   </div>
                 </div>
 
@@ -96,9 +96,9 @@
         <div class="text-xs sm:text-sm text-gray-600">{{ selectedYear }}-{{ selectedMonth < 10 ? '0' + selectedMonth : selectedMonth }}</div>
       </div>
       <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-        <button *ngIf="selectedDay" class="text-sm text-white bg-[#735DA5] px-3 py-2 rounded w-full sm:w-auto" (click)="openAttendeesModal()">View Attendees</button>
-        <button *ngIf="selectedDay" class="text-sm text-white bg-[#735DA5] px-3 py-2 rounded w-full sm:w-auto" (click)="generateMonthlyReport()">Create Report (Day)</button>
-        <button class="text-sm text-white bg-[#735DA5] px-3 py-2 rounded w-full sm:w-auto" (click)="generateWholeMonthReport()">Whole Month Report</button>
+        <button *ngIf="selectedDay" class="text-sm text-white px-3 py-2 rounded w-full sm:w-auto transition-colors duration-150" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'" (click)="openAttendeesModal()">View Attendees</button>
+        <button *ngIf="selectedDay" class="text-sm text-white px-3 py-2 rounded w-full sm:w-auto transition-colors duration-150" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'" (click)="generateMonthlyReport()">Create Report (Day)</button>
+        <button class="text-sm text-white px-3 py-2 rounded w-full sm:w-auto transition-colors duration-150" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'" (click)="generateWholeMonthReport()">Whole Month Report</button>
         <button class="text-sm px-3 py-2 rounded border w-full sm:w-auto" (click)="closeMonthModal()">Close</button>
       </div>
     </div>

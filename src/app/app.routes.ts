@@ -48,7 +48,7 @@ export const routes: Routes = [
 
 
   // Admin routes
-  { path: '', redirectTo: 'admin_login', pathMatch: 'full', },
+  { path: '', redirectTo: 'home', pathMatch: 'full', },
   { path: 'home', component: HomeComponent,  title: 'Home' }, //canActivate: [authGuard],
   { path: 'events', component: EventsComponent,  title: 'Events' },  //canActivate: [authGuard],
   { path: 'Class', component: ClassComponent,  title: 'Class' }, //canActivate: [authGuard],
