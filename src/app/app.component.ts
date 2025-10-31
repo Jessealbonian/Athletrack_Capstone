@@ -2,11 +2,14 @@ import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AppwriteService } from './services/appwrite.service';
+import { PwaInstallComponent } from './components/pwa-install/pwa-install.component';
+import { OfflinePageComponent } from './components/offline-page/offline-page.component';
+import { PwaUpdateComponent } from './components/pwa-update/pwa-update.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [ CommonModule, RouterOutlet],
+  imports: [ CommonModule, RouterOutlet, PwaInstallComponent, OfflinePageComponent, PwaUpdateComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })

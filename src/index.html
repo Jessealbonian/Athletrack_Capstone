@@ -5,7 +5,57 @@
   <title>AthleTrack</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="Professional fitness class management and routine tracking application">
+  <meta name="keywords" content="fitness, health, workout, class management, routine tracking">
+  <meta name="author" content="AthleTrack">
+  <meta name="robots" content="index, follow">
+  
+  <!-- PWA Icons -->
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/Logo.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/Logo.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/Logo.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="assets/Logo.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="assets/Logo.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="assets/Logo.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="assets/Logo.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="assets/Logo.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="assets/Logo.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="assets/Logo.png">
+  <link rel="apple-touch-icon" sizes="57x57" href="assets/Logo.png">
+  
+  <!-- PWA Manifest and Theme -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#735DA5">
+  <meta name="msapplication-TileColor" content="#735DA5">
+  <meta name="msapplication-TileImage" content="assets/Logo.png">
+  <meta name="msapplication-config" content="none">
+  
+  <!-- Apple Mobile Web App Capable -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AthleTrack">
+  
+  <!-- Mobile Optimizations -->
+  <meta name="format-detection" content="telephone=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  
+  <!-- Social Media Meta Tags -->
+  <meta property="og:title" content="AthleTrack - Fitness Class Management">
+  <meta property="og:description" content="Professional fitness class management and routine tracking application">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://athletrack.vercel.app">
+  <meta property="og:image" content="assets/Logo.png">
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AthleTrack - Fitness Class Management">
+  <meta name="twitter:description" content="Professional fitness class management and routine tracking application">
+  <meta name="twitter:image" content="assets/Logo.png">
+  
+  <!-- External CSS and Scripts -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -17,5 +67,75 @@
 </head>
 <body class="mat-typography">
   <app-root></app-root>
+  
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(registration => {
+            console.log('Service Worker registered successfully:', registration);
+            
+            // Check for updates
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New version available
+                  if (confirm('A new version of AthleTrack is available! Would you like to update?')) {
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                    window.location.reload();
+                  }
+                }
+              });
+            });
+          })
+          .catch(error => {
+            console.error('Service Worker registration failed:', error);
+          });
+      });
+    }
+    
+    // PWA Install Prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      // Show install button or notification
+      showInstallPrompt();
+    });
+    
+    function showInstallPrompt() {
+      // You can customize this to show a custom install button
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+          } else {
+            console.log('User dismissed the install prompt');
+          }
+          deferredPrompt = null;
+        });
+      }
+    }
+    
+    // Handle app installed event
+    window.addEventListener('appinstalled', (evt) => {
+      console.log('AthleTrack was installed successfully');
+    });
+    
+    // Handle online/offline status
+    window.addEventListener('online', () => {
+      console.log('App is online');
+      document.body.classList.remove('offline');
+    });
+    
+    window.addEventListener('offline', () => {
+      console.log('App is offline');
+      document.body.classList.add('offline');
+    });
+  </script>
 </body>
 </html>
