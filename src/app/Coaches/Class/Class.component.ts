@@ -191,13 +191,19 @@ export class ClassComponent implements OnInit {
       this.currentAdminId = user?.id ?? null;
       // Once we have admin id, load classes filtered to this admin
       this.fetchClasses();
+      this.loadClassRequests();
+      this.loadClassStats();
     });
-    this.loadClassRequests();
-    this.loadClassStats();
   }
 
   loadClassRequests() {
-    this.http.get(`${this.apiUrl}/routes.php?request=getClasses`).subscribe({
+    if (!this.currentAdminId) {
+      console.warn('Admin ID not available, skipping class requests load');
+      return;
+    }
+    
+    const adminIdParam = `&admin_id=${this.currentAdminId}`;
+    this.http.get(`${this.apiUrl}/routes.php?request=getClasses${adminIdParam}`).subscribe({
       next: (response: any) => {
         console.log('Class Requests:', response); // Debugging log
         // Map the response to ensure property names match the interface
@@ -649,17 +655,48 @@ export class ClassComponent implements OnInit {
 
   fetchClasses() {
     const adminIdParam = this.currentAdminId ? `&admin_id=${this.currentAdminId}` : '';
-    
     this.http.get(`${this.apiUrl}/routes.php?request=getClasses${adminIdParam}`).subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
           const all = response.data || [];
-          // No need to filter here since backend now handles it
-          this.classes = all;
+          // Map intensity strings from DB to checkbox booleans for display
+          this.classes = all.map((classObj: any) => {
+            const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+            for (const day of days) {
+              const intensityString: string = (classObj[`${day}intensity`] || '').toString();
+              const normalized = intensityString.trim().toLowerCase();
+              classObj[`${day}IntensityEasy`] = normalized === 'easy';
+              classObj[`${day}IntensityMedium`] = normalized === 'medium';
+              classObj[`${day}IntensityHard`] = normalized === 'hard';
+            }
+            return classObj;
+          });
+          // Fetch enrolled students for each class and assign to the class object
+          for (const classObj of this.classes) {
+            this.fetchEnrolledStudentsForClassForGrid(classObj);
+          }
         }
       },
       error: (error) => {
         console.error('Error fetching classes:', error);
+      }
+    });
+  }
+
+  // New: For population in grid
+  fetchEnrolledStudentsForClassForGrid(classObj: any) {
+    if (!classObj.class_id) return;
+    const adminIdParam = this.currentAdminId ? `&admin_id=${this.currentAdminId}` : '';
+    this.http.get(`${this.apiUrl}/routes.php?request=getEnrolledStudentsForClass&class_id=${classObj.class_id}${adminIdParam}`).subscribe({
+      next: (response: any) => {
+        if (response && response.status && response.status.remarks === 'success' && Array.isArray(response.payload)) {
+          classObj.enrolledStudents = response.payload;
+        } else {
+          classObj.enrolledStudents = [];
+        }
+      },
+      error: () => {
+        classObj.enrolledStudents = [];
       }
     });
   }

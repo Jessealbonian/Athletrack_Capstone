@@ -30,26 +30,44 @@
 
           <!-- Class Cards Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div *ngFor="let class of classes" class="bg-gray-300 p-4 rounded-lg cursor-pointer hover:bg-gray-400 transition-all duration-150 w-full min-h-[120px] flex flex-col justify-between" (click)="openClassDetailsModal(class)">
+            <div *ngFor="let class of classes" class="bg-gray-300 p-4 rounded-lg hover:bg-gray-400 transition-all duration-150 w-full min-h-[120px] flex flex-col justify-between">
               <h3 class="text-base sm:text-lg font-semibold">{{class.class_name}}</h3>
-              <p class="text-xs sm:text-sm text-gray-600">{{class.description}}</p>
-              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 gap-2 sm:gap-0">
-                <span class="text-xs sm:text-sm">Routines: {{class.mondayRoutine ? 'Mon' : ''}} {{class.tuesdayRoutine ? 'Tue' : ''}} {{class.wednesdayRoutine ? 'Wed' : ''}} {{class.thursdayRoutine ? 'Thu' : ''}} {{class.fridayRoutine ? 'Fri' : ''}} {{class.saturdayRoutine ? 'Sat' : ''}} {{class.sundayRoutine ? 'Sun' : ''}}</span>
-                <button class="text-gray-600 p-2 rounded-lg hover:bg-gray-200">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                  </svg>
+              <p class="text-xs sm:text-sm text-gray-600 mb-2">{{class.description}}</p>
+              <!-- Weekly Routines Display - Card Based -->
+              <div class="mb-2 space-y-2">
+                <div *ngFor="let day of ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']" 
+                     class="bg-white rounded p-2 text-xs sm:text-sm">
+                  <div class="font-semibold text-gray-800 mb-1">{{day}}:</div>
+                  <div class="text-gray-700">{{class[day.toLowerCase()+'Routine'] || '-'}}</div>
+                  <div class="text-gray-600 mt-1">
+                    Intensity: 
+                    <span *ngIf="class[day.toLowerCase()+'IntensityEasy']" class="font-medium text-green-700">Easy</span>
+                    <span *ngIf="class[day.toLowerCase()+'IntensityMedium']" class="font-medium text-yellow-700">Medium</span>
+                    <span *ngIf="class[day.toLowerCase()+'IntensityHard']" class="font-medium text-red-700">Hard</span>
+                    <span *ngIf="!class[day.toLowerCase()+'IntensityEasy'] && !class[day.toLowerCase()+'IntensityMedium'] && !class[day.toLowerCase()+'IntensityHard']" class="text-gray-500">-</span>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-2">
+                <span class="font-semibold text-gray-700">Total Students:</span>
+                <span class="text-gray-800 font-bold">{{class.enrolledStudents?.length || 0}}</span>
+              </div>
+              <div class="flex justify-start mt-2">
+                <button (click)="openClassDetailsModal(class)" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold bg-[#0A7664] hover:bg-[#22473F] text-sm flex items-center gap-1">
+                  <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4' viewBox='0 0 20 20' fill='currentColor'><path d='M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z'/></svg>
+                  Edit
                 </button>
               </div>
             </div>
           </div>
+          <!-- END: Class Cards Grid -->
         </div>
       </div>
     </div>
 
     <!-- Add Class Modal -->
     <div *ngIf="showAddClassModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white shadow-lg p-4 sm:p-8 rounded-lg w-full max-w-2xl mx-2 overflow-y-auto max-h-[90vh]">
+      <div class="bg-white shadow-lg p-4 sm:p-8 rounded-lg w-full max-w-3xl mx-2 overflow-y-auto max-h-[90vh]">
         <h2 class="text-xl sm:text-2xl text-black font-bold mb-4 sm:mb-6">Add New Class</h2>
         
         <!-- Class Name -->
@@ -190,6 +208,9 @@
           <div class="flex-1">
             <h2 class="text-xl sm:text-2xl text-black font-bold mb-2">{{selectedClass.class_name}}</h2>
             <div class="text-gray-700 mb-2 text-sm sm:text-base">{{selectedClass.description}}</div>
+            <div class="text-sm text-gray-700 mb-2 font-medium">
+              Total Students: <span class="font-bold">{{selectedClass.enrolledStudents?.length || 0}}</span>
+            </div>
           </div>
           <div class="lg:ml-8 flex flex-col items-start">
             <span class="font-semibold text-black mb-2 text-base sm:text-lg">Intensity Chart</span>
@@ -200,41 +221,48 @@
             </div>
           </div>
         </div>
+
+        <!-- Show routines with intensity checkmarks even in view mode -->
         <div class="mb-4">
           <label class="block text-black font-semibold mb-2">Class Routines & Intensity:</label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
-            <div *ngFor="let day of ['Monday','Tuesday','Wednesday','Thursday']">
-              <label class="block text-black mb-1 text-sm sm:text-base">{{day}}</label>
-              <input list="jargons" type="text" [(ngModel)]="selectedClass[day.toLowerCase()+'Routine']" class="w-full p-2 rounded border border-gray-300 mb-2 text-sm" [readonly]="!isEditingClassDetails">
-              <div class="flex flex-col sm:flex-row gap-1 sm:gap-2 intensity-group">
-                <label class="flex items-center gap-1 text-xs sm:text-sm">
-                  <input type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityEasy']" (change)="onDetailsIntensityChange($any(day.toLowerCase()),'Easy')" [disabled]="!isEditingClassDetails"> <span>Easy</span>
-                </label>
-                <label class="flex items-center gap-1 text-xs sm:text-sm">
-                  <input type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityMedium']" (change)="onDetailsIntensityChange($any(day.toLowerCase()),'Medium')" [disabled]="!isEditingClassDetails"> <span>Medium</span>
-                </label>
-                <label class="flex items-center gap-1 text-xs sm:text-sm">
-                  <input type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityHard']" (change)="onDetailsIntensityChange($any(day.toLowerCase()),'Hard')" [disabled]="!isEditingClassDetails"> <span>Hard</span>
-                </label>
-              </div>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
-            <div *ngFor="let day of ['Friday','Saturday','Sunday']">
-              <label class="block text-black mb-1 text-sm sm:text-base">{{day}}</label>
-              <input list="jargons" type="text" [(ngModel)]="selectedClass[day.toLowerCase()+'Routine']" class="w-full p-2 rounded border border-gray-300 mb-2 text-sm" [readonly]="!isEditingClassDetails">
-              <div class="flex flex-col sm:flex-row gap-1 sm:gap-2 intensity-group">
-                <label class="flex items-center gap-1 text-xs sm:text-sm">
-                  <input type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityEasy']" (change)="onDetailsIntensityChange($any(day.toLowerCase()),'Easy')" [disabled]="!isEditingClassDetails"> <span>Easy</span>
-                </label>
-                <label class="flex items-center gap-1 text-xs sm:text-sm">
-                  <input type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityMedium']" (change)="onDetailsIntensityChange($any(day.toLowerCase()),'Medium')" [disabled]="!isEditingClassDetails"> <span>Medium</span>
-                </label>
-                <label class="flex items-center gap-1 text-xs sm:text-sm">
-                  <input type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityHard']" (change)="onDetailsIntensityChange($any(day.toLowerCase()),'Hard')" [disabled]="!isEditingClassDetails"> <span>Hard</span>
-                </label>
-              </div>
-            </div>
+
+          <!-- Table/grid for days -->
+          <div class="overflow-x-auto">
+            <table class="min-w-full bg-white text-xs sm:text-sm rounded">
+              <thead>
+                <tr>
+                  <th class="px-2 py-1 text-left">Day</th>
+                  <th class="px-2 py-1 text-left">Routine</th>
+                  <th class="px-2 py-1 text-left">Easy</th>
+                  <th class="px-2 py-1 text-left">Medium</th>
+                  <th class="px-2 py-1 text-left">Hard</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let day of ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']">
+                  <td class="px-2 py-1">{{day}}</td>
+                  <td class="px-2 py-1"><input list="jargons" type="text" [(ngModel)]="selectedClass[day.toLowerCase()+'Routine']" class="w-full p-1 rounded border border-gray-300 text-xs" [readonly]="!isEditingClassDetails"></td>
+                  <td class="px-2 py-1 text-center">
+                    <span *ngIf="!isEditingClassDetails">
+                      <span *ngIf="selectedClass[day.toLowerCase()+'IntensityEasy']" class="inline-block px-1 py-0.5 rounded bg-green-200 text-green-800">✔</span>
+                    </span>
+                    <input *ngIf="isEditingClassDetails" type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityEasy']">
+                  </td>
+                  <td class="px-2 py-1 text-center">
+                    <span *ngIf="!isEditingClassDetails">
+                      <span *ngIf="selectedClass[day.toLowerCase()+'IntensityMedium']" class="inline-block px-1 py-0.5 rounded bg-yellow-200 text-yellow-800">✔</span>
+                    </span>
+                    <input *ngIf="isEditingClassDetails" type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityMedium']">
+                  </td>
+                  <td class="px-2 py-1 text-center">
+                    <span *ngIf="!isEditingClassDetails">
+                      <span *ngIf="selectedClass[day.toLowerCase()+'IntensityHard']" class="inline-block px-1 py-0.5 rounded bg-red-200 text-red-800">✔</span>
+                    </span>
+                    <input *ngIf="isEditingClassDetails" type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityHard']">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           <datalist id="jargons">
             <option value="fartlek (sprint straight, walk curve)"></option>
@@ -243,6 +271,7 @@
             <option value="distance 5k"></option>
           </datalist>
         </div>
+
         <div class="mb-4">
           <h3 class="text-black font-semibold mb-2">Class Lists</h3>
           <div *ngIf="selectedClass.enrolledStudents && selectedClass.enrolledStudents.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

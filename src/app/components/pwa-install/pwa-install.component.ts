@@ -175,8 +175,9 @@ import { Subscription } from 'rxjs';
 
     .pwa-status {
       position: fixed;
-      top: 20px;
+      bottom: 20px;
       right: 20px;
+      top: auto;
       display: flex;
       flex-direction: column;
       gap: 8px;
