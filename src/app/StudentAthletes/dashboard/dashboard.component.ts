@@ -74,6 +74,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private taskStatusChart: Chart | null = null;
   private routineTrendChart: Chart | null = null;
   private perClassBarChart: Chart | null = null;
+  private completedTodayByClass: Map<number, boolean> = new Map();
 
   constructor(
     private http: HttpClient,
@@ -186,8 +187,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (response && response.payload) {
         this.enrolledClasses = response.payload || [];
         console.log('Classes loaded successfully:', this.enrolledClasses);
+        // Ensure routine history is loaded, then compute today's routines and realtime completion
+        await this.loadRoutineHistory();
         await this.loadTodayRoutines();
-        this.loadRoutineHistory();
+        await this.refreshRealtimeCompletion();
+        this.renderCharts();
       } else {
         this.enrolledClasses = [];
       }
@@ -223,7 +227,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
             console.log(`Data for ${this.currentDayName}:`, todayData);
 
             if (todayData && todayData.task && todayData.task.trim() !== '') {
-              const isCompleted = this.isRoutineCompletedToday(this.currentDayName, classInfo.id);
+              // Local check via already loaded history
+              let isCompleted = this.isRoutineCompletedToday(this.currentDayName, classInfo.id);
+              // Independent backend verification to ensure correctness
+              try {
+                const remote = await this.isCompletedTodayRemote(classInfo.id);
+                isCompleted = isCompleted || remote;
+              } catch {}
 
               console.log('Adding routine:', {
                 className: payload.title || classInfo.title || 'Class',
@@ -261,7 +271,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const response = await this.routinesService.getRoutineHistory(this.studentUsername).toPromise();
       if (response && response.payload) {
         this.routineHistory = response.payload || [];
-        setTimeout(() => this.renderCharts(), 0);
+        // charts will be rendered after realtime completion refresh
+        // If classes are already loaded, refresh today's routines to reflect completion
+        if (this.enrolledClasses && this.enrolledClasses.length > 0) {
+          await this.loadTodayRoutines();
+          await this.refreshRealtimeCompletion();
+          this.renderCharts();
+        }
       } else {
         this.routineHistory = [];
       }
@@ -299,6 +315,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       return historyDateString === today && history.class_id === classId;
     });
+  }
+
+  // Independent backend verification using dedicated API
+  private async isCompletedTodayRemote(classId: number): Promise<boolean> {
+    if (this.studentUserId != null) {
+      try {
+        const res = await this.routinesService.checkTodayRoutineById(classId, this.studentUserId).toPromise();
+        const payload = (res && (res.payload ?? res.data)) || res;
+        if (payload && typeof payload.completed === 'boolean') return payload.completed;
+        if (res && res.status && res.status.remarks === 'success' && res.payload) return !!res.payload.completed;
+      } catch {}
+    }
+    if (!this.studentUsername) return false;
+    try {
+      const res = await this.routinesService.checkTodayRoutine(classId, this.studentUsername).toPromise();
+      const payload = (res && (res.payload ?? res.data)) || res;
+      if (payload && typeof payload.completed === 'boolean') {
+        return payload.completed;
+      }
+      // Some responses use {status:{remarks:'success'}, payload:{completed:true}}
+      if (res && res.status && res.status.remarks === 'success' && res.payload) {
+        return !!res.payload.completed;
+      }
+      return false;
+    } catch {
+      return false;
+    }
   }
 
   loadEvents(): void {
@@ -392,7 +435,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
       d.setDate(now.getDate() - i);
       const key = d.toDateString();
       labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-      const count = this.routineHistory.filter(h => new Date(h.date_of_submission).toDateString() === key).length;
+      let count = this.routineHistory.filter(h => new Date(h.date_of_submission).toDateString() === key).length;
+      const todayKey = new Date().toDateString();
+      if (key === todayKey) {
+        const delta = Array.from(this.completedTodayByClass.entries())
+          .filter(([classId, done]) => done && !this.hasHistoryTodayForClass(classId))
+          .length;
+        count += delta;
+      }
       values.push(count);
     }
 
@@ -428,6 +478,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
       entry.count += 1;
       map.set(h.class_id, entry);
     }
+    // Add realtime completions not yet reflected in history
+    for (const [classId, done] of this.completedTodayByClass.entries()) {
+      if (!done) continue;
+      if (this.hasHistoryTodayForClass(classId)) continue;
+      const entry = map.get(classId) || { name: (this.enrolledClasses.find(c => c.id === classId)?.title) || String(classId), count: 0 };
+      entry.count += 1;
+      map.set(classId, entry);
+    }
     const labels = Array.from(map.values()).map(v => v.name);
     const counts = Array.from(map.values()).map(v => v.count);
 
@@ -445,6 +503,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
     });
+  }
+
+  private hasHistoryTodayForClass(classId: number): boolean {
+    const today = new Date().toDateString();
+    return this.routineHistory.some(h => new Date(h.date_of_submission).toDateString() === today && h.class_id === classId);
+  }
+
+  private async refreshRealtimeCompletion(): Promise<void> {
+    this.completedTodayByClass.clear();
+    for (const cls of this.enrolledClasses || []) {
+      const done = await this.isCompletedTodayRemote(cls.id);
+      this.completedTodayByClass.set(cls.id, !!done);
+    }
   }
 }
 

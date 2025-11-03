@@ -108,7 +108,12 @@ export class RoutinesService {
 
            // Check if routine is completed for today
          checkTodayRoutine(routineId: number, studentUsername: string): Observable<any> {
-           return this.http.get<any>(`${this.apiUrl}/check-today/${routineId}/${studentUsername}`);
+           return this.http.get<any>(`${this.apiUrl}/routes.php?request=check-today/${routineId}/${studentUsername}`);
          }
+
+  // New: Check today's completion using class_id and user_id directly
+  checkTodayRoutineById(classId: number, userId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/routes.php?request=check-today-by-id/${classId}/${userId}`);
+  }
 
 }
