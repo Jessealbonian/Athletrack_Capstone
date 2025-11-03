@@ -217,7 +217,7 @@ import { Subscription } from 'rxjs';
       }
 
       .pwa-status {
-        top: 10px;
+        bottom: 10px;
         right: 10px;
       }
     }

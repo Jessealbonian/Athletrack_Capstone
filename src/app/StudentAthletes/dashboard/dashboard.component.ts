@@ -1,5 +1,5 @@
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { SidenavComponent } from '../sidenav/sidenav.component';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { HttpClient } from '@angular/common/http';
@@ -9,6 +9,9 @@ import { environment } from '../../../environments/environment';
 import { RoutinesService, ClassInfo, RoutineHistory } from '../../services/routines.service';
 import Swal from 'sweetalert2';
 import { finalize } from 'rxjs';
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 interface TaskData {
   task_id?: number;
@@ -48,7 +51,7 @@ interface Vlog {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   isNavOpen = true;
   activeSection: string = 'overview';
   
@@ -68,6 +71,11 @@ export class DashboardComponent implements OnInit {
   defaultImageUrl = 'https://placehold.co/400x300?text=No+Image';
   apiBaseUrl = 'http://localhost/demoproj1';
 
+  // Charts
+  private taskStatusChart: Chart | null = null;
+  private routineTrendChart: Chart | null = null;
+  private perClassBarChart: Chart | null = null;
+
   constructor(
     private http: HttpClient, 
     private routinesService: RoutinesService
@@ -86,6 +94,12 @@ export class DashboardComponent implements OnInit {
     this.fetchTasks();
     this.loadEnrolledClasses();
     this.loadEvents();
+  }
+
+  ngOnDestroy(): void {
+    this.taskStatusChart?.destroy();
+    this.routineTrendChart?.destroy();
+    this.perClassBarChart?.destroy();
   }
  
   onNavToggled(isOpen: boolean) {
@@ -115,6 +129,7 @@ export class DashboardComponent implements OnInit {
           ? (res as TaskData[])
           : (res?.payload ?? []);
         this.tasks = this.sortByStatusPriority(raw);
+        setTimeout(() => this.renderCharts(), 0);
         console.log('Fetched tasks:', this.tasks);
       },
       error: (err) => {
@@ -176,6 +191,7 @@ export class DashboardComponent implements OnInit {
       const response = await this.routinesService.getRoutineHistory(this.studentUsername).toPromise();
       if (response && response.payload) {
         this.routineHistory = response.payload || [];
+        setTimeout(() => this.renderCharts(), 0);
       } else {
         this.routineHistory = [];
       }
@@ -244,6 +260,108 @@ export class DashboardComponent implements OnInit {
   // Get routine history for a specific class
   getRoutineHistoryForClass(classId: number): RoutineHistory[] {
     return this.routineHistory.filter(history => history.class_id === classId).slice(0, 3);
+  }
+
+  // -------- Charts --------
+  private renderCharts() {
+    this.renderTaskStatusChart();
+    this.renderRoutineTrendChart();
+    this.renderPerClassBarChart();
+  }
+
+  private renderTaskStatusChart() {
+    const el = document.getElementById('taskStatusChart') as HTMLCanvasElement | null;
+    if (!el) return;
+    this.taskStatusChart?.destroy();
+    const ctx = el.getContext('2d');
+    if (!ctx) return;
+    const pending = this.getTaskCount('Pending');
+    const inProgress = this.getTaskCount('In Progress');
+    const completed = this.getTaskCount('Completed');
+    this.taskStatusChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Pending', 'In Progress', 'Completed'],
+        datasets: [{
+          data: [pending, inProgress, completed],
+          backgroundColor: ['#F59E0B', '#EAB308', '#15957F'],
+          borderColor: ['#F59E0B', '#EAB308', '#0A7664'],
+          borderWidth: 1
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+
+  private renderRoutineTrendChart() {
+    const el = document.getElementById('routineTrendChart') as HTMLCanvasElement | null;
+    if (!el) return;
+    this.routineTrendChart?.destroy();
+    const ctx = el.getContext('2d');
+    if (!ctx) return;
+
+    // Build last 7 days series
+    const now = new Date();
+    const labels: string[] = [];
+    const values: number[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const key = d.toDateString();
+      labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+      const count = this.routineHistory.filter(h => new Date(h.date_of_submission).toDateString() === key).length;
+      values.push(count);
+    }
+
+    this.routineTrendChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Routines Completed',
+          data: values,
+          borderColor: '#15957F',
+          backgroundColor: 'rgba(21, 149, 127, 0.2)',
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+
+  private renderPerClassBarChart() {
+    const el = document.getElementById('perClassBarChart') as HTMLCanvasElement | null;
+    if (!el) return;
+    this.perClassBarChart?.destroy();
+    const ctx = el.getContext('2d');
+    if (!ctx) return;
+
+    const map = new Map<number, { name: string; count: number }>();
+    for (const h of this.routineHistory) {
+      const entry = map.get(h.class_id) || { name: String(h.class_id), count: 0 } as any;
+      entry.name = (this.enrolledClasses.find(c => c.id === h.class_id)?.title) || entry.name;
+      entry.count += 1;
+      map.set(h.class_id, entry);
+    }
+    const labels = Array.from(map.values()).map(v => v.name);
+    const counts = Array.from(map.values()).map(v => v.count);
+
+    this.perClassBarChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Completions (All Time)',
+          data: counts,
+          backgroundColor: '#15957F',
+          borderColor: '#0A7664',
+          borderWidth: 1
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+    });
   }
 }
 
