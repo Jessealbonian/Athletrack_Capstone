@@ -127,6 +127,34 @@ export class RoutinehistoryComponent implements OnInit {
     document.body.classList.remove('modal-open');
   }
 
+  goToPrevMonth() {
+    // Decrement month; wrap year when going below January
+    if (this.selectedMonth === 1) {
+      this.selectedMonth = 12;
+      this.selectedYear -= 1;
+    } else {
+      this.selectedMonth -= 1;
+    }
+    this.daysInMonth = this.computeDaysInMonth(this.selectedYear, this.selectedMonth);
+    this.selectedDay = null;
+    this.attendeesForSelectedDay = [];
+    this.monthlyAttendanceCache.clear();
+  }
+
+  goToNextMonth() {
+    // Increment month; wrap year when passing December
+    if (this.selectedMonth === 12) {
+      this.selectedMonth = 1;
+      this.selectedYear += 1;
+    } else {
+      this.selectedMonth += 1;
+    }
+    this.daysInMonth = this.computeDaysInMonth(this.selectedYear, this.selectedMonth);
+    this.selectedDay = null;
+    this.attendeesForSelectedDay = [];
+    this.monthlyAttendanceCache.clear();
+  }
+
   private computeDaysInMonth(year: number, month: number): number[] {
     const count = new Date(year, month, 0).getDate();
     return Array.from({ length: count }, (_, i) => i + 1);

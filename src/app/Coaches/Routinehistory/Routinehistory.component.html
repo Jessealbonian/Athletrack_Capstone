@@ -93,7 +93,11 @@
     <div class="flex flex-col sm:flex-row items-center justify-between p-4 border-b gap-2 sticky top-0 bg-white">
       <div class="w-full sm:w-auto">
         <div class="text-base sm:text-lg font-semibold">{{ selectedClass?.class_name || 'Class' }} — Month View</div>
-        <div class="text-xs sm:text-sm text-gray-600">{{ selectedYear }}-{{ selectedMonth < 10 ? '0' + selectedMonth : selectedMonth }}</div>
+        <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+          <button class="px-2 py-1 rounded border" (click)="goToPrevMonth()">Prev</button>
+          <span>{{ selectedYear }}-{{ selectedMonth < 10 ? '0' + selectedMonth : selectedMonth }}</span>
+          <button class="px-2 py-1 rounded border" (click)="goToNextMonth()">Next</button>
+        </div>
       </div>
       <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-2 sm:mt-0">
         <button *ngIf="selectedDay" class="text-sm text-white px-3 py-2 rounded w-full sm:w-auto transition-colors duration-150" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'" (click)="openAttendeesModal()">View Attendees</button>

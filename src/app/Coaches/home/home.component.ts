@@ -127,6 +127,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   private lineChart: Chart | null = null;
   private pieCharts: Map<number, Chart> = new Map();
   currentAdminId: number | null = null;
+  activeStudentsToday: number = 0;
 
   constructor(
     private eventService: EventService,
@@ -256,6 +257,11 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       next: (response: any) => {
         if (response.status?.remarks === 'success' && response.payload) {
           this.dailyActivityData = response.payload;
+          // Compute "today" active students (fallback to latest point)
+          const todayIso = new Date().toISOString().slice(0,10);
+          const todayItem = this.dailyActivityData.find((d: any) => (new Date(d.date)).toISOString().slice(0,10) === todayIso)
+                           || this.dailyActivityData[this.dailyActivityData.length - 1];
+          this.activeStudentsToday = todayItem ? (todayItem.active_students || 0) : 0;
           this.createLineChart();
         }
       },
@@ -582,100 +588,76 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     return options;
   }
 
-  // Modify the generateReport function to handle dynamic month options
+  // Replace with a coach-focused report using dashboard stats
   generateReport() {
-    this.getAvailableDates();
+    const doc = new jsPDF();
+    const today = new Date();
+    const dateStr = today.toLocaleDateString();
 
-    if (this.availableDates.length === 0) {
-      Swal.fire({
-        icon: 'info',
-        title: 'No Data Available',
-        text: 'There are no past maintenance requests or events to generate a report from.'
+    // Title
+    doc.setFontSize(18);
+    doc.text('Coach Dashboard Report', 14, 18);
+    doc.setFontSize(11);
+    doc.text(`Generated: ${dateStr}`, 14, 26);
+
+    // Summary cards data
+    const activeToday = (() => {
+      const todayIso = new Date().toISOString().slice(0,10);
+      const item = this.dailyActivityData.find((d: any) => (new Date(d.date)).toISOString().slice(0,10) === todayIso)
+                 || this.dailyActivityData[this.dailyActivityData.length - 1];
+      return item ? (item.active_students || 0) : 0;
+    })();
+
+    autoTable(doc, {
+      startY: 34,
+      head: [['Metric', 'Value']],
+      body: [
+        ['Total Students', String(this.totalStudents || 0)],
+        ['Total Classes', String(this.totalClasses || 0)],
+        ['Active Students (Today)', String(activeToday)],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [10, 118, 100] },
+      styles: { cellPadding: 3 }
+    });
+
+    let currentY = (doc as any).lastAutoTable.finalY + 8;
+
+    // 7-day activity
+    const activityRows = (this.dailyActivityData || []).map((d: any) => [
+      new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      String(d.active_students || 0)
+    ]);
+    if (activityRows.length > 0) {
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Date', 'Active Students']],
+        body: activityRows,
+        theme: 'grid',
+        headStyles: { fillColor: [10, 118, 100] },
       });
-      return;
+      currentY = (doc as any).lastAutoTable.finalY + 8;
     }
 
-    // First, show section selection
-    Swal.fire({
-      title: 'Select Report Type',
-      html: `
-        <select id="sectionSelect" class="swal2-select" style="margin: 10px">
-          <option value="">Select Report Section</option>
-          <option value="${ReportSection.ALL}">${ReportSection.ALL}</option>
-          <option value="${ReportSection.SUMMARIES}">${ReportSection.SUMMARIES}</option>
-          <option value="${ReportSection.EVENTS}">${ReportSection.EVENTS}</option>
-          <option value="${ReportSection.RESIDENTS}">${ReportSection.RESIDENTS}</option>
-          <option value="${ReportSection.MAINTENANCE}">${ReportSection.MAINTENANCE}</option>
-        </select>
-      `,
-      showCancelButton: true,
-      confirmButtonText: 'Next',
-      preConfirm: () => {
-        const section = (document.getElementById('sectionSelect') as HTMLSelectElement).value;
-        if (!section) {
-          Swal.showValidationMessage('Please select a report section');
-          return false;
-        }
-        return section;
-      }
-    }).then((sectionResult) => {
-      if (sectionResult.isConfirmed) {
-        // Show year selection
-        Swal.fire({
-          title: 'Select Report Year',
-          html: `
-            <select id="yearSelect" class="swal2-select" style="margin: 10px">
-              ${this.generateYearOptions()}
-            </select>
-          `,
-          showCancelButton: true,
-          confirmButtonText: 'Next',
-          preConfirm: () => {
-            const year = (document.getElementById('yearSelect') as HTMLSelectElement).value;
-            if (!year) {
-              Swal.showValidationMessage('Please select a year');
-              return false;
-            }
-            return { section: sectionResult.value, year };
-          }
-        }).then((yearResult) => {
-          if (yearResult.isConfirmed) {
-            // Show month selection
-            Swal.fire({
-              title: 'Select Report Month',
-              html: `
-                <select id="monthSelect" class="swal2-select" style="margin: 10px">
-                  ${yearResult.value && 'year' in yearResult.value ? this.generateMonthOptions(yearResult.value.year) : ''}
-                </select>
-              `,
-              showCancelButton: true,
-              confirmButtonText: 'Generate Report',
-              preConfirm: () => {
-                const month = (document.getElementById('monthSelect') as HTMLSelectElement).value;
-                if (!month) {
-                  Swal.showValidationMessage('Please select a month');
-                  return false;
-                }
-                if (!yearResult.value) {
-                  Swal.showValidationMessage('Year data is missing');
-                  return false;
-                }
-                return {
-                  section: yearResult.value.section,
-                  month,
-                  year: yearResult.value.year
-                };
-              }
-            }).then((monthResult) => {
-              if (monthResult.isConfirmed && monthResult.value) {
-                const { section, month, year } = monthResult.value;
-                this.generatePDFReport(parseInt(month), parseInt(year), section as ReportSection);
-              }
-            });
-          }
-        });
-      }
+    // Per-class completion for the week
+    const classRows = (this.classCompletionStats || []).map((s: any) => {
+      const total = (s.completed || 0) + (s.not_completed || 0);
+      const rate = total > 0 ? Math.round((s.completed / total) * 100) : 0;
+      const enrolled = s.total_enrolled ?? total;
+      return [s.class_name || `Class ${s.class_id}`, String(enrolled), String(s.completed || 0), String(s.not_completed || 0), `${rate}%`];
     });
+    if (classRows.length > 0) {
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Class', 'Enrolled', 'Completed', 'Not Completed', 'Completion Rate']],
+        body: classRows,
+        theme: 'grid',
+        headStyles: { fillColor: [10, 118, 100] },
+      });
+      currentY = (doc as any).lastAutoTable.finalY + 8;
+    }
+
+    doc.save('coach_dashboard_report.pdf');
   }
 
   // New function to generate the actual PDF with filtering
