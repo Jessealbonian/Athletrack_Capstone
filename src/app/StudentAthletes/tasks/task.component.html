@@ -9,7 +9,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mb-4 gap-2">
             <h2 class="text-lg sm:text-xl font-semibold text-gray-800">Tasks</h2>
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                <button class="bg-[#735DA5] text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto justify-center" (click)="openAddTaskModal()">
+                <button class="bg-[#0A7664] hover:bg-[#22473F] text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto justify-center" (click)="openAddTaskModal()">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                     </svg>
@@ -26,9 +26,9 @@
 
         <!-- Filter Buttons -->
         <div class="flex flex-col sm:flex-row gap-2 mb-4">
-          <button (click)="setFilter('Pending')" [class.bg-[#735DA5]]="activeFilter==='Pending'" class="px-3 py-1 rounded text-white bg-gray-400 w-full sm:w-auto">Pending</button>
-          <button (click)="setFilter('In Progress')" [class.bg-[#735DA5]]="activeFilter==='In Progress'" class="px-3 py-1 rounded text-white bg-gray-400 w-full sm:w-auto">In Progress</button>
-          <button (click)="setFilter('Completed')" [class.bg-[#735DA5]]="activeFilter==='Completed'" class="px-3 py-1 rounded text-white bg-gray-400 w-full sm:w-auto">Completed</button>
+          <button (click)="setFilter('Pending')" [class.bg-[#0A7664]]="activeFilter==='Pending'" class="px-3 py-1 rounded text-white bg-gray-400 w-full sm:w-auto">Pending</button>
+          <button (click)="setFilter('In Progress')" [class.bg-[#0A7664]]="activeFilter==='In Progress'" class="px-3 py-1 rounded text-white bg-gray-400 w-full sm:w-auto">In Progress</button>
+          <button (click)="setFilter('Completed')" [class.bg-[#0A7664]]="activeFilter==='Completed'" class="px-3 py-1 rounded text-white bg-gray-400 w-full sm:w-auto">Completed</button>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -57,7 +57,7 @@
                        style="cursor: pointer;">
                 </div> -->
                 <div class="mt-2">
-                  <button class="text-sm text-white bg-[#735DA5] px-3 py-1 rounded w-full sm:w-auto" (click)="$event.stopPropagation(); openEditTask(task)">Edit Status</button>
+                  <button class="text-sm text-white bg-[#0A7664] hover:bg-[#22473F] px-3 py-1 rounded w-full sm:w-auto" (click)="$event.stopPropagation(); openEditTask(task)">Edit Status</button>
                 </div>
             </div>
         </div>

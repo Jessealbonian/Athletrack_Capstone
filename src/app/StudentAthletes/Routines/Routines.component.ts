@@ -92,7 +92,7 @@ export class RoutinesComponent implements OnInit {
         icon: 'warning',
         title: 'Invalid Token',
         text: 'Please enter a valid 7-digit token',
-        confirmButtonColor: '#735DA5'
+        confirmButtonColor: '#0A7664'
       });
       return;
     }
@@ -126,7 +126,7 @@ export class RoutinesComponent implements OnInit {
           showCancelButton: true,
           confirmButtonText: 'Yes, redeem',
           cancelButtonText: 'Cancel',
-          confirmButtonColor: '#735DA5',
+          confirmButtonColor: '#0A7664',
           cancelButtonColor: '#6B7280'
         });
         if (confirmSwal.isConfirmed) {
@@ -137,7 +137,7 @@ export class RoutinesComponent implements OnInit {
             text: 'You have been enrolled in the class!',
             timer: 2000,
             showConfirmButton: false,
-            confirmButtonColor: '#735DA5'
+            confirmButtonColor: '#0A7664'
           });
           this.closeEnrollmentModal();
           this.loadEnrolledClasses();
@@ -151,7 +151,7 @@ export class RoutinesComponent implements OnInit {
           icon: 'error',
           title: 'Enrollment Failed',
           text: result.message || 'Invalid token or enrollment failed',
-          confirmButtonColor: '#735DA5'
+          confirmButtonColor: '#0A7664'
         });
       }
     } catch (error: any) {
@@ -184,7 +184,7 @@ export class RoutinesComponent implements OnInit {
         icon: 'error', 
         title: 'Connection Error', 
         text: errorMessage,
-        confirmButtonColor: '#735DA5'
+        confirmButtonColor: '#0A7664'
       });
     } finally {
       this.isEnrolling = false;
@@ -314,7 +314,7 @@ export class RoutinesComponent implements OnInit {
         icon: 'warning',
         title: 'Routines Unavailable',
         text: 'Unable to load routines for this class. Please try again later.',
-        confirmButtonColor: '#735DA5'
+        confirmButtonColor: '#0A7664'
       });
     } finally {
       this.isLoadingRoutines = false;
@@ -370,7 +370,7 @@ export class RoutinesComponent implements OnInit {
         icon: 'warning',
         title: 'Missing Information',
         text: 'Please select a file and ensure routine data is available.',
-        confirmButtonColor: '#735DA5'
+        confirmButtonColor: '#0A7664'
       });
       return;
     }
@@ -412,7 +412,7 @@ export class RoutinesComponent implements OnInit {
         imageAlt: 'Uploaded Routine Image',
         timer: 3000,
         showConfirmButton: false,
-        confirmButtonColor: '#735DA5'
+        confirmButtonColor: '#0A7664'
       });
       this.closeRoutineCompletionModal();
       this.loadRoutineHistory();

@@ -12,16 +12,16 @@
                 <nav class="mt-6 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                     <a (click)="showSection('overview')" 
                        [class.bg-[#417505]]="activeSection === 'overview'" 
-                       class="bg-[#735DA5] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#A981DE] hover:scale-105 cursor-pointer text-center">Overview</a>
+                       class="bg-[#0A7664] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#22473F] hover:scale-105 cursor-pointer text-center">Overview</a>
                     <a (click)="showSection('tasks')" 
                        [class.bg-[#417505]]="activeSection === 'tasks'" 
-                       class="bg-[#735DA5] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#A981DE] hover:scale-105 cursor-pointer text-center">Tasks</a>
+                       class="bg-[#0A7664] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#22473F] hover:scale-105 cursor-pointer text-center">Tasks</a>
                     <!-- <a (click)="showSection('routines')"  -->
                        <!-- [class.bg-[#417505]]="activeSection === 'routines'"  -->
                        <!-- class="bg-[#735DA5] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#A981DE] hover:scale-105 cursor-pointer text-center">Routines</a> -->
                     <!-- <a (click)="showSection('events')" 
                        [class.bg-[#417505]]="activeSection === 'events'" 
-                       class="bg-[#735DA5] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#A981DE] hover:scale-105 cursor-pointer">Events</a> -->
+                       class="bg-[#0A7664] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#22473F] hover:scale-105 cursor-pointer">Events</a> -->
                 </nav>
 
                 <!-- Overview Section -->
@@ -107,7 +107,7 @@
                     </div>
 
                         <!-- Recent Routines -->
-                        <!-- <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+                         <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
                             <h3 class="text-base sm:text-lg font-semibold mb-4">Recent Routines</h3>
                             <div class="space-y-3">
                                 <div *ngFor="let history of routineHistory.slice(0, 3)" class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 rounded">
@@ -118,7 +118,7 @@
                                     <span class="text-xs sm:text-sm font-medium text-green-600 mt-2 sm:mt-0">Completed</span>
                                 </div>
                             </div>
-                        </div> -->
+                        </div> 
                     </div>
                 </div>
 

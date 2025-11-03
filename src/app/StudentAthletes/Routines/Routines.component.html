@@ -22,7 +22,7 @@
                     </div>
                         <!-- Copied layout from tasks: button + search -->
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                            <button class="bg-[#735DA5] text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto justify-center" (click)="openEnrollmentModal()">
+                            <button class="bg-[#0A7664] hover:bg-[#22473F] text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto justify-center" (click)="openEnrollmentModal()">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                             </svg>
@@ -42,7 +42,7 @@
                         <!-- Loading State for Routines -->
                         <div *ngIf="isLoadingRoutines" class="text-center py-8">
                             <div class="inline-flex items-center px-4 py-2 font-semibold leading-6 text-gray-600">
-                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-[#735DA5]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-[#0A7664]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
@@ -87,15 +87,15 @@
                                             readonly />
                                     </div>
                                     <div class="space-y-2">
-                                    <label class="purple-checkbox flex items-center">
+                                    <label class="flex items-center">
                                         <input type="checkbox" [checked]="weekly[day] && weekly[day].intensity==='Easy'" disabled/>
                                         <span class="ml-2 text-sm">Easy</span>
                                             </label>
-                                    <label class="purple-checkbox flex items-center">
+                                    <label class="flex items-center">
                                         <input type="checkbox" [checked]="weekly[day] && weekly[day].intensity==='Medium'" disabled/>
                                         <span class="ml-2 text-sm">Medium</span>
                                             </label>
-                                    <label class="purple-checkbox flex items-center">
+                                    <label class="flex items-center">
                                         <input type="checkbox" [checked]="weekly[day] && weekly[day].intensity==='Hard'" disabled/>
                                         <span class="ml-2 text-sm">Hard</span>
                                             </label>
@@ -173,7 +173,7 @@
                                 </svg>
                                 <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-2">No Classes Yet</h3>
                                 <p class="text-gray-500 mb-4">You haven't enrolled in any classes yet.</p>
-                                <button (click)="openEnrollmentModal()" class="inline-flex items-center px-4 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-[#735DA5] hover:bg-[#6B4F8F] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#735DA5]">
+                                <button (click)="openEnrollmentModal()" class="inline-flex items-center px-4 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-[#0A7664] hover:bg-[#22473F] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0A7664]">
                                     <svg class="-ml-1 mr-2 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                                     </svg>

@@ -310,7 +310,7 @@ export class taskComponent implements OnInit {
       imageHeight: 400,
       imageAlt: `Task completion screenshot for ${taskTitle}`,
       confirmButtonText: 'Close',
-      confirmButtonColor: '#735DA5'
+      confirmButtonColor: '#0A7664'
     });
   }
 }
