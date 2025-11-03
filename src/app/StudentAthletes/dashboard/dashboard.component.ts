@@ -1,4 +1,3 @@
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { SidenavComponent } from '../sidenav/sidenav.component';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -34,14 +33,12 @@ interface Event {
   status: string;
 }
 
-interface Vlog {
-  id: number;
-  title: string;
-  description: string;
-  video_url: string;
-  thumbnail_url: string;
-  author: string;
-  publishDate: string;
+interface TodayRoutine {
+  className: string;
+  task: string;
+  intensity: string;
+  isCompleted: boolean;
+  classId: number;
 }
 
 @Component({
@@ -54,17 +51,19 @@ interface Vlog {
 export class DashboardComponent implements OnInit, OnDestroy {
   isNavOpen = true;
   activeSection: string = 'overview';
-  
+
   // Task related properties
   tasks: TaskData[] = [];
   activeFilter: 'Pending' | 'In Progress' | 'Completed' = 'Pending';
-  
+
   // Routine related properties
   enrolledClasses: ClassInfo[] = [];
   routineHistory: RoutineHistory[] = [];
+  todayRoutines: TodayRoutine[] = [];
+  currentDayName: string = '';
   studentUsername = '';
   studentUserId: number | null = null;
-  
+
   // Event related properties
   events: Event[] = [];
   isLoading = false;
@@ -77,19 +76,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private perClassBarChart: Chart | null = null;
 
   constructor(
-    private http: HttpClient, 
+    private http: HttpClient,
     private routinesService: RoutinesService
   ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
     // Get user info from localStorage
     const storedUsername = localStorage.getItem('username');
     if (storedUsername && storedUsername.trim().length > 0) {
       this.studentUsername = storedUsername;
-  }
+    }
     const storedId = localStorage.getItem('hoa_user_id');
     this.studentUserId = storedId ? Number(storedId) : null;
-    
+
+    // Get current day name
+    this.currentDayName = this.getCurrentDayName();
+
     // Load all data
     this.fetchTasks();
     this.loadEnrolledClasses();
@@ -97,30 +99,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Clean up charts to prevent memory leaks
     this.taskStatusChart?.destroy();
     this.routineTrendChart?.destroy();
     this.perClassBarChart?.destroy();
   }
+
  
   onNavToggled(isOpen: boolean) {
     this.isNavOpen = isOpen;
   }
-
-  showSection(section: string) {
+  showSection(section: string): void {
     this.activeSection = section;
   }
 
+  // Get current day name
+  getCurrentDayName(): string {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const today = new Date();
+    return days[today.getDay()];
+  }
+
   // Task Methods (from task.component.ts)
-  private fetchTasks() {
+  private fetchTasks(): void {
     const storedUserId = localStorage.getItem('hoa_user_id');
     const userId = storedUserId ? Number(storedUserId) : null;
-    
+
     if (!userId) {
       console.error('No user ID found in localStorage');
       this.tasks = [];
       return;
     }
-    
+
     const url = `${environment.apiUrl}/routes.php?request=getTasks&user_id=${userId}`;
     console.log('Fetching tasks from:', url);
     this.http.get<{ status?: string; payload?: TaskData[] } | any>(url).subscribe({
@@ -144,7 +154,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.sortByStatusPriority(filtered);
   }
 
-  setFilter(filter: 'Pending' | 'In Progress' | 'Completed') {
+  setFilter(filter: 'Pending' | 'In Progress' | 'Completed'): void {
     this.activeFilter = filter;
   }
 
@@ -163,19 +173,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Routine Methods (from Routines.component.ts)
-  async loadEnrolledClasses() {
+  // Routine Methods
+  async loadEnrolledClasses(): Promise<void> {
     console.log('Loading classes for user_id:', this.studentUserId);
-    
+
     try {
       if (!this.studentUserId) {
         throw new Error('Missing user_id');
       }
       const response = await this.routinesService.getEnrolledClassesById(this.studentUserId).toPromise();
-      
+
       if (response && response.payload) {
         this.enrolledClasses = response.payload || [];
         console.log('Classes loaded successfully:', this.enrolledClasses);
+        await this.loadTodayRoutines();
         this.loadRoutineHistory();
       } else {
         this.enrolledClasses = [];
@@ -186,7 +197,66 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  async loadRoutineHistory() {
+  async loadTodayRoutines(): Promise<void> {
+    this.todayRoutines = [];
+
+    console.log('Loading today\'s routines...');
+    console.log('Current day:', this.currentDayName);
+    console.log('Enrolled classes:', this.enrolledClasses);
+
+    for (const classInfo of this.enrolledClasses) {
+      try {
+        console.log(`Fetching routines for class ${classInfo.id}...`);
+        const response = await this.routinesService.getClassRoutines(classInfo.id).toPromise();
+
+        console.log('Full response:', response);
+        console.log('Response payload:', response?.payload);
+
+        if (response && response.payload) {
+          const payload = response.payload;
+
+          if (payload.weekly) {
+            const weekly = payload.weekly;
+            console.log('Weekly data found:', weekly);
+
+            const todayData = weekly[this.currentDayName];
+            console.log(`Data for ${this.currentDayName}:`, todayData);
+
+            if (todayData && todayData.task && todayData.task.trim() !== '') {
+              const isCompleted = this.isRoutineCompletedToday(this.currentDayName, classInfo.id);
+
+              console.log('Adding routine:', {
+                className: payload.title || classInfo.title || 'Class',
+                task: todayData.task,
+                intensity: todayData.intensity,
+                isCompleted: isCompleted
+              });
+
+              this.todayRoutines.push({
+                className: payload.title || classInfo.title || 'Class',
+                task: todayData.task,
+                intensity: todayData.intensity,
+                isCompleted: isCompleted,
+                classId: classInfo.id
+              });
+            } else {
+              console.log(`No task for ${this.currentDayName} or task is empty`);
+            }
+          } else {
+            console.log('No weekly data in payload');
+          }
+        } else {
+          console.log('Invalid response structure');
+        }
+      } catch (error) {
+        console.error(`Error loading routines for class ${classInfo.id}:`, error);
+      }
+    }
+
+    console.log('Final today\'s routines:', this.todayRoutines);
+  }
+
+  async loadRoutineHistory(): Promise<void> {
     try {
       const response = await this.routinesService.getRoutineHistory(this.studentUsername).toPromise();
       if (response && response.payload) {
@@ -201,21 +271,37 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Check if routine is completed today
-  isRoutineCompletedToday(classId: number): boolean {
-    // Get current date in Philippine timezone (UTC+8)
+  isRoutineCompletedToday(day: string, classId: number): boolean {
     const philippineTime = new Date();
-    philippineTime.setHours(philippineTime.getHours() + 8); // Adjust to Philippine time
+    philippineTime.setHours(philippineTime.getHours() + 8);
     const today = philippineTime.toDateString();
-    
-    return this.routineHistory.some(history => 
-      history.class_id === classId && 
-      new Date(history.date_of_submission).toDateString() === today
-    );
+
+    return this.routineHistory.some(history => {
+      const historyDate = new Date(history.date_of_submission);
+      historyDate.setHours(historyDate.getHours() + 8);
+      const historyDateString = historyDate.toDateString();
+
+      return historyDateString === today &&
+             history.class_id === classId &&
+             history.routine.includes(day);
+    });
   }
 
-  // Event Methods (from dashboard.component.ts)
-  loadEvents() {
+  isAnyRoutineCompletedTodayForClass(classId: number): boolean {
+    const philippineTime = new Date();
+    philippineTime.setHours(philippineTime.getHours() + 8);
+    const today = philippineTime.toDateString();
+
+    return this.routineHistory.some(history => {
+      const historyDate = new Date(history.date_of_submission);
+      historyDate.setHours(historyDate.getHours() + 8);
+      const historyDateString = historyDate.toDateString();
+
+      return historyDateString === today && history.class_id === classId;
+    });
+  }
+
+  loadEvents(): void {
     this.isLoading = true;
     this.http.get(`${this.apiBaseUrl}/api/routes.php?request=getEvents`).pipe(
       finalize(() => {
@@ -224,7 +310,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     ).subscribe(response => {
       if (response && (response as any).status === 'success') {
         this.events = ((response as any).data || []).map((event: Event) => {
-          const imageUrl = event.image 
+          const imageUrl = event.image
             ? (event.image.startsWith('http') ? event.image : `${this.apiBaseUrl}/api/uploads/events/${event.image}`)
             : this.defaultImageUrl;
           return {
@@ -236,20 +322,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Utility methods
   getTaskCount(status: 'Pending' | 'In Progress' | 'Completed'): number {
     return this.tasks.filter(task => task.status === status).length;
   }
 
   getCompletedRoutinesToday(): number {
-    // Get current date in Philippine timezone (UTC+8)
     const philippineTime = new Date();
-    philippineTime.setHours(philippineTime.getHours() + 8); // Adjust to Philippine time
+    philippineTime.setHours(philippineTime.getHours() + 8);
     const today = philippineTime.toDateString();
-    
-    return this.routineHistory.filter(history => 
-      new Date(history.date_of_submission).toDateString() === today
-    ).length;
+
+    return this.routineHistory.filter(history => {
+      const historyDate = new Date(history.date_of_submission);
+      historyDate.setHours(historyDate.getHours() + 8);
+      return historyDate.toDateString() === today;
+    }).length;
   }
 
   getUpcomingEvents(): Event[] {
@@ -257,19 +343,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.events.filter(event => new Date(event.date) > today).slice(0, 3);
   }
 
-  // Get routine history for a specific class
   getRoutineHistoryForClass(classId: number): RoutineHistory[] {
     return this.routineHistory.filter(history => history.class_id === classId).slice(0, 3);
   }
 
-  // -------- Charts --------
-  private renderCharts() {
+  private renderCharts(): void {
     this.renderTaskStatusChart();
     this.renderRoutineTrendChart();
     this.renderPerClassBarChart();
   }
 
-  private renderTaskStatusChart() {
+  private renderTaskStatusChart(): void {
     const el = document.getElementById('taskStatusChart') as HTMLCanvasElement | null;
     if (!el) return;
     this.taskStatusChart?.destroy();
@@ -293,14 +377,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  private renderRoutineTrendChart() {
+  private renderRoutineTrendChart(): void {
     const el = document.getElementById('routineTrendChart') as HTMLCanvasElement | null;
     if (!el) return;
     this.routineTrendChart?.destroy();
     const ctx = el.getContext('2d');
     if (!ctx) return;
 
-    // Build last 7 days series
     const now = new Date();
     const labels: string[] = [];
     const values: number[] = [];
@@ -331,7 +414,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  private renderPerClassBarChart() {
+  private renderPerClassBarChart(): void {
     const el = document.getElementById('perClassBarChart') as HTMLCanvasElement | null;
     if (!el) return;
     this.perClassBarChart?.destroy();
@@ -340,7 +423,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const map = new Map<number, { name: string; count: number }>();
     for (const h of this.routineHistory) {
-      const entry = map.get(h.class_id) || { name: String(h.class_id), count: 0 } as any;
+      const entry = map.get(h.class_id) || { name: String(h.class_id), count: 0 };
       entry.name = (this.enrolledClasses.find(c => c.id === h.class_id)?.title) || entry.name;
       entry.count += 1;
       map.set(h.class_id, entry);

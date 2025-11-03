@@ -3,31 +3,31 @@
     <app-sidenav (navToggled)="onNavToggled($event)" class="fixed top-0 left-0 h-full z-10"></app-sidenav>
     <div class="flex flex-1">
         <!-- Content div with lower z-index -->
-        <div class="transition-all duration-300 w-full z-1 mt-16" 
+        <div class="transition-all duration-300 w-full z-1 mt-16"
             [class.lg:ml-64]="isNavOpen"
             [class.lg:ml-20]="!isNavOpen">
             <div class="p-2 sm:p-6">
 
                 <!-- Navigation Bar -->
                 <nav class="mt-6 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                    <a (click)="showSection('overview')" 
-                       [class.bg-[#417505]]="activeSection === 'overview'" 
+                    <a (click)="showSection('overview')"
+                       [class.bg-[#417505]]="activeSection === 'overview'"
                        class="bg-[#0A7664] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#22473F] hover:scale-105 cursor-pointer text-center">Overview</a>
-                    <a (click)="showSection('tasks')" 
-                       [class.bg-[#417505]]="activeSection === 'tasks'" 
+                    <a (click)="showSection('tasks')"
+                       [class.bg-[#417505]]="activeSection === 'tasks'"
                        class="bg-[#0A7664] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#22473F] hover:scale-105 cursor-pointer text-center">Tasks</a>
                     <!-- <a (click)="showSection('routines')"  -->
                        <!-- [class.bg-[#417505]]="activeSection === 'routines'"  -->
                        <!-- class="bg-[#735DA5] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#A981DE] hover:scale-105 cursor-pointer text-center">Routines</a> -->
-                    <!-- <a (click)="showSection('events')" 
-                       [class.bg-[#417505]]="activeSection === 'events'" 
+                    <!-- <a (click)="showSection('events')"
+                       [class.bg-[#417505]]="activeSection === 'events'"
                        class="bg-[#0A7664] text-white py-2 px-4 rounded transition-all duration-300 ease-in-out hover:bg-[#22473F] hover:scale-105 cursor-pointer">Events</a> -->
                 </nav>
 
                 <!-- Overview Section -->
                 <div *ngIf="activeSection === 'overview'" class="mt-8">
                     <h2 class="text-xl sm:text-2xl font-bold mb-6">Dashboard Overview</h2>
-                    
+
                     <!-- Stats Cards -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
                         <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md border-l-4 border-blue-500">
@@ -58,7 +58,7 @@
                             </div>
                         </div>
 
-                        <!-- <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md border-l-4 border-green-500">
                             <div class="flex items-center">
                                 <div class="p-2 bg-green-100 rounded-full">
                                     <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,25 +66,25 @@
                                     </svg>
                                 </div>
                                 <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600">Completed Today</p>
-                                    <p class="text-2xl font-semibold text-gray-900">{{ getCompletedRoutinesToday() }}</p>
+                                    <p class="text-xs sm:text-sm font-medium text-gray-600">Completed Today</p>
+                                    <p class="text-xl sm:text-2xl font-semibold text-gray-900">{{ getCompletedRoutinesToday() }}</p>
                                 </div>
                             </div>
-                        </div> -->
+                        </div>
 
-                        <!-- <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md border-l-4 border-purple-500">
                             <div class="flex items-center">
                                 <div class="p-2 bg-purple-100 rounded-full">
                                     <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                                     </svg>
                                 </div>
                                 <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600">Upcoming Events</p>
-                                    <p class="text-2xl font-semibold text-gray-900">{{ getUpcomingEvents().length }}</p>
+                                    <p class="text-xs sm:text-sm font-medium text-gray-600">Today's Routines</p>
+                                    <p class="text-xl sm:text-2xl font-semibold text-gray-900">{{ todayRoutines.length }}</p>
                                 </div>
                             </div>
-                        </div> -->
+                        </div>
                     </div>
 
                     <!-- Recent Activity -->
@@ -97,28 +97,61 @@
                                     <div>
                                         <p class="font-medium">{{ task.title }}</p>
                                         <p class="text-xs sm:text-sm text-gray-600">{{ task.date_due }} {{ task.time_due }}</p>
-                        </div>
+                                    </div>
                                     <span [class]="task.status === 'Completed' ? 'text-green-600' : task.status === 'In Progress' ? 'text-yellow-600' : 'text-gray-600'"
                                           class="text-xs sm:text-sm font-medium mt-2 sm:mt-0">
                                         {{ task.status }}
                                     </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Today's Routines -->
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+                            <h3 class="text-base sm:text-lg font-semibold mb-4">Today's Routines ({{ currentDayName }})</h3>
+                            <div class="space-y-3">
+                                <div *ngIf="todayRoutines.length === 0" class="text-center py-4 text-gray-500">
+                                    <p>No routines scheduled for today</p>
+                                </div>
+                                <div *ngFor="let routine of todayRoutines" class="p-3 bg-gray-50 rounded border-l-4"
+                                     [class.border-green-500]="routine.isCompleted"
+                                     [class.border-yellow-500]="!routine.isCompleted">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <p class="font-medium text-sm">{{ routine.className }}</p>
+                                            <p class="text-xs text-gray-600 mt-1">{{ routine.task }}</p>
+                                            <p class="text-xs text-gray-500 mt-1">Intensity: {{ routine.intensity }}</p>
+                                        </div>
+                                        <div class="ml-2">
+                                            <span *ngIf="routine.isCompleted" class="text-green-600">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </span>
+                                            <span *ngIf="!routine.isCompleted" class="text-yellow-600 text-xs font-medium">
+                                                Pending
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                        <!-- Recent Routines -->
-                         <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
-                            <h3 class="text-base sm:text-lg font-semibold mb-4">Recent Routines</h3>
-                            <div class="space-y-3">
-                                <div *ngFor="let history of routineHistory.slice(0, 3)" class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 rounded">
-                                    <div>
-                                        <p class="font-medium">{{ history.routine }}</p>
-                                        <p class="text-xs sm:text-sm text-gray-600">{{ history.date_of_submission }}</p>
+                    <!-- Insights Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mt-6">
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md h-72 sm:h-64">
+                            <h3 class="text-sm font-semibold mb-2">Your Task Status</h3>
+                            <canvas id="taskStatusChart"></canvas>
                         </div>
-                                    <span class="text-xs sm:text-sm font-medium text-green-600 mt-2 sm:mt-0">Completed</span>
-                                </div>
-                            </div>
-                        </div> 
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md h-72 sm:h-64 lg:col-span-2">
+                            <h3 class="text-sm font-semibold mb-2">Routines Completed (Last 7 Days)</h3>
+                            <canvas id="routineTrendChart"></canvas>
+                        </div>
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md h-80 sm:h-64 lg:col-span-3">
+                            <h3 class="text-sm font-semibold mb-2">Completions by Class</h3>
+                            <canvas id="perClassBarChart"></canvas>
+                        </div>
                     </div>
 
                     <!-- Insights Charts -->
@@ -141,22 +174,22 @@
                 <!-- Tasks Section -->
                 <div *ngIf="activeSection === 'tasks'" class="mt-8">
                     <h2 class="text-xl sm:text-2xl font-bold mb-6">Tasks</h2>
-                    
+
                     <!-- Task Filters -->
                     <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mb-6">
-                        <button (click)="setFilter('Pending')" 
+                        <button (click)="setFilter('Pending')"
                                 [class.bg-blue-600]="activeFilter === 'Pending'"
                                 [class.bg-gray-300]="activeFilter !== 'Pending'"
                                 class="px-4 py-2 rounded-lg text-white font-medium transition-colors w-full sm:w-auto">
                             Pending ({{ getTaskCount('Pending') }})
                         </button>
-                        <button (click)="setFilter('In Progress')" 
+                        <button (click)="setFilter('In Progress')"
                                 [class.bg-yellow-600]="activeFilter === 'In Progress'"
                                 [class.bg-gray-300]="activeFilter !== 'In Progress'"
                                 class="px-4 py-2 rounded-lg text-white font-medium transition-colors w-full sm:w-auto">
                             In Progress ({{ getTaskCount('In Progress') }})
                         </button>
-                        <button (click)="setFilter('Completed')" 
+                        <button (click)="setFilter('Completed')"
                                 [class.bg-green-600]="activeFilter === 'Completed'"
                                 [class.bg-gray-300]="activeFilter !== 'Completed'"
                                 class="px-4 py-2 rounded-lg text-white font-medium transition-colors w-full sm:w-auto">
@@ -189,7 +222,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div *ngIf="filteredTasks.length === 0" class="text-center py-8 text-gray-500">
                             No tasks found for this status.
                         </div>
@@ -199,7 +232,7 @@
                 <!-- Routines Section -->
                 <div *ngIf="activeSection === 'routines'" class="mt-8">
                     <h2 class="text-xl sm:text-2xl font-bold mb-6">Routines</h2>
-                    
+
                     <div *ngIf="enrolledClasses.length === 0" class="text-center py-8">
                         <p class="text-gray-500 mb-4">You haven't enrolled in any classes yet.</p>
                         <p class="text-gray-400 text-sm">Go to the Routines page to enroll in classes.</p>
@@ -211,22 +244,22 @@
                                 <div>
                                     <h3 class="text-base sm:text-lg font-semibold">{{ classInfo.title }}</h3>
                                     <p class="text-gray-600">Coach: {{ classInfo.coach_username }}</p>
-                    </div>
+                                </div>
                                 <div class="text-left sm:text-right">
-                                    <span [class]="isRoutineCompletedToday(classInfo.id) ? 'text-green-600' : 'text-gray-500'"
+                                    <span [class]="isAnyRoutineCompletedTodayForClass(classInfo.id) ? 'text-green-600' : 'text-gray-500'"
                                           class="text-xs sm:text-sm font-medium">
-                                        {{ isRoutineCompletedToday(classInfo.id) ? 'Completed Today' : 'Not Completed' }}
+                                        {{ isAnyRoutineCompletedTodayForClass(classInfo.id) ? 'Completed Today' : 'Not Completed' }}
                                     </span>
                                 </div>
-                        </div>
-                            
+                            </div>
+
                             <!-- Routine History for this class -->
                             <div class="mt-4">
                                 <h4 class="font-medium text-gray-700 mb-2">Recent Completions:</h4>
                                 <div class="space-y-2">
-                                    <div *ngFor="let history of getRoutineHistoryForClass(classInfo.id)" 
+                                    <div *ngFor="let history of getRoutineHistoryForClass(classInfo.id)"
                                          class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 bg-gray-50 rounded">
-                                <div>
+                                        <div>
                                             <p class="text-xs sm:text-sm font-medium">{{ history.routine }}</p>
                                             <p class="text-xs text-gray-600">{{ history.date_of_submission }}</p>
                                         </div>
@@ -241,11 +274,11 @@
                 <!-- Events Section -->
                 <!-- <div *ngIf="activeSection === 'events'" class="mt-8">
                     <h2 class="text-2xl font-bold mb-6">Events</h2>
-                    
+
                     <div *ngIf="isLoading" class="text-center py-8">
                         <p class="text-gray-500">Loading events...</p>
                         </div>
-                                
+
                     <div *ngIf="!isLoading && events.length === 0" class="text-center py-8">
                         <p class="text-gray-500">No events found.</p>
                     </div>
