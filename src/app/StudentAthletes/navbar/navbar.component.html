@@ -7,6 +7,39 @@
 
     <!-- Right-aligned user section -->
     <div class="user-section flex items-center space-x-4">
+      <!-- Notification Bell Icon -->
+      <div class="relative cursor-pointer mr-2">
+        <button (click)="toggleNotification()" class="relative">
+          <i class="fa-regular fa-bell text-xl text-gray-700 hover:text-gray-900"></i>
+          <span *ngIf="hasKickNotification" class="absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full"></span>
+        </button>
+        <!-- Notification Dropdown -->
+        <div *ngIf="isNotificationOpen && hasKickNotification" class="absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-lg ring-1 ring-black ring-opacity-5 z-50 max-h-96 overflow-y-auto">
+          <div class="p-4">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b">
+              <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>
+              <button (click)="isNotificationOpen = false" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="space-y-3">
+              <div *ngFor="let notif of kickNotifications" class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p class="text-sm text-gray-800">
+                  <strong class="text-red-700">You were kicked from:</strong>
+                  <span class="font-bold text-gray-900">{{ notif.class_name }}</span>
+                </p>
+                <p class="text-xs text-gray-600 mt-1">
+                  <strong>Reason:</strong> {{ notif.reason }}
+                </p>
+              </div>
+            </div>
+            <div *ngIf="kickNotifications.length === 0" class="text-center py-4 text-gray-500 text-sm">
+              No notifications
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Profile and Dropdown -->
       <div class="relative">
         <button (click)="toggleDropdown()" class="flex items-center gap-2">

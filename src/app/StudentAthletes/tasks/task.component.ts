@@ -313,4 +313,61 @@ export class taskComponent implements OnInit {
       confirmButtonColor: '#0A7664'
     });
   }
+
+  deleteTask(task: TaskData) {
+    if (!task.task_id) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Cannot delete task: Invalid task ID'
+      });
+      return;
+    }
+
+    Swal.fire({
+      title: 'Are you sure?',
+      text: `Do you want to delete "${task.title}"? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const url = `${environment.apiUrl}/routes.php?request=deleteTask`;
+        const body = { task_id: task.task_id };
+
+        this.http.post(url, body).subscribe({
+          next: (res: any) => {
+            console.log('Delete task response:', res);
+            if (res.status === 'success') {
+              Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: 'Task has been deleted successfully.',
+                timer: 1500,
+                showConfirmButton: false
+              });
+              this.fetchTasks();
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: res.message || 'Failed to delete task'
+              });
+            }
+          },
+          error: (err) => {
+            console.error('Failed to delete task', err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Failed to delete task. Please try again later.'
+            });
+          }
+        });
+      }
+    });
+  }
 }

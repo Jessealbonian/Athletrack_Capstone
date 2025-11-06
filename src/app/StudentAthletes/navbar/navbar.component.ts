@@ -22,6 +22,12 @@ export class NavbarComponent implements OnInit {
   email: string = ''; // Change from username to email
 
   isDropdownOpen: boolean = false;
+  
+  // Notification properties
+  kickNotifications: any[] = [];
+  hasKickNotification: boolean = false;
+  isNotificationOpen: boolean = false;
+  private apiUrl = 'https://capstonebackend-9wrj.onrender.com/api';
 
   constructor(private auth: AuthService, private http: HttpClient, private titleService: Title, private router: Router, private route: ActivatedRoute) {}
 
@@ -36,6 +42,7 @@ export class NavbarComponent implements OnInit {
           localStorage.setItem('hoa_user_id', String(this.userId));
         } catch (e) {}
         this.getProfile(this.userId);
+        this.fetchKickNotifications();
       } else {
         this.profile = null; // No user logged in
         console.log("User not found");
@@ -85,6 +92,10 @@ export class NavbarComponent implements OnInit {
   
   toggleDropdown() {
     this.isDropdownOpen = !this.isDropdownOpen;
+    // Close notification when opening dropdown
+    if (this.isDropdownOpen) {
+      this.isNotificationOpen = false;
+    }
   }
 
   logout() {
@@ -112,6 +123,43 @@ export class NavbarComponent implements OnInit {
         });
       }
     });
+  }
+
+  fetchKickNotifications() {
+    if (!this.userId) {
+      return;
+    }
+
+    const url = `${this.apiUrl}/routes.php?request=getKickNotifications&user_id=${this.userId}`;
+    this.http.get(url).pipe(
+      catchError(error => {
+        console.error("Error fetching kick notifications:", error);
+        return [];
+      })
+    ).subscribe({
+      next: (resp: any) => {
+        if (resp && resp.status && resp.status.remarks === 'success' && resp.payload && Array.isArray(resp.payload)) {
+          this.kickNotifications = resp.payload;
+          this.hasKickNotification = resp.payload.length > 0;
+        } else {
+          this.kickNotifications = [];
+          this.hasKickNotification = false;
+        }
+      },
+      error: (error) => {
+        console.error("Error fetching kick notifications:", error);
+        this.kickNotifications = [];
+        this.hasKickNotification = false;
+      }
+    });
+  }
+
+  toggleNotification(): void {
+    this.isNotificationOpen = !this.isNotificationOpen;
+    // Close dropdown when opening notification
+    if (this.isNotificationOpen) {
+      this.isDropdownOpen = false;
+    }
   }
 }
 

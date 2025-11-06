@@ -48,16 +48,17 @@
                   </span>
                 </p>
                 <!-- Display uploaded image if available -->
-                <!-- <div *ngIf="task.image && task.status === 'Completed'" class="mt-3">
+                <div *ngIf="task.image && task.status === 'Completed'" class="mt-3">
                   <p class="text-sm text-gray-600 mb-2">Completion Screenshot:</p>
                   <img [src]="task.image" 
                        [alt]="'Task completion screenshot for ' + task.title"
-                       class="w-full h-32 object-cover rounded border"
+                       class="w-full h-32 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
                        (click)="openImageModal(task.image, task.title)"
                        style="cursor: pointer;">
-                </div> -->
-                <div class="mt-2">
-                  <button class="text-sm text-white bg-[#0A7664] hover:bg-[#22473F] px-3 py-1 rounded w-full sm:w-auto" (click)="$event.stopPropagation(); openEditTask(task)">Edit Status</button>
+                </div>
+                <div class="mt-2 flex gap-2">
+                  <button class="text-sm text-white bg-[#0A7664] hover:bg-[#22473F] px-3 py-1 rounded flex-1" (click)="$event.stopPropagation(); openEditTask(task)">Edit Status</button>
+                  <button class="text-sm text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded flex-1" (click)="$event.stopPropagation(); deleteTask(task)">Delete</button>
                 </div>
             </div>
         </div>

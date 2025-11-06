@@ -177,6 +177,12 @@ export class ClassComponent implements OnInit {
   generatedTokens: string[] = [];
   isGeneratingTokens = false;
 
+  // Kick student properties
+  showKickModal = false;
+  selectedStudentForKick: any = null;
+  kickReason = '';
+  isKickingStudent = false;
+
   onNavToggled(isOpen: boolean) {
     this.isNavOpen = isOpen;
   }
@@ -191,8 +197,8 @@ export class ClassComponent implements OnInit {
       this.currentAdminId = user?.id ?? null;
       // Once we have admin id, load classes filtered to this admin
       this.fetchClasses();
-      this.loadClassRequests();
-      this.loadClassStats();
+    this.loadClassRequests();
+    this.loadClassStats();
     });
   }
 
@@ -1038,6 +1044,163 @@ export class ClassComponent implements OnInit {
         text: 'All tokens copied to clipboard',
         timer: 1500,
         showConfirmButton: false
+      });
+    });
+  }
+
+  // Kick student methods
+  openKickModal(student: any) {
+    this.selectedStudentForKick = student;
+    this.kickReason = '';
+    this.showKickModal = true;
+  }
+
+  closeKickModal() {
+    this.showKickModal = false;
+    this.selectedStudentForKick = null;
+    this.kickReason = '';
+    this.isKickingStudent = false;
+  }
+
+  confirmKickStudent() {
+    if (!this.selectedStudentForKick || !this.selectedClass || !this.kickReason || this.kickReason.trim().length === 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Please provide a reason for kicking the student.'
+      });
+      return;
+    }
+
+    // Confirmation dialog
+    Swal.fire({
+      icon: 'warning',
+      title: 'Are you sure?',
+      text: `You are about to kick ${this.selectedStudentForKick.name} from this class. This action cannot be undone.`,
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, kick student',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.isKickingStudent = true;
+        
+        // Step 1: Fetch codegen data to get class_id and user_id
+        const kickData = {
+          class_id: this.selectedClass.class_id,
+          user_id: this.selectedStudentForKick.user_id,
+          code: this.selectedStudentForKick.code,
+          reason: this.kickReason.trim()
+        };
+
+        this.http.post(`${this.apiUrl}/routes.php?request=kickStudent`, kickData).subscribe({
+          next: (response: any) => {
+            this.isKickingStudent = false;
+            if (response.status === 'success' || response.status?.remarks === 'success') {
+              Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Student has been kicked from the class.',
+                timer: 2000,
+                showConfirmButton: false
+              });
+              this.closeKickModal();
+              // Refresh the enrolled students list
+              this.fetchEnrolledStudentsForClass(this.selectedClass.class_id);
+              // Also refresh the grid view
+              this.fetchClasses();
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: response.message || response.status?.message || 'Failed to kick student. Please try again.'
+              });
+            }
+          },
+          error: (error) => {
+            this.isKickingStudent = false;
+            console.error('Error kicking student:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Failed to kick student. Please try again.'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  deleteClass() {
+    if (!this.selectedClass || !this.selectedClass.class_id) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No class selected to delete.'
+      });
+      return;
+    }
+
+    // First confirmation
+    Swal.fire({
+      icon: 'warning',
+      title: 'Are you sure?',
+      text: `You are about to delete "${this.selectedClass.class_name}". This will permanently delete the class, all enrolled students, routines, and related data. This action cannot be undone!`,
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel'
+    }).then((firstResult) => {
+      if (!firstResult.isConfirmed) return;
+
+      // Second confirmation for safety
+      Swal.fire({
+        icon: 'error',
+        title: 'Final Warning',
+        html: `This will <strong>permanently delete</strong> "${this.selectedClass.class_name}" and all associated data.<br/><br/>Are you absolutely sure?`,
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, I am sure',
+        cancelButtonText: 'Cancel'
+      }).then((secondResult) => {
+        if (secondResult.isConfirmed) {
+          const deleteData = {
+            class_id: this.selectedClass.class_id
+          };
+
+          this.http.post(`${this.apiUrl}/routes.php?request=deleteClass`, deleteData).subscribe({
+            next: (response: any) => {
+              if (response.status === 'success') {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Deleted!',
+                  text: 'Class has been deleted successfully.',
+                  timer: 2000,
+                  showConfirmButton: false
+                });
+                this.closeClassDetailsModal();
+                this.fetchClasses(); // Refresh the class list
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: response.message || 'Failed to delete class. Please try again.'
+                });
+              }
+            },
+            error: (error) => {
+              console.error('Error deleting class:', error);
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to delete class. Please try again.'
+              });
+            }
+          });
+        }
       });
     });
   }
