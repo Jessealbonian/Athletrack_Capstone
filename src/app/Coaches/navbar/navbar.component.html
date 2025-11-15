@@ -11,10 +11,8 @@
       <!-- Profile and Dropdown -->
       <div class="relative">
         <button (click)="toggleDropdown()" class="flex items-center gap-2">
+          <span *ngIf="username" class="username font-medium mr-2">{{ username }}</span>
           <i class="fa-regular fa-user text-xl cursor-pointer"></i>
-          <div *ngIf="profile">
-            <span class="username font-medium">{{ profile.username }}</span>
-          </div>
         </button>
         <div *ngIf="isDropdownOpen"
           class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">

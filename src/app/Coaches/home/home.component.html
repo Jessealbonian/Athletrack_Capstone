@@ -12,10 +12,10 @@
           </div>
 
           <div class="flex justify-end ">
-            <button (click)="generateReport()" 
+            <button (click)="openReportModal()" 
                 class="bg-green-900 text-white px-4 py-2 rounded hover:bg-green-1000 transition duration-200 mr-2 mb-4">
                 <i class="fas fa-download"></i> Generate Report
-            </button> <!--(click)="generateReport()" -->
+            </button>
         </div>
 
           <!-- Statistics Cards -->
@@ -174,6 +174,73 @@
                     <button (click)="showUpcomingEventsModal = false" 
                             class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded">
                         Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Generation Modal -->
+        <div *ngIf="showReportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white shadow-lg p-6 rounded-lg w-full max-w-md mx-2">
+                <h2 class="text-xl font-bold mb-4">Generate Report</h2>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Report Type</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center">
+                            <input type="radio" [(ngModel)]="reportType" value="week" class="mr-2">
+                            <span>Week</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" [(ngModel)]="reportType" value="month" class="mr-2">
+                            <span>Month</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Year</label>
+                    <input type="number" [(ngModel)]="selectedReportYear" 
+                           [min]="2020" [max]="2030" 
+                           class="w-full p-2 border rounded">
+                </div>
+
+                <div class="mb-4" *ngIf="reportType === 'week'">
+                    <label class="block text-sm font-semibold mb-2">Week (1-52)</label>
+                    <input type="number" [(ngModel)]="selectedReportWeek" 
+                           [min]="1" [max]="52" 
+                           class="w-full p-2 border rounded">
+                </div>
+
+                <div class="mb-4" *ngIf="reportType === 'month'">
+                    <label class="block text-sm font-semibold mb-2">Month</label>
+                    <select [(ngModel)]="selectedReportMonth" class="w-full p-2 border rounded">
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <button (click)="closeReportModal()" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                        Cancel
+                    </button>
+                    <button (click)="generateReport()" 
+                            class="px-4 py-2 text-white rounded" 
+                            style="background-color: #0A7664;"
+                            onmouseover="this.style.backgroundColor='#22473F'"
+                            onmouseout="this.style.backgroundColor='#0A7664'">
+                        Generate
                     </button>
                 </div>
             </div>

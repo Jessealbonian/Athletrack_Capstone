@@ -35,6 +35,9 @@ interface AttendeeRecord {
   user_id?: number;
   name?: string;
   image?: string | null;
+  routine?: string;
+  routine_intensity?: string;
+  time_of_submission?: string;
 }
 
 @Component({
@@ -182,7 +185,10 @@ export class RoutinehistoryComponent implements OnInit {
           return {
             user_id: a.user_id ?? a.id ?? null,
             name: a.name ?? a.username ?? 'Student',
-            image
+            image,
+            routine: a.routine || '',
+            routine_intensity: a.routine_intensity || '',
+            time_of_submission: a.time_of_submission || ''
           } as AttendeeRecord;
         });
         this.attendeesForSelectedDay = attendees;
@@ -253,13 +259,25 @@ export class RoutinehistoryComponent implements OnInit {
 
     autoTable(doc, {
       startY: 32,
-      head: [['Name', 'Image']],
-      body: body.map(r => [r.name, '']),
-      styles: { fontSize: 10, cellPadding: 3, minCellHeight: imageSizeMm + 4 },
-      headStyles: { fillColor: [115, 93, 165] },
-      columnStyles: { 0: { cellWidth: 100 }, 1: { cellWidth: imageSizeMm + 6 } },
+      head: [['Name', 'Routine', 'Intensity', 'Time', 'Image']],
+      body: body.map((r, idx) => [
+        r.name, 
+        (list[idx]?.routine || 'N/A'),
+        (list[idx]?.routine_intensity || 'N/A'),
+        (list[idx]?.time_of_submission || 'N/A'),
+        ''
+      ]),
+      styles: { fontSize: 9, cellPadding: 2, minCellHeight: imageSizeMm + 4 },
+      headStyles: { fillColor: [10, 118, 100] },
+      columnStyles: { 
+        0: { cellWidth: 50 }, 
+        1: { cellWidth: 60 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 30 },
+        4: { cellWidth: imageSizeMm + 6 } 
+      },
       didDrawCell: (data) => {
-        if (data.section === 'body' && data.column.index === 1) {
+        if (data.section === 'body' && data.column.index === 4) {
           const rowIndex = data.row.index;
           const imgData = body[rowIndex]?.img;
           if (imgData) {
@@ -302,7 +320,10 @@ export class RoutinehistoryComponent implements OnInit {
                 return {
                   user_id: a.user_id ?? a.id ?? null,
                   name: a.name ?? a.username ?? 'Student',
-                  image
+                  image,
+                  routine: a.routine || '',
+                  routine_intensity: a.routine_intensity || '',
+                  time_of_submission: a.time_of_submission || ''
                 } as AttendeeRecord;
               });
               this.monthlyAttendanceCache.set(d, attendees);
@@ -317,17 +338,24 @@ export class RoutinehistoryComponent implements OnInit {
       );
     }
 
-    // Build flat rows: Date, Name, Image
-    const rows: { date: string; name: string; imageUrl: string | null }[] = [];
+    // Build flat rows: Date, Name, Routine, Intensity, Time, Image
+    const rows: { date: string; name: string; routine: string; intensity: string; time: string; imageUrl: string | null }[] = [];
     for (const d of days) {
       const list = this.monthlyAttendanceCache.get(d) || [];
       const dateStr = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       for (const a of list) {
-        rows.push({ date: dateStr, name: a.name || 'Student', imageUrl: a.image || null });
+        rows.push({ 
+          date: dateStr, 
+          name: a.name || 'Student', 
+          routine: a.routine || 'N/A',
+          intensity: a.routine_intensity || 'N/A',
+          time: a.time_of_submission || 'N/A',
+          imageUrl: a.image || null 
+        });
       }
       if (list.length === 0) {
         // Still show the day with no attendees
-        rows.push({ date: dateStr, name: '(none)', imageUrl: null });
+        rows.push({ date: dateStr, name: '(none)', routine: 'N/A', intensity: 'N/A', time: 'N/A', imageUrl: null });
       }
     }
 
@@ -348,24 +376,30 @@ export class RoutinehistoryComponent implements OnInit {
 
     autoTable(doc, {
       startY: 32,
-      head: [['Date', 'Name', 'Image']],
-      body: rows.map(() => ['', '', '']),
-      styles: { fontSize: 10, cellPadding: 3, minCellHeight: imageSizeMm + 4 },
-      headStyles: { fillColor: [115, 93, 165] },
+      head: [['Date', 'Name', 'Routine', 'Intensity', 'Time', 'Image']],
+      body: rows.map(() => ['', '', '', '', '', '']),
+      styles: { fontSize: 8, cellPadding: 2, minCellHeight: imageSizeMm + 4 },
+      headStyles: { fillColor: [10, 118, 100] },
       columnStyles: {
-        0: { cellWidth: 35 },
-        1: { cellWidth: 100 },
-        2: { cellWidth: imageSizeMm + 6 }
+        0: { cellWidth: 30 },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 50 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: imageSizeMm + 6 }
       },
       didParseCell: (data) => {
         if (data.section === 'body') {
           const idx = data.row.index;
           if (data.column.index === 0) data.cell.text = [rows[idx].date];
           if (data.column.index === 1) data.cell.text = [rows[idx].name];
+          if (data.column.index === 2) data.cell.text = [rows[idx].routine];
+          if (data.column.index === 3) data.cell.text = [rows[idx].intensity];
+          if (data.column.index === 4) data.cell.text = [rows[idx].time];
         }
       },
       didDrawCell: (data) => {
-        if (data.section === 'body' && data.column.index === 2) {
+        if (data.section === 'body' && data.column.index === 5) {
           const idx = data.row.index;
           const imgData = images[idx];
           if (imgData) {

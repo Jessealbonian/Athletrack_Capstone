@@ -1,10 +1,11 @@
 import { HttpClient } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../auth.service';
 import { CommonModule } from '@angular/common';
 import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
-import { Router } from '@angular/router'; // Import the Router service
+import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-navbar',
@@ -13,11 +14,11 @@ import { Router } from '@angular/router'; // Import the Router service
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
 
   userId: number = 0;
   profile: any;
-  name:  any;
+  username: string = '';
 
   
   isDropdownOpen: boolean = false;
@@ -40,7 +41,7 @@ ngOnInit() {
 
 
 getProfile(userId: number) {
-  const url = `http://localhost/DEMO2/demoproject/api/getHoaAdminProf/${userId}`;
+  const url = `${environment.apiUrl}/routes.php?request=getHoaAdminProf/${userId}`;
   this.http.get(url).pipe(
     catchError(error => {
       console.error("Error fetching profile:", error);
@@ -51,6 +52,11 @@ getProfile(userId: number) {
       console.log("API response:", resp);
       if (resp?.data && Array.isArray(resp.data) && resp.data.length > 0) {
         this.profile = resp.data[0];
+        this.username = this.profile.username || '';
+        console.log("Profile data:", this.profile);
+      } else if (resp?.payload && Array.isArray(resp.payload) && resp.payload.length > 0) {
+        this.profile = resp.payload[0];
+        this.username = this.profile.username || '';
         console.log("Profile data:", this.profile);
       } else {
         console.error("No profile data found for userId:", userId);
