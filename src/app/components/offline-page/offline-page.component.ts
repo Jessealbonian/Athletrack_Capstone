@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PwaService } from '../../services/pwa.service';
+import { OfflineStorageService } from '../../services/offline-storage.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -8,7 +9,16 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="offline-container" *ngIf="isOffline">
+    <!-- Small offline indicator when cached data is available -->
+    <div class="offline-indicator" *ngIf="isOffline && hasCachedData && !shouldShowOfflinePage">
+      <div class="offline-badge">
+        <i class="fas fa-wifi-slash mr-2"></i>
+        <span>Offline - Using cached data</span>
+      </div>
+    </div>
+
+    <!-- Full offline page only when no cached data -->
+    <div class="offline-container" *ngIf="shouldShowOfflinePage">
       <div class="offline-content">
         <div class="offline-icon">
           <i class="fas fa-wifi-slash text-red-500 text-6xl"></i>
@@ -226,32 +236,200 @@ import { Subscription } from 'rxjs';
         justify-content: center;
       }
     }
+
+    /* Small offline indicator */
+    .offline-indicator {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      z-index: 9999;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .offline-badge {
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .offline-indicator {
+        top: 60px;
+        right: 10px;
+        left: 10px;
+      }
+
+      .offline-badge {
+        justify-content: center;
+        font-size: 0.75rem;
+        padding: 6px 12px;
+      }
+    }
   `]
 })
 export class OfflinePageComponent implements OnInit, OnDestroy {
   isOffline = false;
   isRetrying = false;
+  hasCachedData = false;
+  shouldShowOfflinePage = false;
   
   private subscriptions: Subscription[] = [];
 
-  constructor(private pwaService: PwaService) {}
+  constructor(
+    private pwaService: PwaService,
+    private offlineStorage: OfflineStorageService
+  ) {}
 
   ngOnInit(): void {
     // Subscribe to online/offline status
     this.subscriptions.push(
       this.pwaService.pwaStatus$.subscribe(status => {
         this.isOffline = !status.isOnline;
+        this.checkCachedData();
       })
     );
 
     // Also listen to browser's online/offline events
     window.addEventListener('online', () => {
       this.isOffline = false;
+      this.checkCachedData();
     });
 
     window.addEventListener('offline', () => {
       this.isOffline = true;
+      this.checkCachedData();
     });
+
+    // Initial check
+    this.checkCachedData();
+  }
+
+  /**
+   * Check if there's cached data available
+   * Only show offline page if offline AND no cached data
+   */
+  private async checkCachedData(): Promise<void> {
+    if (!this.isOffline) {
+      // Online - don't show offline page
+      this.shouldShowOfflinePage = false;
+      this.hasCachedData = false;
+      return;
+    }
+
+    // Offline - check if we have cached data
+    try {
+      let hasIndexedDBCache = false;
+      let hasCacheAPICache = false;
+
+      // Check IndexedDB for cached data
+      try {
+        // Check offlineData store
+        const offlineDataKeys = await this.offlineStorage.getAllOfflineDataKeys();
+        hasIndexedDBCache = offlineDataKeys.length > 0;
+        
+        // Also check cache store for API responses
+        // Try to get a sample cached response from common endpoints
+        const sampleKeys = [
+          'appState',
+          'GET:/api/routes.php?request=getClasses',
+          'GET:/api/routes.php?request=getTotalStudents',
+          'GET:/api/routes.php?request=getDailyStudentActivity'
+        ];
+        for (const key of sampleKeys) {
+          const cached = await this.offlineStorage.getCachedData(key);
+          if (cached) {
+            hasIndexedDBCache = true;
+            break;
+          }
+        }
+        
+        // Also check if we can access IndexedDB directly
+        if ('indexedDB' in window) {
+          try {
+            const db = await new Promise<IDBDatabase>((resolve, reject) => {
+              const request = indexedDB.open('AthleTrackDB', 1);
+              request.onsuccess = () => resolve(request.result);
+              request.onerror = () => reject(request.error);
+            });
+            
+            // Check cache store
+            if (db.objectStoreNames.contains('cache')) {
+              const transaction = db.transaction(['cache'], 'readonly');
+              const store = transaction.objectStore('cache');
+              const countRequest = store.count();
+              const count = await new Promise<number>((resolve, reject) => {
+                countRequest.onsuccess = () => resolve(countRequest.result);
+                countRequest.onerror = () => reject(countRequest.error);
+              });
+              if (count > 0) {
+                hasIndexedDBCache = true;
+              }
+            }
+            
+            db.close();
+          } catch (e) {
+            // Ignore direct IndexedDB access errors
+          }
+        }
+      } catch (e) {
+        console.log('IndexedDB check failed:', e);
+      }
+      
+      // Check Cache API
+      if ('caches' in window) {
+        try {
+          const cacheNames = await caches.keys();
+          for (const cacheName of cacheNames) {
+            if (cacheName.includes('athletrack') || cacheName.includes('dynamic') || cacheName.includes('static')) {
+              const cache = await caches.open(cacheName);
+              const keys = await cache.keys();
+              if (keys.length > 0) {
+                hasCacheAPICache = true;
+                break;
+              }
+            }
+          }
+        } catch (e) {
+          console.log('Cache API check failed:', e);
+        }
+      }
+
+      this.hasCachedData = hasIndexedDBCache || hasCacheAPICache;
+
+      // Only show offline page if we're offline AND have no cached data
+      this.shouldShowOfflinePage = this.isOffline && !this.hasCachedData;
+      
+      if (this.hasCachedData && this.isOffline) {
+        console.log('📦 Offline mode: Using cached data. App will continue to work.');
+        console.log(`   IndexedDB Cache: ${hasIndexedDBCache ? 'Yes' : 'No'}`);
+        console.log(`   Cache API: ${hasCacheAPICache ? 'Yes' : 'No'}`);
+      } else if (this.isOffline && !this.hasCachedData) {
+        console.log('⚠️  Offline mode: No cached data available. Showing offline page.');
+      }
+    } catch (error) {
+      console.error('Error checking cached data:', error);
+      // If we can't check, assume no cache and show offline page
+      this.shouldShowOfflinePage = this.isOffline;
+      this.hasCachedData = false;
+    }
   }
 
   ngOnDestroy(): void {

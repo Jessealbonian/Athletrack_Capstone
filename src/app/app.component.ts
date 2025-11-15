@@ -40,6 +40,27 @@ export class AppComponent implements OnInit, OnDestroy {
         console.error('Auto-sync failed:', err);
       });
     });
+
+    // Try to restore frozen state if offline
+    if (!navigator.onLine) {
+      this.restoreFrozenState();
+    }
+  }
+
+  /**
+   * Restore frozen app state when offline
+   */
+  private async restoreFrozenState(): Promise<void> {
+    try {
+      const frozenState = await this.pwaService.getFrozenState();
+      if (frozenState) {
+        console.log('📦 Restoring frozen app state from cache');
+        // The state is already in IndexedDB, components can access it via OfflineStorageService
+        // This is just a notification that cached data is available
+      }
+    } catch (error) {
+      console.error('Error restoring frozen state:', error);
+    }
   }
 
   ngOnDestroy(): void {
