@@ -42,13 +42,13 @@ import { Subscription } from 'rxjs';
             <i class="fas fa-sync-alt mr-2" [class.animate-spin]="isRetrying"></i>
             {{ isRetrying ? 'Retrying...' : 'Try Again' }}
           </button>
-          
-          <button 
-            (click)="checkForUpdates()" 
-            class="update-btn">
-            <i class="fas fa-download mr-2"></i>
-            Check for Updates
-          </button>
+        </div>
+        
+        <div class="offline-info" *ngIf="!isRetrying">
+          <p class="text-sm text-gray-600">
+            <i class="fas fa-info-circle mr-2"></i>
+            Data will automatically sync when connection is restored
+          </p>
         </div>
         
         <div class="offline-tips">
@@ -278,21 +278,5 @@ export class OfflinePageComponent implements OnInit, OnDestroy {
     }
   }
 
-  async checkForUpdates(): Promise<void> {
-    try {
-      const hasUpdate = await this.pwaService.checkForUpdates();
-      if (hasUpdate) {
-        // Show update notification
-        alert('Update available! The app will refresh to apply the update.');
-        await this.pwaService.forceUpdate();
-        window.location.reload();
-      } else {
-        alert('No updates available.');
-      }
-    } catch (error) {
-      console.error('Update check failed:', error);
-      alert('Failed to check for updates. Please try again.');
-    }
-  }
 }
 

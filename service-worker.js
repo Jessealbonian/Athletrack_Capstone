@@ -89,8 +89,11 @@ self.addEventListener('fetch', event => {
   event.respondWith(handleDefaultRequest(request));
 });
 
-// Handle API requests with network-first strategy
+// Handle API requests with network-first strategy and aggressive caching
 async function handleApiRequest(request) {
+  const url = new URL(request.url);
+  const cacheKey = request.url;
+  
   try {
     // Try network first
     const networkResponse = await fetch(request);
@@ -98,10 +101,25 @@ async function handleApiRequest(request) {
     // Clone the response for caching
     const responseClone = networkResponse.clone();
     
-    // Cache successful responses
-    if (networkResponse.ok) {
+    // Cache ALL successful responses (including errors that might be useful offline)
+    if (networkResponse.status < 500) {
       const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, responseClone);
+      // Store with timestamp for freshness checking
+      const cachedRequest = new Request(cacheKey, {
+        method: request.method,
+        headers: request.headers
+      });
+      await cache.put(cachedRequest, responseClone);
+      
+      // Also store in IndexedDB for more persistent storage
+      try {
+        const data = await networkResponse.clone().json();
+        await storeInIndexedDB(cacheKey, data, Date.now());
+      } catch (e) {
+        // If not JSON, store as text
+        const text = await networkResponse.clone().text();
+        await storeInIndexedDB(cacheKey, text, Date.now());
+      }
     }
     
     return networkResponse;
@@ -111,14 +129,30 @@ async function handleApiRequest(request) {
     // Fallback to cache
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
+      console.log('Serving from cache:', request.url);
       return cachedResponse;
+    }
+    
+    // Try IndexedDB as fallback
+    try {
+      const storedData = await getFromIndexedDB(cacheKey);
+      if (storedData) {
+        console.log('Serving from IndexedDB:', request.url);
+        return new Response(JSON.stringify(storedData.data), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    } catch (e) {
+      console.log('IndexedDB fallback failed:', e);
     }
     
     // Return offline response for API requests
     return new Response(
       JSON.stringify({ 
         error: 'Network unavailable', 
-        message: 'Please check your connection and try again.' 
+        message: 'You are offline. Showing cached data.',
+        offline: true
       }),
       {
         status: 503,
@@ -127,6 +161,58 @@ async function handleApiRequest(request) {
       }
     );
   }
+}
+
+// IndexedDB helper functions
+async function storeInIndexedDB(key, data, timestamp) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('AthleTrackDB', 1);
+    request.onsuccess = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains('apiCache')) {
+        // Create if doesn't exist
+        const versionChange = db.version + 1;
+        db.close();
+        const upgradeRequest = indexedDB.open('AthleTrackDB', versionChange);
+        upgradeRequest.onupgradeneeded = () => {
+          const upgradeDb = upgradeRequest.result;
+          upgradeDb.createObjectStore('apiCache', { keyPath: 'key' });
+        };
+        upgradeRequest.onsuccess = () => {
+          const upgradeDb = upgradeRequest.result;
+          const transaction = upgradeDb.transaction(['apiCache'], 'readwrite');
+          const store = transaction.objectStore('apiCache');
+          store.put({ key, data, timestamp });
+          resolve();
+        };
+      } else {
+        const transaction = db.transaction(['apiCache'], 'readwrite');
+        const store = transaction.objectStore('apiCache');
+        store.put({ key, data, timestamp });
+        resolve();
+      }
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function getFromIndexedDB(key) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('AthleTrackDB', 1);
+    request.onsuccess = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains('apiCache')) {
+        resolve(null);
+        return;
+      }
+      const transaction = db.transaction(['apiCache'], 'readonly');
+      const store = transaction.objectStore('apiCache');
+      const getRequest = store.get(key);
+      getRequest.onsuccess = () => resolve(getRequest.result);
+      getRequest.onerror = () => reject(getRequest.error);
+    };
+    request.onerror = () => reject(request.error);
+  });
 }
 
 // Handle static assets with cache-first strategy
@@ -209,28 +295,57 @@ async function handleDefaultRequest(request) {
 self.addEventListener('sync', event => {
   console.log('Background sync triggered:', event.tag);
   
-  if (event.tag === 'background-sync') {
+  if (event.tag === 'background-sync' || event.tag === 'sync-pending-requests') {
     event.waitUntil(doBackgroundSync());
   }
 });
 
-// Handle background sync
+// Handle background sync - automatically sync when online
 async function doBackgroundSync() {
   try {
+    // Check if we're online
+    if (!navigator.onLine) {
+      console.log('Still offline, cannot sync');
+      return;
+    }
+
     // Get all clients
     const clients = await self.clients.matchAll();
     
-    // Notify clients about sync
+    // Notify clients to sync their pending requests
     clients.forEach(client => {
       client.postMessage({
-        type: 'BACKGROUND_SYNC',
-        message: 'Background sync completed'
+        type: 'AUTO_SYNC',
+        message: 'Automatic sync triggered'
       });
     });
+
+    console.log('Background sync completed automatically');
   } catch (error) {
     console.error('Background sync failed:', error);
   }
 }
+
+// Listen for online event to trigger automatic sync
+self.addEventListener('online', () => {
+  console.log('Service Worker detected online status - triggering sync');
+  // Register a background sync
+  if ('sync' in self.registration) {
+    self.registration.sync.register('sync-pending-requests').catch(err => {
+      console.log('Background sync registration failed:', err);
+    });
+  }
+  
+  // Also notify all clients
+  self.clients.matchAll().then(clients => {
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'ONLINE',
+        message: 'Connection restored - syncing data automatically'
+      });
+    });
+  });
+});
 
 // Handle push notifications
 self.addEventListener('push', event => {

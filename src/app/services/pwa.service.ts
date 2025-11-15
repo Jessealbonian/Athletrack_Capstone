@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { OfflineStorageService } from './offline-storage.service';
 
 export interface PWAInstallPrompt {
   prompt(): Promise<void>;
@@ -30,9 +31,12 @@ export class PwaService {
 
   public installPrompt$ = this.installPromptSource.asObservable();
   public pwaStatus$ = this.pwaStatusSource.asObservable();
+  private syncInterval: any;
+  private isSyncing = false;
 
-  constructor() {
+  constructor(private offlineStorage: OfflineStorageService) {
     this.initializePWA();
+    this.setupAutoSync();
   }
 
   private initializePWA(): void {
@@ -54,10 +58,12 @@ export class PwaService {
     // Listen for online/offline events
     window.addEventListener('online', () => {
       this.updatePWAStatus({ isOnline: true });
+      this.handleOnline();
     });
 
     window.addEventListener('offline', () => {
       this.updatePWAStatus({ isOnline: false });
+      this.handleOffline();
     });
 
     // Check if app is already installed
@@ -271,5 +277,77 @@ export class PwaService {
       }
     }
     return false;
+  }
+
+  /**
+   * Setup automatic sync when online
+   */
+  private setupAutoSync(): void {
+    // Check for pending syncs every 5 seconds when online
+    this.syncInterval = setInterval(() => {
+      if (navigator.onLine && !this.isSyncing) {
+        this.syncPendingData();
+      }
+    }, 5000);
+  }
+
+  /**
+   * Handle going online - automatically sync
+   */
+  private async handleOnline(): Promise<void> {
+    console.log('Back online - starting automatic sync...');
+    // Wait a bit to ensure connection is stable
+    setTimeout(() => {
+      this.syncPendingData();
+    }, 1000);
+  }
+
+  /**
+   * Handle going offline - save current state
+   */
+  private async handleOffline(): Promise<void> {
+    console.log('Gone offline - saving current state...');
+    // The service worker will handle caching automatically
+    // This is where you could save critical app state
+  }
+
+  /**
+   * Sync pending data automatically (no user prompt)
+   */
+  private async syncPendingData(): Promise<void> {
+    if (this.isSyncing || !navigator.onLine) {
+      return;
+    }
+
+    this.isSyncing = true;
+    try {
+      await this.offlineStorage.syncPendingRequests();
+      console.log('Automatic sync completed');
+    } catch (error) {
+      console.error('Error during automatic sync:', error);
+    } finally {
+      this.isSyncing = false;
+    }
+  }
+
+  /**
+   * Save current app state for offline use
+   */
+  async freezeAppState(state: any): Promise<void> {
+    await this.offlineStorage.saveOfflineData('appState', state);
+  }
+
+  /**
+   * Get frozen app state
+   */
+  async getFrozenState(): Promise<any> {
+    return await this.offlineStorage.getOfflineData('appState');
+  }
+
+  /**
+   * Clear frozen state
+   */
+  async clearFrozenState(): Promise<void> {
+    await this.offlineStorage.removeCachedData('appState');
   }
 }
