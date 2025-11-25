@@ -38,6 +38,7 @@ interface AttendeeRecord {
   routine?: string;
   routine_intensity?: string;
   time_of_submission?: string;
+  status?: 'active' | 'inactive';
 }
 
 @Component({
@@ -70,6 +71,31 @@ export class RoutinehistoryComponent implements OnInit {
 
   // Attendees modal
   isAttendeesModalOpen = false;
+  attendeeStatusFilter: 'all' | 'active' | 'inactive' = 'all';
+  get filteredAttendeesForSelectedDay() {
+    if (this.attendeeStatusFilter === 'all') return this.attendeesForSelectedDay;
+    return this.attendeesForSelectedDay.filter((a: any) => {
+      // Assume all fetched are active; extend if backend supports real status
+      return this.attendeeStatusFilter === 'active';
+    });
+  }
+
+  attendeeHistoryModalOpen = false;
+  selectedAttendeeHistory: any[] = [];
+  selectedAttendee: any = null;
+  onAttendeeClick(attendee: any) {
+    this.selectedAttendee = attendee;
+    this.attendeeHistoryModalOpen = true;
+    const url = `${environment.apiUrl}/routes.php?request=getRoutineHistoryForStudentInClass&class_id=${this.selectedClass?.class_id}&user_id=${attendee.user_id}`;
+    this.http.get<any>(url).subscribe(res => {
+      this.selectedAttendeeHistory = res?.payload || [];
+    });
+  }
+  closeAttendeeHistoryModal() {
+    this.attendeeHistoryModalOpen = false;
+    this.selectedAttendee = null;
+    this.selectedAttendeeHistory = [];
+  }
 
   constructor(private http: HttpClient, private auth: AuthService) {}
 
@@ -188,7 +214,8 @@ export class RoutinehistoryComponent implements OnInit {
             image,
             routine: a.routine || '',
             routine_intensity: a.routine_intensity || '',
-            time_of_submission: a.time_of_submission || ''
+            time_of_submission: a.time_of_submission || '',
+            status: a.status === 'inactive' ? 'inactive' : 'active'
           } as AttendeeRecord;
         });
         this.attendeesForSelectedDay = attendees;

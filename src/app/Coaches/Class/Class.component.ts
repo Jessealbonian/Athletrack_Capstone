@@ -69,6 +69,8 @@ interface ClassData {
   title: string;
   description: string;
   routines: ClassRoutines;
+  expirationDate?: string;
+  expirationTime?: string;
 }
 
 interface TaskData {
@@ -152,7 +154,9 @@ export class ClassComponent implements OnInit {
       sundayIntensityEasy: false,
       sundayIntensityMedium: false,
       sundayIntensityHard: false
-    }
+    },
+    expirationDate: '',
+    expirationTime: ''
   };
 
   showAddTaskModal = false;
@@ -182,6 +186,8 @@ export class ClassComponent implements OnInit {
   selectedStudentForKick: any = null;
   kickReason = '';
   isKickingStudent = false;
+
+  archivedFilter = false;
 
   onNavToggled(isOpen: boolean) {
     this.isNavOpen = isOpen;
@@ -526,46 +532,56 @@ export class ClassComponent implements OnInit {
         sundayIntensityEasy: false,
         sundayIntensityMedium: false,
         sundayIntensityHard: false
-      }
+      },
+      expirationDate: '',
+      expirationTime: ''
     };
+  }
+
+  // Utility for UI: map intensity flag to label (Average instead of Medium)
+  private getDisplayIntensity(easy: boolean, medium: boolean, hard: boolean): string {
+    if (easy) return 'Easy';
+    if (medium) return 'Average';
+    if (hard) return 'Hard';
+    return '';
   }
 
   private getIntensityFromFlags(easy: boolean, medium: boolean, hard: boolean): string {
     if (easy) return 'Easy';
-    if (medium) return 'Medium';
+    if (medium) return 'Average';
     if (hard) return 'Hard';
     return '';
   }
 
   // Ensure only one checkbox per day is selected in Add Class modal
-  onIntensityChange(day: 'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday'|'sunday', level: 'Easy'|'Medium'|'Hard') {
+  onIntensityChange(day: 'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday'|'sunday', level: 'Easy'|'Average'|'Hard') {
     const routines = this.newClass.routines;
     const keys = {
       Easy: `${day}IntensityEasy`,
-      Medium: `${day}IntensityMedium`,
+      Average: `${day}IntensityMedium`,
       Hard: `${day}IntensityHard`
     } as const;
 
     // Turn off the other two when one is set to true
     if ((routines as any)[keys[level]]) {
       if (level !== 'Easy') (routines as any)[`${day}IntensityEasy`] = false;
-      if (level !== 'Medium') (routines as any)[`${day}IntensityMedium`] = false;
+      if (level !== 'Average') (routines as any)[`${day}IntensityMedium`] = false;
       if (level !== 'Hard') (routines as any)[`${day}IntensityHard`] = false;
     }
   }
 
   // Ensure only one checkbox per day in Class Details modal when editing
-  onDetailsIntensityChange(day: 'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday'|'sunday', level: 'Easy'|'Medium'|'Hard') {
+  onDetailsIntensityChange(day: 'monday'|'tuesday'|'wednesday'|'thursday'|'friday'|'saturday'|'sunday', level: 'Easy'|'Average'|'Hard') {
     const obj = this.selectedClass;
     if (!obj) return;
     const keys = {
       Easy: `${day}IntensityEasy`,
-      Medium: `${day}IntensityMedium`,
+      Average: `${day}IntensityMedium`,
       Hard: `${day}IntensityHard`
     } as const;
     if (obj[keys[level]]) {
       if (level !== 'Easy') obj[`${day}IntensityEasy`] = false;
-      if (level !== 'Medium') obj[`${day}IntensityMedium`] = false;
+      if (level !== 'Average') obj[`${day}IntensityMedium`] = false;
       if (level !== 'Hard') obj[`${day}IntensityHard`] = false;
     }
   }
@@ -625,7 +641,8 @@ export class ClassComponent implements OnInit {
         this.newClass.routines.sundayIntensityEasy,
         this.newClass.routines.sundayIntensityMedium,
         this.newClass.routines.sundayIntensityHard
-      )
+      ),
+      expiration_date: this.combineExpirationDateTime(this.newClass.expirationDate, this.newClass.expirationTime)
     };
 
     console.log('Sending class data to API:', classData);
@@ -661,7 +678,8 @@ export class ClassComponent implements OnInit {
 
   fetchClasses() {
     const adminIdParam = this.currentAdminId ? `&admin_id=${this.currentAdminId}` : '';
-    this.http.get(`${this.apiUrl}/routes.php?request=getClasses${adminIdParam}`).subscribe({
+    const showArchived = this.archivedFilter ? '&show_archived=1' : '';
+    this.http.get(`${this.apiUrl}/routes.php?request=getClasses${adminIdParam}${showArchived}`).subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
           const all = response.data || [];
@@ -675,6 +693,8 @@ export class ClassComponent implements OnInit {
               classObj[`${day}IntensityMedium`] = normalized === 'medium';
               classObj[`${day}IntensityHard`] = normalized === 'hard';
             }
+            classObj.isArchived = classObj.archived == 1;
+            classObj.isExpired = classObj.expiration_date && new Date(classObj.expiration_date) < new Date();
             return classObj;
           });
           // Fetch enrolled students for each class and assign to the class object
@@ -1203,5 +1223,37 @@ export class ClassComponent implements OnInit {
         }
       });
     });
+  }
+
+  private combineExpirationDateTime(dateStr?: string, timeStr?: string): string | null {
+    if (!dateStr) return null;
+    // fallback to 23:59:59 if no time
+    return dateStr + ' ' + (timeStr ? timeStr : '23:59:59');
+  }
+
+  // Add property
+  dailyStatusFilter: 'all' | 'active' | 'inactive' = 'all';
+  get filteredStudents() {
+    if (!this.selectedClass?.enrolledStudents) return [];
+    if (this.dailyStatusFilter === 'all') return this.selectedClass.enrolledStudents;
+    return this.selectedClass.enrolledStudents.filter((s: any) => s.dailyStatus === this.dailyStatusFilter);
+  }
+
+  studentHistoryModalOpen = false;
+  selectedStudentHistory: any[] = [];
+  selectedStudentDetails: any = null;
+  openStudentHistoryModal(student: any) {
+    this.selectedStudentDetails = student;
+    this.studentHistoryModalOpen = true;
+    this.selectedStudentHistory = [];
+    this.http.get(`${this.apiUrl}/routes.php?request=getRoutineHistoryForStudentInClass&class_id=${this.selectedClass.class_id}&user_id=${student.user_id}`)
+      .subscribe((response: any) => {
+        this.selectedStudentHistory = response?.payload || [];
+      });
+  }
+  closeStudentHistoryModal() {
+    this.studentHistoryModalOpen = false;
+    this.selectedStudentDetails = null;
+    this.selectedStudentHistory = [];
   }
 }

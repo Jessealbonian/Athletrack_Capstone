@@ -1,0 +1,34 @@
+<div class="landing-wrapper">
+  <nav class="landing-nav">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      AthleTrack
+    </div>
+    <div class="nav-actions">
+      <a routerLink="/login" class="nav-btn primary">Student Login</a>
+      <a routerLink="/admin_login" class="nav-btn outline">Coach Login</a>
+    </div>
+  </nav>
+
+  <div class="landing-bg">
+    <div class="landing-content">
+      <h1 class="main-title animate-flip">AthleTrack</h1>
+      <h2 class="subtitle animate-fadein">Bridging Coach and Athlete Time</h2>
+      <p class="desc animate-rise">
+        Empowering efficient communication between coaches and athletes <br>
+        even when coaches have limited availability. AthleTrack enables flexible, asynchronous feedback,
+        active/inactive monitoring, and a <b>reflection channel</b> for growth on both sides.
+      </p>
+
+      <div class="visits-row animate-scale">
+        <span class="visits-label">Unique Visits:</span>
+        <span class="visits-counter">{{displayedCount | number}}</span>
+        <span *ngIf="isLoading" class="loading-dots">...</span>
+      </div>
+
+      <div class="arrow-scroll animate-bounce">
+        <span class="arrow">↓</span>
+      </div>
+    </div>
+  </div>
+</div>

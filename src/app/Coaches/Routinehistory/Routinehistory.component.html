@@ -125,17 +125,44 @@
           <div class="flex items-center justify-between mb-2">
             <div class="font-semibold text-xs sm:text-base">Attendees for {{ selectedYear }}-{{ selectedMonth < 10 ? '0' + selectedMonth : selectedMonth }}-{{ selectedDay && selectedDay < 10 ? ('0' + selectedDay) : selectedDay }}</div>
           </div>
+          <div class="flex gap-4 mb-2">
+            <label><input type="radio" [(ngModel)]="attendeeStatusFilter" value="all"> All</label>
+            <label><input type="radio" [(ngModel)]="attendeeStatusFilter" value="active"> Active</label>
+            <label><input type="radio" [(ngModel)]="attendeeStatusFilter" value="inactive"> Inactive</label>
+          </div>
           <div *ngIf="isLoadingAttendees" class="text-gray-600">Loading attendees...</div>
-          <div *ngIf="!isLoadingAttendees && attendeesForSelectedDay.length === 0" class="text-gray-600">No attendees recorded.</div>
-          <div *ngIf="!isLoadingAttendees && attendeesForSelectedDay.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            <div class="flex items-center gap-3 p-2 border rounded" *ngFor="let a of attendeesForSelectedDay">
+          <div *ngIf="!isLoadingAttendees && filteredAttendeesForSelectedDay.length === 0" class="text-gray-600">No attendees recorded.</div>
+          <div *ngIf="!isLoadingAttendees && filteredAttendeesForSelectedDay.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <div class="flex items-center gap-3 p-2 border rounded cursor-pointer" *ngFor="let a of filteredAttendeesForSelectedDay" (click)="onAttendeeClick(a)">
               <img *ngIf="a.image" [src]="a.image" alt="photo" class="w-10 h-10 rounded-full object-cover" />
               <div class="text-xs sm:text-sm">{{ a.name }}</div>
+              <span class="inline-block ml-2 px-2 py-0.5 rounded-full text-white text-xs" [ngClass]="a.status === 'active' ? 'bg-green-600' : 'bg-gray-400'">{{ a.status || 'Active' }}</span>
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<div *ngIf="attendeeHistoryModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[11000] p-4">
+  <div class="bg-white rounded-lg w-full max-w-2xl shadow-lg p-6 mx-2 overflow-y-auto max-h-[90vh]">
+    <h2 class="text-xl font-bold mb-2">Submission History: {{selectedAttendee?.name}}</h2>
+    <table class="w-full text-xs sm:text-sm mb-4">
+      <thead><tr>
+        <th>Date</th><th>Time</th><th>Routine</th><th>Reflection</th><th>Coach Response</th>
+      </tr></thead>
+      <tbody>
+        <tr *ngFor="let entry of selectedAttendeeHistory">
+          <td>{{entry.date_of_submission}}</td>
+          <td>{{entry.time_of_submission}}</td>
+          <td>{{entry.routine}}</td>
+          <td>{{entry.student_reflection}}</td>
+          <td>{{entry.coach_response}}</td>
+        </tr>
+      </tbody>
+    </table>
+    <button (click)="closeAttendeeHistoryModal()" class="px-4 py-2 rounded bg-gray-600 text-white font-semibold">Close</button>
   </div>
 </div>
 

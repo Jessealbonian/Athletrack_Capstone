@@ -71,8 +71,8 @@ p {
 }
 
 .purple-checkbox input[type="checkbox"]:checked {
-    background-color: #735DA5;
-    border-color: #735DA5;
+    background-color: #022F11;
+    border-color: #022F11;
 }
 
 .purple-checkbox input[type="checkbox"]:checked::after {

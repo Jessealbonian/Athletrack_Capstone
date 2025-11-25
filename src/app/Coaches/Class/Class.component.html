@@ -11,7 +11,7 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2 sm:gap-0">
             <h1 class="text-xl sm:text-2xl font-bold">Class</h1>
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
-              <button (click)="openAddClassModal()" class="text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'">
+              <button (click)="openAddClassModal()" class="text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto" style="background-color: #022F11;" onmouseover="this.style.backgroundColor='#0e4e21'" onmouseout="this.style.backgroundColor='#022F11'">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                 </svg>
@@ -27,43 +27,59 @@
               </div>
             </div>
           </div>
-
-          <!-- Class Cards Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div *ngFor="let class of classes" class="bg-gray-300 p-4 rounded-lg hover:bg-gray-400 transition-all duration-150 w-full min-h-[120px] flex flex-col justify-between">
-              <h3 class="text-base sm:text-lg font-semibold">{{class.class_name}}</h3>
-              <p class="text-xs sm:text-sm text-gray-600 mb-2">{{class.description}}</p>
-              <!-- Weekly Routines Display - Card Based -->
-              <div class="mb-2 space-y-2">
-                <div *ngFor="let day of ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']" 
-                     class="bg-white rounded p-2 text-xs sm:text-sm">
-                  <div class="font-semibold text-gray-800 mb-1">{{day}}:</div>
-                  <div class="text-gray-700">{{class[day.toLowerCase()+'Routine'] || '-'}}</div>
-                  <div class="text-gray-600 mt-1">
-                    Intensity: 
-                    <span *ngIf="class[day.toLowerCase()+'IntensityEasy']" class="font-medium text-green-700">Easy</span>
-                    <span *ngIf="class[day.toLowerCase()+'IntensityMedium']" class="font-medium text-yellow-700">Medium</span>
-                    <span *ngIf="class[day.toLowerCase()+'IntensityHard']" class="font-medium text-red-700">Hard</span>
-                    <span *ngIf="!class[day.toLowerCase()+'IntensityEasy'] && !class[day.toLowerCase()+'IntensityMedium'] && !class[day.toLowerCase()+'IntensityHard']" class="text-gray-500">-</span>
-                  </div>
-                </div>
-              </div>
-              <div class="mb-2">
-                <span class="font-semibold text-gray-700">Total Students:</span>
-                <span class="text-gray-800 font-bold">{{class.enrolledStudents?.length || 0}}</span>
-              </div>
-              <div class="flex justify-start mt-2">
-                <button (click)="openClassDetailsModal(class)" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold bg-[#0A7664] hover:bg-[#22473F] text-sm flex items-center gap-1">
-                  <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4' viewBox='0 0 20 20' fill='currentColor'><path d='M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z'/></svg>
-                  Edit
-                </button>
-              </div>
-            </div>
-          </div>
-          <!-- END: Class Cards Grid -->
-        </div>
-      </div>
+  <!-- Class Table -->
+  <div class="overflow-x-auto mt-2">
+    <div class="flex items-center gap-4 mb-2 mt-1">
+      <label class="font-medium text-[#022F11]">
+        <input type="checkbox" [(ngModel)]="archivedFilter" (change)="fetchClasses()" class="mr-1 align-middle"/> Show Archived/Expired Classes
+      </label>
     </div>
+    <table class="class-table min-w-full bg-white rounded shadow-md">
+      <thead style="background:#022F11; color:#fff;">
+        <tr>
+          <th class="px-4 py-2 text-left">Class Name</th>
+          <th class="px-4 py-2 text-left">Description</th>
+          <th class="px-4 py-2 text-center"># Students</th>
+          <th class="px-4 py-2 text-left">Weekly Routines</th>
+          <th class="px-4 py-2 text-center">Status</th>
+          <th class="px-4 py-2 text-center">Edit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let class of classes; index as i" [class.bg-green-50]="i%2===1" class="hover:bg-green-100 transition">
+          <td class="px-4 py-3 font-bold text-[#022F11] text-base">{{class.class_name}}</td>
+          <td class="px-4 py-3 text-sm text-gray-600">{{class.description}}</td>
+          <td class="px-4 py-3 text-center font-semibold">{{class.enrolledStudents?.length || 0}}</td>
+          <td class="px-4 py-3 text-xs whitespace-pre-wrap">
+            <table class="w-auto border-none">
+              <tr *ngFor="let day of ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']">
+                <td class="font-semibold text-[#022F11] pr-1">{{day}}</td>
+                <td class="pr-1"><span class="text-gray-900">{{class[day.toLowerCase()+'Routine']||'-'}}</span></td>
+                <td>
+                  <span *ngIf="class[day.toLowerCase()+'IntensityEasy']" class="inline-block px-2 py-0.5 rounded bg-green-200 text-green-900 font-semibold mr-1">Easy</span>
+                  <span *ngIf="class[day.toLowerCase()+'IntensityMedium']" class="inline-block px-2 py-0.5 rounded bg-yellow-100 text-[#fcbe31] font-semibold mr-1">Average</span>
+                  <span *ngIf="class[day.toLowerCase()+'IntensityHard']" class="inline-block px-2 py-0.5 rounded bg-red-100 text-red-700 font-semibold">Hard</span>
+                  <span *ngIf="!class[day.toLowerCase()+'IntensityEasy'] && !class[day.toLowerCase()+'IntensityMedium'] && !class[day.toLowerCase()+'IntensityHard']" class="text-gray-400 font-normal pl-1">-</span>
+                </td>
+              </tr>
+            </table>
+          </td>
+          <td class="px-4 py-3">
+            <span *ngIf="!class.isArchived && !class.isExpired" class="status-badge status-active">Active</span>
+            <span *ngIf="class.isArchived" class="status-badge status-archived">Archived</span>
+            <span *ngIf="!class.isArchived && class.isExpired" class="status-badge status-expired">Expired</span>
+          </td>
+          <td class="px-4 py-3 text-center">
+            <button (click)="openClassDetailsModal(class)" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold bg-[#022F11] hover:bg-[#095024] text-sm flex items-center gap-1">
+              <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4' viewBox='0 0 20 20' fill='currentColor'><path d='M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z'/></svg>
+              Edit
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
     <!-- Add Class Modal -->
     <div *ngIf="showAddClassModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -82,6 +98,18 @@
           <textarea [(ngModel)]="newClass.description" rows="3" class="w-full p-2 sm:p-3 rounded border border-gray-300"></textarea>
         </div>
 
+        <!-- Expiration Date/Time -->
+        <div class="mb-4 flex gap-4">
+          <div class="flex-1">
+            <label class="block text-black font-semibold mb-2">Expiration Date</label>
+            <input type="date" [(ngModel)]="newClass.expirationDate" class="w-full p-2 sm:p-3 rounded border border-gray-300">
+          </div>
+          <div class="flex-1">
+            <label class="block text-black font-semibold mb-2">Expiration Time</label>
+            <input type="time" [(ngModel)]="newClass.expirationTime" class="w-full p-2 sm:p-3 rounded border border-gray-300">
+          </div>
+        </div>
+
         <!-- Weekly Routines -->
         <div class="mb-4">
           <label class="block text-black font-semibold mb-2">Weekly Routines & Intensity:</label>
@@ -94,7 +122,7 @@
                   <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityEasy']" (change)="onIntensityChange($any(day.toLowerCase()),'Easy')"> <span>Easy</span>
                 </label>
                 <label class="flex items-center gap-1 text-xs sm:text-sm">
-                  <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityMedium']" (change)="onIntensityChange($any(day.toLowerCase()),'Medium')"> <span>Medium</span>
+                  <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityMedium']" (change)="onIntensityChange($any(day.toLowerCase()),'Average')"> <span>Average</span>
                 </label>
                 <label class="flex items-center gap-1 text-xs sm:text-sm">
                   <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityHard']" (change)="onIntensityChange($any(day.toLowerCase()),'Hard')"> <span>Hard</span>
@@ -111,7 +139,7 @@
                   <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityEasy']" (change)="onIntensityChange($any(day.toLowerCase()),'Easy')"> <span>Easy</span>
                 </label>
                 <label class="flex items-center gap-1 text-xs sm:text-sm">
-                  <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityMedium']" (change)="onIntensityChange($any(day.toLowerCase()),'Medium')"> <span>Medium</span>
+                  <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityMedium']" (change)="onIntensityChange($any(day.toLowerCase()),'Average')"> <span>Average</span>
                 </label>
                 <label class="flex items-center gap-1 text-xs sm:text-sm">
                   <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityHard']" (change)="onIntensityChange($any(day.toLowerCase()),'Hard')"> <span>Hard</span>
@@ -280,20 +308,20 @@
 
         <div class="mb-4">
           <h3 class="text-black font-semibold mb-2">Class Lists</h3>
-          <div *ngIf="selectedClass.enrolledStudents && selectedClass.enrolledStudents.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div *ngFor="let student of selectedClass.enrolledStudents" class="bg-gray-100 rounded p-3 border border-gray-300 flex flex-col justify-between">
+          <div class="flex mb-3 gap-4">
+            <label><input type="radio" [(ngModel)]="dailyStatusFilter" value="all"> All</label>
+            <label><input type="radio" [(ngModel)]="dailyStatusFilter" value="active"> Active</label>
+            <label><input type="radio" [(ngModel)]="dailyStatusFilter" value="inactive"> Inactive</label>
+          </div>
+          <div *ngIf="filteredStudents.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div *ngFor="let student of filteredStudents" class="bg-gray-100 rounded p-3 border border-gray-300 flex flex-col justify-between cursor-pointer" (click)="openStudentHistoryModal(student)">
               <div class="text-sm mb-2">
                 <div class="font-medium text-gray-800">{{student.name}}</div>
                 <div class="text-gray-600 text-xs">Code: {{student.code}}</div>
+                <span *ngIf="student.dailyStatus === 'active'" class="inline-block mt-1 px-2 py-0.5 rounded-full bg-green-600 text-white text-xs">Active</span>
+                <span *ngIf="student.dailyStatus === 'inactive'" class="inline-block mt-1 px-2 py-0.5 rounded-full bg-gray-400 text-white text-xs">Inactive</span>
               </div>
-              <button 
-                (click)="openKickModal(student)" 
-                class="mt-2 px-3 py-1 text-xs rounded transition-colors duration-150 text-white font-semibold w-full" 
-                style="background-color: #dc2626;" 
-                onmouseover="this.style.backgroundColor='#b91c1c'" 
-                onmouseout="this.style.backgroundColor='#dc2626'">
-                Kick
-              </button>
+              <button (click)="$event.stopPropagation(); openKickModal(student)" class="mt-2 px-3 py-1 text-xs rounded transition-colors duration-150 text-white font-semibold w-full" style="background-color: #dc2626;" onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">Kick</button>
             </div>
           </div>
           <div *ngIf="!selectedClass.enrolledStudents || selectedClass.enrolledStudents.length === 0" class="text-center py-4 text-gray-500">
@@ -428,5 +456,32 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+<div *ngIf="studentHistoryModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white shadow-lg p-4 sm:p-8 rounded-lg w-full max-w-2xl mx-2 overflow-y-auto max-h-[90vh]">
+    <h2 class="text-xl sm:text-2xl text-black font-bold mb-2">Submission History: {{selectedStudentDetails?.name}}</h2>
+    <div class="mb-2 text-gray-700 text-xs">Code: {{selectedStudentDetails?.code}}</div>
+    <table class="w-full mb-4">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Routine</th>
+          <th>Reflection</th>
+          <th>Coach Response</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let entry of selectedStudentHistory">
+          <td>{{entry.date_of_submission}}</td>
+          <td>{{entry.time_of_submission}}</td>
+          <td>{{entry.routine}}</td>
+          <td>{{entry.student_reflection}}</td>
+          <td>{{entry.coach_response}}</td>
+        </tr>
+      </tbody>
+    </table>
+    <button (click)="closeStudentHistoryModal()" class="px-4 py-2 rounded bg-gray-600 text-white font-semibold">Close</button>
   </div>
 </div>

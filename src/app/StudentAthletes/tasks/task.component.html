@@ -2,131 +2,57 @@
   <app-sidenav (navToggled)="onNavToggled($event)" class="fixed top-0 left-0 h-full z-10"></app-sidenav>
   <app-navbar class="relative z-20"></app-navbar>
   <div class="content-area px-2 sm:px-4 md:px-8">
-      <div class="dashboard-container">
-          <div class="transition-all duration-300 z-1 mt-16" [class.lg:ml-64]="isNavOpen"
-              [class.lg:ml-20]="!isNavOpen">
-    <div class="flex-1 p-2 sm:p-6 mt-16">
-        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mb-4 gap-2">
-            <h2 class="text-lg sm:text-xl font-semibold text-gray-800">Tasks</h2>
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                <button class="bg-[#0A7664] hover:bg-[#22473F] text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto justify-center" (click)="openAddTaskModal()">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                    </svg>
-                    Add Task
-                </button>
-                <div class="relative w-full sm:w-auto">
-                    <input type="text" placeholder="Search" class="border rounded-lg px-3 py-2 w-full sm:w-auto" />
-                    <button class="absolute right-2 top-2">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-            </div>
+    <div class="dashboard-container">
+      <div class="transition-all duration-300 z-1 mt-16" [class.lg:ml-64]="isNavOpen" [class.lg:ml-20]="!isNavOpen">
+        <!-- Student Info -->
+        <div class="bg-[#022F11] text-white rounded-lg p-5 mb-6 flex flex-col sm:flex-row items-center gap-5 shadow">
+          <div class="text-4xl bg-white text-[#022F11] font-bold rounded-full px-5 py-3">{{ studentProfile?.name?.charAt(0) || '?' }}</div>
+          <div>
+            <h2 class="text-2xl font-semibold mb-1">{{ studentProfile?.name || '-' }}</h2>
+            <div class="text-sm">Username: <span class="font-mono">{{ studentProfile?.username || '-' }}</span></div>
+            <div class="text-sm">ID: <span class="font-mono">{{ studentProfile?.user_id || '-' }}</span></div>
+          </div>
         </div>
 
-        <!-- Filter Buttons -->
-        <div class="flex flex-col sm:flex-row gap-2 mb-4">
-          <button (click)="setFilter('Pending')" [class.bg-[#0A7664]]="activeFilter==='Pending'" class="px-3 py-1 rounded text-white bg-gray-400 w-full sm:w-auto">Pending</button>
-          <button (click)="setFilter('In Progress')" [class.bg-[#0A7664]]="activeFilter==='In Progress'" class="px-3 py-1 rounded text-white bg-gray-400 w-full sm:w-auto">In Progress</button>
-          <button (click)="setFilter('Completed')" [class.bg-[#0A7664]]="activeFilter==='Completed'" class="px-3 py-1 rounded text-white bg-gray-400 w-full sm:w-auto">Completed</button>
+        <!-- Enrolled Classes -->
+        <div class="mb-8">
+          <h3 class="text-xl font-semibold text-[#022F11] mb-3">Enrolled Classes</h3>
+          <ul class="bg-gray-100 rounded-lg p-4 flex flex-col gap-2">
+            <li *ngFor="let c of enrolledClasses" class="font-semibold text-[#022F11]">{{ c.class_name }}</li>
+            <li *ngIf="!enrolledClasses || enrolledClasses.length === 0" class="text-gray-500">You are not enrolled in any classes.</li>
+          </ul>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="bg-gray-200 p-4 rounded-lg shadow transition-colors duration-150 hover:bg-gray-300 cursor-pointer" *ngFor="let task of filteredTasks">
-                <h3 class="font-semibold">{{ task.title }}</h3>
-                <p>Task Due Date: {{ task.date_due | date: 'MMMM d, y' }}</p>
-                <p>Task Due Time: {{ task.time_due }}</p>
-                <p>
-                  Status:
-                  <span [ngClass]="{
-                      'text-red-500': task.status === 'Pending',
-                      'text-yellow-500': task.status === 'In Progress',
-                      'text-green-500': task.status === 'Completed'
-                    }"
-                  >
-                    {{ task.status }}
-                  </span>
-                </p>
-                <!-- Display uploaded image if available -->
-                <div *ngIf="task.image && task.status === 'Completed'" class="mt-3">
-                  <p class="text-sm text-gray-600 mb-2">Completion Screenshot:</p>
-                  <img [src]="task.image" 
-                       [alt]="'Task completion screenshot for ' + task.title"
-                       class="w-full h-32 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
-                       (click)="openImageModal(task.image, task.title)"
-                       style="cursor: pointer;">
-                </div>
-                <div class="mt-2 flex gap-2">
-                  <button class="text-sm text-white bg-[#0A7664] hover:bg-[#22473F] px-3 py-1 rounded flex-1" (click)="$event.stopPropagation(); openEditTask(task)">Edit Status</button>
-                  <button class="text-sm text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded flex-1" (click)="$event.stopPropagation(); deleteTask(task)">Delete</button>
-                </div>
-            </div>
+        <!-- Routine Submission History -->
+        <div>
+          <h3 class="text-xl font-semibold text-[#022F11] mb-3">Routine Submission History</h3>
+          <div class="overflow-auto bg-gray-50 rounded shadow">
+            <table class="min-w-full text-xs sm:text-sm">
+              <thead class="bg-[#022F11] text-white">
+                <tr>
+                  <th class="px-2 py-2">Date</th>
+                  <th class="px-2 py-2">Time</th>
+                  <th class="px-2 py-2">Routine</th>
+                  <th class="px-2 py-2">Reflection</th>
+                  <th class="px-2 py-2">Coach Response</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let entry of routineHistory" class="border-b last:border-0">
+                  <td class="px-2 py-2">{{ entry.date_of_submission }}</td>
+                  <td class="px-2 py-2">{{ entry.time_of_submission }}</td>
+                  <td class="px-2 py-2">{{ entry.routine }}</td>
+                  <td class="px-2 py-2">{{ entry.student_reflection }}</td>
+                  <td class="px-2 py-2">{{ entry.coach_response }}</td>
+                </tr>
+                <tr *ngIf="!routineHistory || routineHistory.length === 0">
+                  <td colspan="5" class="text-center text-gray-400">No submissions yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-    </div>
-</div>
-</div>
-</div>
-
-<!-- Add Task Modal -->
-<div *ngIf="showAddTaskModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-gray-500 p-4 sm:p-6 rounded-lg w-full max-w-md mx-2 overflow-y-auto max-h-[90vh]">
-    <h2 class="text-lg sm:text-xl text-white mb-4">Add Task</h2>
-    <!-- Task Title -->
-    <div class="mb-4">
-      <label class="block text-white mb-2">Task Title</label>
-      <input type="text" [(ngModel)]="newTask.title" class="w-full p-2 rounded">
-    </div>
-    <!-- Task Description -->
-    <div class="mb-4">
-      <label class="block text-white mb-2">Task Description</label>
-      <textarea [(ngModel)]="newTask.description" rows="4" class="w-full p-2 rounded"></textarea>
-    </div>
-    <!-- Task Due Date -->
-    <div class="mb-4">
-      <label class="block text-white mb-2">Task Due Date</label>
-      <input type="date" [(ngModel)]="newTask.date_due" class="w-full p-2 rounded">
-    </div>
-    <!-- Task Due Time -->
-    <div class="mb-4">
-      <label class="block text-white mb-2">Task Due Time</label>
-      <input type="time" [(ngModel)]="newTask.time_due" class="w-full p-2 rounded">
-    </div>
-    <!-- Task Status -->
-    <div class="mb-4">
-      <label class="block text-white mb-2">Status</label>
-      <select [(ngModel)]="newTask.status" class="w-full p-2 rounded">
-        <option value="Pending">Pending</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Completed">Completed</option>
-      </select>
-    </div>
-    <!-- Buttons -->
-    <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
-      <button (click)="confirmAddTask()" class="bg-white text-gray-800 px-4 py-2 rounded w-full sm:w-auto">Confirm</button>
-      <button (click)="closeAddTaskModal()" class="bg-white text-gray-800 px-4 py-2 rounded w-full sm:w-auto">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- Edit Status Modal -->
-<div *ngIf="showEditStatusModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-gray-500 p-4 sm:p-6 rounded-lg w-full max-w-md mx-2 overflow-y-auto max-h-[90vh]">
-    <h2 class="text-lg sm:text-xl text-white mb-4">Update Task Status</h2>
-    <div class="mb-4">
-      <label class="block text-white mb-2">Status</label>
-      <select [(ngModel)]="editStatus" class="w-full p-2 rounded">
-        <option value="Pending">Pending</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Completed">Completed</option>
-      </select>
-    </div>
-    <div class="mb-4" *ngIf="editStatus === 'Completed'">
-      <label class="block text-white mb-2">Upload Screenshot (required)</label>
-      <input type="file" accept="image/*" (change)="onEditFileChange($event)" class="w-full p-2 rounded bg-white" />
-    </div>
-    <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
-      <button (click)="submitEditStatus()" class="bg-white text-gray-800 px-4 py-2 rounded w-full sm:w-auto">Save</button>
-      <button (click)="cancelEdit()" class="bg-white text-gray-800 px-4 py-2 rounded w-full sm:w-auto">Cancel</button>
+      </div>
     </div>
   </div>
 </div>

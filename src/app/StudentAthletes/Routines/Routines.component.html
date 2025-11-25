@@ -86,7 +86,7 @@
                                         [value]="weekly[day] ? weekly[day].task : 'No routine'" 
                                             readonly />
                                     </div>
-                                    <div class="space-y-2">
+                                        <div class="space-y-2">
                                     <label class="flex items-center">
                                         <input type="checkbox" [checked]="weekly[day] && weekly[day].intensity==='Easy'" disabled/>
                                         <span class="ml-2 text-sm">Easy</span>
@@ -115,7 +115,7 @@
                             </div>
                         </div>
                         </div>
-                    </div>
+                      </div>
 
                     <!-- Fallback: list routines as cards -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" *ngIf="selectedClass && !weekly && classRoutines.length > 0">
@@ -151,7 +151,7 @@
                                 </span>
                         </div>
                         </div>
-                    </div>
+                      </div>
 
                     <!-- Loading State -->
                     <div *ngIf="isLoadingClasses" class="text-center py-12">
@@ -182,12 +182,12 @@
                             </div>
                         </div>
                     </div>
+                      </div>
+                        </div>
+                      </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
+                
 <!-- Class Enrollment Modal -->
 <div *ngIf="showEnrollmentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="bg-white p-4 sm:p-6 rounded-lg w-full max-w-sm mx-2 overflow-y-auto max-h-[90vh]">
@@ -234,7 +234,13 @@
                 accept="image/*"
                 (change)="onFileSelected($event)"
                 class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50">
-            <p class="text-xs text-gray-500 mt-1">Upload an image to prove you completed this routine</p>
+            <p class="text-xs text-gray-500 mt-1 mb-3">Upload an image to prove you completed this routine</p>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Reflection Response <span class="text-red-600">*</span></label>
+            <textarea [(ngModel)]="reflectionText" rows="3" required
+                    class="w-full p-2 rounded border border-gray-300 bg-gray-50"
+                    placeholder="Write your reflection here (required)"></textarea>
+            <p class="text-xs text-gray-500 mt-1 mb-2">Please reflect on today's routine. Required before submission.</p>
+            <div *ngIf="(!selectedFile || !reflectionText)" class="text-xs text-red-600">Both image and reflection are required.</div>
     </div>
         <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
             <button 
@@ -244,8 +250,8 @@
             </button>
             <button 
                 (click)="confirmRoutineCompletion()" 
-                [disabled]="!selectedFile"
-                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
+                [disabled]="!selectedFile || !reflectionText"
+                class="px-4 py-2 bg-[#022F11] text-white rounded-lg hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
                 Complete Routine
             </button>
         </div>
@@ -268,6 +274,12 @@
              (change)="onFileSelected($event)"
                 class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50">
             <p class="text-xs text-gray-500 mt-1">Upload an image to prove you completed this routine</p>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2 mt-3">Reflection Response <span class="text-red-600">*</span></label>
+            <textarea [(ngModel)]="reflectionText" rows="3" required
+                class="w-full p-2 rounded border border-gray-300 bg-gray-50"
+                placeholder="Write your reflection here (required)"></textarea>
+            <p class="text-xs text-gray-500 mt-1 mb-2">Please reflect on today's routine. Required before submission.</p>
+            <div *ngIf="(!selectedFile || !reflectionText)" class="text-xs text-red-600">Both image and reflection are required.</div>
     </div>
         <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
             <button 
@@ -277,8 +289,8 @@
             </button>
             <button 
                 (click)="confirmUpload()" 
-                [disabled]="!selectedFile"
-                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
+                [disabled]="!selectedFile || !reflectionText"
+                class="px-4 py-2 bg-[#022F11] text-white rounded-lg hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
                 Complete Routine
             </button>
     </div>

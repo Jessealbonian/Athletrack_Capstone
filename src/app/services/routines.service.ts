@@ -87,7 +87,7 @@ export class RoutinesService {
          }
 
            // Submit routine completion
-         submitRoutineCompletion(routineId: number, userId?: number | null, imageFile?: File, routine?: string, intensity?: string): Observable<any> {
+         submitRoutineCompletion(routineId: number, userId?: number | null, imageFile?: File, routine?: string, intensity?: string, reflection?: string): Observable<any> {
            const formData = new FormData();
            formData.append('routine_id', routineId.toString());
            if (imageFile) {
@@ -102,6 +102,9 @@ export class RoutinesService {
            if (intensity) {
              formData.append('intensity', intensity);
            }
+           if (reflection) {
+             formData.append('student_reflection', reflection);
+           }
        
            return this.http.post<any>(`${this.apiUrl}/submit-completion`, formData);
          }
@@ -114,6 +117,6 @@ export class RoutinesService {
   // New: Check today's completion using class_id and user_id directly
   checkTodayRoutineById(classId: number, userId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/routes.php?request=check-today-by-id/${classId}/${userId}`);
-  }
+         }
 
 }

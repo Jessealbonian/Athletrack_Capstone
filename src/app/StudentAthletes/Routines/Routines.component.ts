@@ -42,6 +42,7 @@ export class RoutinesComponent implements OnInit {
   // New routine completion modal properties
   selectedDay: string = '';
   selectedRoutineData: { task: string; intensity: string } | null = null;
+  reflectionText: string = '';
   
   // Loading states
   isLoading = false;
@@ -342,6 +343,7 @@ export class RoutinesComponent implements OnInit {
     this.selectedRoutineData = routineData;
     this.showRoutineCompletionModal = true;
     this.selectedFile = null;
+    this.reflectionText = '';
   }
 
   closeRoutineCompletionModal() {
@@ -349,6 +351,7 @@ export class RoutinesComponent implements OnInit {
     this.selectedDay = '';
     this.selectedRoutineData = null;
     this.selectedFile = null;
+    this.reflectionText = '';
   }
 
   async confirmRoutineCompletion() {
@@ -358,23 +361,18 @@ export class RoutinesComponent implements OnInit {
       selectedClass: this.selectedClass,
       selectedDay: this.selectedDay,
       studentUsername: this.studentUsername,
-      studentUserId: this.studentUserId
+      studentUserId: this.studentUserId,
+      reflection: this.reflectionText
     });
-    if (!this.selectedFile || !this.selectedRoutineData || !this.selectedClass) {
-      console.warn('[Routine Completion] Missing information:', {
-        selectedFile: this.selectedFile,
-        selectedRoutineData: this.selectedRoutineData,
-        selectedClass: this.selectedClass
-      });
+    if (!this.selectedFile || !this.selectedRoutineData || !this.selectedClass || !this.reflectionText) {
       Swal.fire({
         icon: 'warning',
         title: 'Missing Information',
-        text: 'Please select a file and ensure routine data is available.',
-        confirmButtonColor: '#0A7664'
+        text: 'Please select a file, enter your reflection, and ensure routine data is available.',
+        confirmButtonColor: '#022F11'
       });
       return;
     }
-
     try {
       const intensityMap: { [key: string]: string } = {
         'Easy': 'Low',
@@ -382,53 +380,30 @@ export class RoutinesComponent implements OnInit {
         'Hard': 'High'
       };
       const dbIntensity = intensityMap[this.selectedRoutineData?.intensity || 'Medium'] || 'Medium';
-      console.log('[Routine Completion] Submitting routine completion with:', {
-        routineId: this.selectedClass.id,
-        studentUsername: this.studentUsername,
-        file: this.selectedFile,
-        userId: this.studentUserId,
-        routine: `${this.selectedDay}: ${this.selectedRoutineData?.task}`,
-        intensity: dbIntensity
-      });
       const response = await this.routinesService.submitRoutineCompletion(
         this.selectedClass.id,
         this.studentUserId,
         this.selectedFile,
         `${this.selectedDay}: ${this.selectedRoutineData?.task}`,
-        dbIntensity
+        dbIntensity,
+        this.reflectionText
       ).toPromise();
-      console.log('[Routine Completion] API response:', response);
-      if (response && response.status !== 'success') {
-        throw new Error(response.message || 'Unknown error from API');
-      }
-      // Show success message with uploaded image
+      if (response && response.status !== 'success') throw new Error(response.message || 'Unknown error from API');
       await Swal.fire({
         icon: 'success',
         title: 'Routine Completed!',
         text: `${this.selectedDay} routine completed successfully!`,
-        imageUrl: response.image_url || null,
-        imageWidth: 300,
-        imageHeight: 200,
-        imageAlt: 'Uploaded Routine Image',
-        timer: 3000,
-        showConfirmButton: false,
-        confirmButtonColor: '#0A7664'
+        confirmButtonColor: '#022F11'
       });
       this.closeRoutineCompletionModal();
+      this.reflectionText = '';
       this.loadRoutineHistory();
-    } catch (error: any) {
-      console.error('[Routine Completion] Upload error:', error);
-      let errorMessage = 'Failed to complete routine. Please try again.';
-      if (error?.message) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
+    } catch(err:any) {
       await Swal.fire({
         icon: 'error',
         title: 'Upload Failed',
-        text: errorMessage,
-        confirmButtonColor: '#735DA5'
+        text: err.message || err,
+        confirmButtonColor: '#022F11'
       });
     }
   }
@@ -487,12 +462,14 @@ export class RoutinesComponent implements OnInit {
     this.selectedRoutine = routine;
     this.showUploadModal = true;
     this.selectedFile = null;
+    this.reflectionText = '';
   }
 
   closeUploadModal() {
     this.showUploadModal = false;
     this.selectedRoutine = null;
     this.selectedFile = null;
+    this.reflectionText = '';
   }
 
   onFileSelected(event: Event) {
@@ -503,69 +480,39 @@ export class RoutinesComponent implements OnInit {
   }
 
   async confirmUpload() {
-    console.log('[Routine Upload] Attempting to upload routine:', {
-      selectedFile: this.selectedFile,
-      selectedRoutine: this.selectedRoutine,
-      studentUsername: this.studentUsername,
-      studentUserId: this.studentUserId
-    });
-    if (!this.selectedFile || !this.selectedRoutine) {
-      console.warn('[Routine Upload] Missing information:', {
-        selectedFile: this.selectedFile,
-        selectedRoutine: this.selectedRoutine
-      });
+    if (!this.selectedFile || !this.selectedRoutine || !this.reflectionText) {
       Swal.fire({
         icon: 'warning',
         title: 'Missing Information',
-        text: 'Please select a file and routine',
-        confirmButtonColor: '#735DA5'
+        text: 'Please select a file and enter your reflection.',
+        confirmButtonColor: '#022F11'
       });
       return;
     }
     try {
-      console.log('[Routine Upload] Submitting routine completion with:', {
-        routineId: this.selectedRoutine.id,
-        studentUsername: this.studentUsername,
-        file: this.selectedFile,
-        userId: this.studentUserId
-      });
       const response = await this.routinesService.submitRoutineCompletion(
         this.selectedRoutine.id,
         this.studentUserId,
-        this.selectedFile
+        this.selectedFile,
+        undefined, // routine task for legacy mode (optional)
+        undefined, // intensity
+        this.reflectionText
       ).toPromise();
-      console.log('[Routine Upload] API response:', response);
-      if (response && response.status !== 'success') {
-        throw new Error(response.message || 'Unknown error from API');
-      }
-      // Show success message with uploaded image
+      if (response && response.status !== 'success') throw new Error(response.message || 'Unknown error from API');
       await Swal.fire({
         icon: 'success',
         title: 'Routine Completed!',
-        text: 'Routine completed successfully!',
-        imageUrl: response.image_url || null,
-        imageWidth: 300,
-        imageHeight: 200,
-        imageAlt: 'Uploaded Routine Image',
-        timer: 3000,
-        showConfirmButton: false,
-        confirmButtonColor: '#735DA5'
+        confirmButtonColor: '#022F11'
       });
       this.closeUploadModal();
+      this.reflectionText = '';
       this.loadRoutineHistory();
-    } catch (error: any) {
-      console.error('[Routine Upload] Upload error:', error);
-      let errorMessage = 'Failed to complete routine. Please try again.';
-      if (error?.message) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
+    } catch(err:any) {
       await Swal.fire({
         icon: 'error',
         title: 'Upload Failed',
-        text: errorMessage,
-        confirmButtonColor: '#735DA5'
+        text: err.message || err,
+        confirmButtonColor: '#022F11'
       });
     }
   }

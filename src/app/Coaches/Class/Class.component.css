@@ -393,25 +393,30 @@ body {
 }
 
 .status-badge {
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
+  display: inline-block;
+  font-size: 0.97em;
+  padding: 2px 13px 2px 13px;
+  border-radius: 13px;
+  font-weight: 700;
+  margin-right: 5px;
+  background: #e0fde3;
+  color: #022F11;
+  border: 1.2px solid #022F11;
 }
-
-.status-badge.pending {
-  background-color: #fefcbf;
-  color: #d69e2e;
+.status-active {
+  background: #e0fde3;
+  color: #022F11;
+  border-color: #43b85d;
 }
-
-.status-badge.in-progress {
-  background-color: #ebf8ff;
-  color: #4299e1;
+.status-archived {
+  background: #e0e1e1;
+  color: #222;
+  border-color: #b0b0b0;
 }
-
-.status-badge.completed {
-  background-color: #c6f6d5;
-  color: #38a169;
+.status-expired {
+  background: #fff1f1;
+  color: #c61e1e;
+  border-color: #fd7272;
 }
 
 .priority-badge {
@@ -535,7 +540,7 @@ body {
 
 /* Checkbox accent color for this component */
 input[type="checkbox"] {
-  accent-color: #0A7664 !important;
+  accent-color: #022F11 !important;
 }
 
 input[type="checkbox"]:focus {
@@ -554,4 +559,44 @@ input[type="checkbox"]:focus {
 .class-details-modal.view-mode .intensity-group label span,
 .class-details-modal.view-mode .intensity-group label {
   color: #111827; /* gray-900 */
+}
+
+.class-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  box-shadow: 0 4px 18px #022F1122;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.class-table thead th {
+  background: #022F11;
+  color: #fff;
+  font-size: 1.08em;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+.class-table tr {
+  border-bottom: 1px solid #e9fbe6;
+  transition: background 0.15s;
+}
+.class-table tbody tr:hover {
+  background: #e0fde3 !important;
+}
+.class-table tbody tr:nth-child(odd) {
+  background: #f7fffa;
+}
+.class-table td, .class-table th {
+  padding-left: 18px;
+  padding-right: 18px;
+}
+@media (max-width: 700px) {
+  .class-table td, .class-table th {
+    padding-left: 4px;
+    padding-right: 4px;
+    font-size: 0.94em;
+  }
 }
