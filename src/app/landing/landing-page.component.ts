@@ -15,6 +15,8 @@ export class LandingPageComponent implements OnInit {
   visitCount = 0;
   displayedCount = 0;
   isLoading = true;
+  lastError: string | null = null;
+  dbStatus: string = 'Not queried';
 
   constructor(private http: HttpClient) {}
 
@@ -24,16 +26,36 @@ export class LandingPageComponent implements OnInit {
 
   fetchAndAnimateVisits() {
     this.isLoading = true;
+    this.lastError = null;
+    this.dbStatus = 'Querying...';
     // API endpoint to increment and get visits
     const url = `${environment.apiUrl}/routes.php?request=landing-visits&increment=1`;
     this.http.get<any>(url).subscribe({
       next: res => {
-        const newCount = res.visit_count || 0;
+        console.log('Landing count API raw response:', res);
+        if (!res) {
+          this.dbStatus = 'No response from backend!';
+          this.lastError = 'Visit API response was empty.';
+          console.error('No response:', res);
+          this.isLoading = false;
+          return;
+        }
+        if (typeof res.visit_count !== 'number') {
+          this.dbStatus = 'Invalid data from backend!';
+          this.lastError = 'Visit API response was invalid.';
+          console.error('Invalid response:', res);
+          this.isLoading = false;
+          return;
+        }
+        this.dbStatus = `Backend responded: visit_count=${res.visit_count}`;
+        const newCount = res.visit_count;
         this.animateVisitCount(newCount);
         this.isLoading = false;
       },
-      error: _ => {
-        // fallback
+      error: err => {
+        this.lastError = `Failed to fetch visits: ${err.message || err}`;
+        this.dbStatus = 'Backend request failed!';
+        console.error('Landing visit API error', err);
         this.isLoading = false;
       }
     });
