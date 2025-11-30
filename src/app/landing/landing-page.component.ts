@@ -21,41 +21,33 @@ export class LandingPageComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
-    this.fetchAndAnimateVisits();
+    this.loadAndIncrement();
   }
 
-  fetchAndAnimateVisits() {
+  loadAndIncrement() {
     this.isLoading = true;
     this.lastError = null;
-    this.dbStatus = 'Querying...';
-    // API endpoint to increment and get visits
-    const url = `${environment.apiUrl}/routes.php?request=landing-visits&increment=1`;
-    this.http.get<any>(url).subscribe({
-      next: res => {
-        console.log('Landing count API raw response:', res);
-        if (!res) {
-          this.dbStatus = 'No response from backend!';
-          this.lastError = 'Visit API response was empty.';
-          console.error('No response:', res);
-          this.isLoading = false;
-          return;
-        }
-        if (typeof res.visit_count !== 'number') {
-          this.dbStatus = 'Invalid data from backend!';
-          this.lastError = 'Visit API response was invalid.';
-          console.error('Invalid response:', res);
-          this.isLoading = false;
-          return;
-        }
-        this.dbStatus = `Backend responded: visit_count=${res.visit_count}`;
-        const newCount = res.visit_count;
-        this.animateVisitCount(newCount);
-        this.isLoading = false;
+  
+    const postUrl = `${environment.apiUrl}/routes.php?request=landing-visits`;
+    const getUrl = `${environment.apiUrl}/routes.php?request=landing-visits&increment=0`;
+  
+    // do both sequentially
+    this.http.post(postUrl, {}).subscribe({
+      next: () => {
+        this.http.get<any>(getUrl).subscribe({
+          next: res => {
+            this.visitCount = res.visit_count;
+            this.displayedCount = res.visit_count;
+            this.isLoading = false;
+          },
+          error: err => {
+            this.lastError = `[GET] Fetch error: ${err.message || err}`;
+            this.isLoading = false;
+          }
+        });
       },
       error: err => {
-        this.lastError = `Failed to fetch visits: ${err.message || err}`;
-        this.dbStatus = 'Backend request failed!';
-        console.error('Landing visit API error', err);
+        this.lastError = `[POST] Increment error: ${err.message || err}`;
         this.isLoading = false;
       }
     });
