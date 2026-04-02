@@ -5,35 +5,107 @@
       AthleTrack
     </div>
     <div class="nav-actions">
-      <a routerLink="/login" class="nav-btn primary">Student Login</a>
+      <a routerLink="/login" class="nav-btn primary">Get Started</a>
       <a routerLink="/admin_login" class="nav-btn outline">Coach Login</a>
     </div>
   </nav>
 
-  <div class="landing-bg">
-    <div class="landing-content">
-      <h1 class="main-title animate-flip">AthleTrack</h1>
-      <h2 class="subtitle animate-fadein">Bridging Coach and Athlete Time</h2>
-      <p class="desc animate-rise">
-        Empowering efficient communication between coaches and athletes <br>
-        even when coaches have limited availability. AthleTrack enables flexible, asynchronous feedback,
-        active/inactive monitoring, and a <b>reflection channel</b> for growth on both sides.
-      </p>
+  <main class="landing-main">
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="hero-left">
+          <div class="hero-badge">Bridging the Gap</div>
+          <h1 class="hero-title">Bridging the Gap in Training & Academics</h1>
+          <p class="hero-subtitle">
+            Streamline communication & performance tracking for coaches and student-athletes.
+          </p>
+          <p class="hero-desc">
+            AthleTrack keeps your workouts and feedback aligned, even when schedules don't match - so athletes can
+            stay consistent and coaches can respond with clarity.
+          </p>
 
-      <div class="visits-row animate-scale">
-        <span class="visits-label">Unique Visits:</span>
-        <span class="visits-counter">{{ visitCount | number }}</span>
-        <span class="actual-counter" style="font-size:12px;color:#999;padding-left:8px;" *ngIf="visitCount !== displayedCount">
-          (actual: {{ visitCount | number }})
-        </span>
-        <span *ngIf="isLoading" class="loading-dots">...</span>
-      </div>
-      <div *ngIf="lastError" style="color:#e33;font-size:13px;margin-top:8px;">Error: {{ lastError }}</div>
-      <div *ngIf="dbStatus && !lastError" class="status-message" style="color: #29885a; font-size: 12px; margin-top:3px;">{{dbStatus}}</div>
+          <div class="hero-cta">
+            <a routerLink="/login" class="cta-btn primary">Get Started</a>
+            <button type="button" class="cta-btn secondary" (click)="watchDemo()">Watch Demo</button>
+          </div>
 
-      <div class="arrow-scroll animate-bounce">
-        <span class="arrow">↓</span>
+          <div class="visits-row animate-scale">
+            <span class="visits-label">Unique Visits:</span>
+            <span class="visits-counter">{{ visitCount | number }}</span>
+            <span
+              class="actual-counter"
+              style="font-size:12px;color:#999;padding-left:8px;"
+              *ngIf="visitCount !== displayedCount"
+            >
+              (actual: {{ visitCount | number }})
+            </span>
+            <span *ngIf="isLoading" class="loading-dots">...</span>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <div class="workout-card">
+            <div class="card-title">Today's Workout</div>
+            <div class="check-list">
+              <div class="check-item">
+                <span class="check-icon">✔</span>
+                <span>Speed Drills</span>
+              </div>
+              <div class="check-item">
+                <span class="check-icon">✔</span>
+                <span>Strength Training</span>
+              </div>
+              <div class="check-item muted">
+                <span class="check-icon dim">✔</span>
+                <span>Finish + Reflect</span>
+              </div>
+            </div>
+
+            <div class="workout-meter">
+              <div class="meter-label">Today's Focus</div>
+              <div class="meter-bars" aria-hidden="true">
+                <span class="bar bar-1"></span>
+                <span class="bar bar-2"></span>
+                <span class="bar bar-3"></span>
+                <span class="bar bar-4"></span>
+                <span class="bar bar-5"></span>
+              </div>
+            </div>
+
+            <button type="button" class="submit-btn" (click)="watchDemo()">Submit Report</button>
+          </div>
+
+          <div class="feedback-card">
+            <div class="card-title with-icon">
+              <span class="icon-circle">F</span>
+              Coach Feedback
+            </div>
+            <div class="feedback-bubble">
+              Great job today! Remember to work on your form. Keep it up!
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
+    </section>
+
+    <section class="features-row">
+      <div class="feature-card">
+        <div class="feature-icon">1</div>
+        <div class="feature-title">Log Training & Progress</div>
+        <div class="feature-desc">Track routines and improvements in one place.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">2</div>
+        <div class="feature-title">Receive Coach Feedback</div>
+        <div class="feature-desc">Get clear, timely guidance after every session.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">3</div>
+        <div class="feature-title">Track & Improve Performance</div>
+        <div class="feature-desc">Stay consistent and progress faster over time.</div>
+      </div>
+    </section>
+  </main>
 </div>

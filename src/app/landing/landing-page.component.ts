@@ -70,4 +70,8 @@ export class LandingPageComponent implements OnInit {
     };
     increment();
   }
+
+  watchDemo() {
+    window.alert('Demo coming soon!');
+  }
 }

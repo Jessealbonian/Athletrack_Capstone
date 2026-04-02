@@ -42,25 +42,25 @@ interface ClassRoutines {
   saturday: string;
   sunday: string;
   mondayIntensityEasy: boolean;
-  mondayIntensityMedium: boolean;
+  mondayIntensityAverage: boolean;
   mondayIntensityHard: boolean;
   tuesdayIntensityEasy: boolean;
-  tuesdayIntensityMedium: boolean;
+  tuesdayIntensityAverage: boolean;
   tuesdayIntensityHard: boolean;
   wednesdayIntensityEasy: boolean;
-  wednesdayIntensityMedium: boolean;
+  wednesdayIntensityAverage: boolean;
   wednesdayIntensityHard: boolean;
   thursdayIntensityEasy: boolean;
-  thursdayIntensityMedium: boolean;
+  thursdayIntensityAverage: boolean;
   thursdayIntensityHard: boolean;
   fridayIntensityEasy: boolean;
-  fridayIntensityMedium: boolean;
+  fridayIntensityAverage: boolean;
   fridayIntensityHard: boolean;
   saturdayIntensityEasy: boolean;
-  saturdayIntensityMedium: boolean;
+  saturdayIntensityAverage: boolean;
   saturdayIntensityHard: boolean;
   sundayIntensityEasy: boolean;
-  sundayIntensityMedium: boolean;
+  sundayIntensityAverage: boolean;
   sundayIntensityHard: boolean;
   [key: string]: string | boolean; // Add index signature for dynamic access
 }
@@ -134,25 +134,25 @@ export class ClassComponent implements OnInit {
       saturday: '',
       sunday: '',
       mondayIntensityEasy: false,
-      mondayIntensityMedium: false,
+      mondayIntensityAverage: false,
       mondayIntensityHard: false,
       tuesdayIntensityEasy: false,
-      tuesdayIntensityMedium: false,
+      tuesdayIntensityAverage: false,
       tuesdayIntensityHard: false,
       wednesdayIntensityEasy: false,
-      wednesdayIntensityMedium: false,
+      wednesdayIntensityAverage: false,
       wednesdayIntensityHard: false,
       thursdayIntensityEasy: false,
-      thursdayIntensityMedium: false,
+      thursdayIntensityAverage: false,
       thursdayIntensityHard: false,
       fridayIntensityEasy: false,
-      fridayIntensityMedium: false,
+      fridayIntensityAverage: false,
       fridayIntensityHard: false,
       saturdayIntensityEasy: false,
-      saturdayIntensityMedium: false,
+      saturdayIntensityAverage: false,
       saturdayIntensityHard: false,
       sundayIntensityEasy: false,
-      sundayIntensityMedium: false,
+      sundayIntensityAverage: false,
       sundayIntensityHard: false
     },
     expirationDate: '',
@@ -181,11 +181,11 @@ export class ClassComponent implements OnInit {
   generatedTokens: string[] = [];
   isGeneratingTokens = false;
 
-  // Kick student properties
-  showKickModal = false;
-  selectedStudentForKick: any = null;
-  kickReason = '';
-  isKickingStudent = false;
+  // Deactivate student properties
+  showDeactivateModal = false;
+  selectedStudentForDeactivate: any = null;
+  deactivateReason = '';
+  isDeactivatingStudent = false;
 
   archivedFilter = false;
 
@@ -512,25 +512,25 @@ export class ClassComponent implements OnInit {
         saturday: '',
         sunday: '',
         mondayIntensityEasy: false,
-        mondayIntensityMedium: false,
+        mondayIntensityAverage: false,
         mondayIntensityHard: false,
         tuesdayIntensityEasy: false,
-        tuesdayIntensityMedium: false,
+        tuesdayIntensityAverage: false,
         tuesdayIntensityHard: false,
         wednesdayIntensityEasy: false,
-        wednesdayIntensityMedium: false,
+        wednesdayIntensityAverage: false,
         wednesdayIntensityHard: false,
         thursdayIntensityEasy: false,
-        thursdayIntensityMedium: false,
+        thursdayIntensityAverage: false,
         thursdayIntensityHard: false,
         fridayIntensityEasy: false,
-        fridayIntensityMedium: false,
+        fridayIntensityAverage: false,
         fridayIntensityHard: false,
         saturdayIntensityEasy: false,
-        saturdayIntensityMedium: false,
+        saturdayIntensityAverage: false,
         saturdayIntensityHard: false,
         sundayIntensityEasy: false,
-        sundayIntensityMedium: false,
+        sundayIntensityAverage: false,
         sundayIntensityHard: false
       },
       expirationDate: '',
@@ -538,17 +538,17 @@ export class ClassComponent implements OnInit {
     };
   }
 
-  // Utility for UI: map intensity flag to label (Average instead of Medium)
-  private getDisplayIntensity(easy: boolean, medium: boolean, hard: boolean): string {
+  // Utility for UI: map intensity flag to label (Average instead of Average)
+  private getDisplayIntensity(easy: boolean, Average: boolean, hard: boolean): string {
     if (easy) return 'Easy';
-    if (medium) return 'Average';
+    if (Average) return 'Average';
     if (hard) return 'Hard';
     return '';
   }
 
-  private getIntensityFromFlags(easy: boolean, medium: boolean, hard: boolean): string {
+  private getIntensityFromFlags(easy: boolean, Average: boolean, hard: boolean): string {
     if (easy) return 'Easy';
-    if (medium) return 'Average';
+    if (Average) return 'Average';
     if (hard) return 'Hard';
     return '';
   }
@@ -558,14 +558,14 @@ export class ClassComponent implements OnInit {
     const routines = this.newClass.routines;
     const keys = {
       Easy: `${day}IntensityEasy`,
-      Average: `${day}IntensityMedium`,
+      Average: `${day}IntensityAverage`,
       Hard: `${day}IntensityHard`
     } as const;
 
     // Turn off the other two when one is set to true
     if ((routines as any)[keys[level]]) {
       if (level !== 'Easy') (routines as any)[`${day}IntensityEasy`] = false;
-      if (level !== 'Average') (routines as any)[`${day}IntensityMedium`] = false;
+      if (level !== 'Average') (routines as any)[`${day}IntensityAverage`] = false;
       if (level !== 'Hard') (routines as any)[`${day}IntensityHard`] = false;
     }
   }
@@ -576,12 +576,12 @@ export class ClassComponent implements OnInit {
     if (!obj) return;
     const keys = {
       Easy: `${day}IntensityEasy`,
-      Average: `${day}IntensityMedium`,
+      Average: `${day}IntensityAverage`,
       Hard: `${day}IntensityHard`
     } as const;
     if (obj[keys[level]]) {
       if (level !== 'Easy') obj[`${day}IntensityEasy`] = false;
-      if (level !== 'Average') obj[`${day}IntensityMedium`] = false;
+      if (level !== 'Average') obj[`${day}IntensityAverage`] = false;
       if (level !== 'Hard') obj[`${day}IntensityHard`] = false;
     }
   }
@@ -609,37 +609,37 @@ export class ClassComponent implements OnInit {
       sundayRoutine: this.newClass.routines.sunday || '',
       mondayintensity: this.getIntensityFromFlags(
         this.newClass.routines.mondayIntensityEasy,
-        this.newClass.routines.mondayIntensityMedium,
+        this.newClass.routines.mondayIntensityAverage,
         this.newClass.routines.mondayIntensityHard
       ),
       tuesdayintensity: this.getIntensityFromFlags(
         this.newClass.routines.tuesdayIntensityEasy,
-        this.newClass.routines.tuesdayIntensityMedium,
+        this.newClass.routines.tuesdayIntensityAverage,
         this.newClass.routines.tuesdayIntensityHard
       ),
       wednesdayintensity: this.getIntensityFromFlags(
         this.newClass.routines.wednesdayIntensityEasy,
-        this.newClass.routines.wednesdayIntensityMedium,
+        this.newClass.routines.wednesdayIntensityAverage,
         this.newClass.routines.wednesdayIntensityHard
       ),
       thursdayintensity: this.getIntensityFromFlags(
         this.newClass.routines.thursdayIntensityEasy,
-        this.newClass.routines.thursdayIntensityMedium,
+        this.newClass.routines.thursdayIntensityAverage,
         this.newClass.routines.thursdayIntensityHard
       ),
       fridayintensity: this.getIntensityFromFlags(
         this.newClass.routines.fridayIntensityEasy,
-        this.newClass.routines.fridayIntensityMedium,
+        this.newClass.routines.fridayIntensityAverage,
         this.newClass.routines.fridayIntensityHard
       ),
       saturdayintensity: this.getIntensityFromFlags(
         this.newClass.routines.saturdayIntensityEasy,
-        this.newClass.routines.saturdayIntensityMedium,
+        this.newClass.routines.saturdayIntensityAverage,
         this.newClass.routines.saturdayIntensityHard
       ),
       sundayintensity: this.getIntensityFromFlags(
         this.newClass.routines.sundayIntensityEasy,
-        this.newClass.routines.sundayIntensityMedium,
+        this.newClass.routines.sundayIntensityAverage,
         this.newClass.routines.sundayIntensityHard
       ),
       expiration_date: this.combineExpirationDateTime(this.newClass.expirationDate, this.newClass.expirationTime)
@@ -690,7 +690,7 @@ export class ClassComponent implements OnInit {
               const intensityString: string = (classObj[`${day}intensity`] || '').toString();
               const normalized = intensityString.trim().toLowerCase();
               classObj[`${day}IntensityEasy`] = normalized === 'easy';
-              classObj[`${day}IntensityMedium`] = normalized === 'medium';
+              classObj[`${day}IntensityAverage`] = normalized === 'average' || normalized === 'medium';
               classObj[`${day}IntensityHard`] = normalized === 'hard';
             }
             classObj.isArchived = classObj.archived == 1;
@@ -713,7 +713,7 @@ export class ClassComponent implements OnInit {
   fetchEnrolledStudentsForClassForGrid(classObj: any) {
     if (!classObj.class_id) return;
     const adminIdParam = this.currentAdminId ? `&admin_id=${this.currentAdminId}` : '';
-    this.http.get(`${this.apiUrl}/routes.php?request=getEnrolledStudentsForClass&class_id=${classObj.class_id}${adminIdParam}`).subscribe({
+    this.http.get(`${this.apiUrl}/routes.php?request=getEnrolledStudentsForClass&class_id=${classObj.class_id}${adminIdParam}&show_deactivated=1`).subscribe({
       next: (response: any) => {
         if (response && response.status && response.status.remarks === 'success' && Array.isArray(response.payload)) {
           classObj.enrolledStudents = response.payload;
@@ -787,7 +787,7 @@ export class ClassComponent implements OnInit {
       const intensityString: string = (classObj[`${day}intensity`] || '').toString();
       const normalized = intensityString.trim().toLowerCase();
       this.selectedClass[`${day}IntensityEasy`] = normalized === 'easy';
-      this.selectedClass[`${day}IntensityMedium`] = normalized === 'medium';
+      this.selectedClass[`${day}IntensityAverage`] = normalized === 'average' || normalized === 'medium';
       this.selectedClass[`${day}IntensityHard`] = normalized === 'hard';
     }
     
@@ -806,7 +806,7 @@ export class ClassComponent implements OnInit {
     
     const adminIdParam = this.currentAdminId ? `&admin_id=${this.currentAdminId}` : '';
     
-    this.http.get(`${this.apiUrl}/routes.php?request=getEnrolledStudentsForClass&class_id=${classId}${adminIdParam}`).subscribe({
+    this.http.get(`${this.apiUrl}/routes.php?request=getEnrolledStudentsForClass&class_id=${classId}${adminIdParam}&show_deactivated=1`).subscribe({
       next: (response: any) => {
         console.log('Raw response from backend:', response);
         
@@ -852,37 +852,37 @@ export class ClassComponent implements OnInit {
       sundayRoutine: this.selectedClass.sundayRoutine || '',
       mondayintensity: this.getIntensityFromFlags(
         !!this.selectedClass.mondayIntensityEasy,
-        !!this.selectedClass.mondayIntensityMedium,
+        !!this.selectedClass.mondayIntensityAverage,
         !!this.selectedClass.mondayIntensityHard
       ),
       tuesdayintensity: this.getIntensityFromFlags(
         !!this.selectedClass.tuesdayIntensityEasy,
-        !!this.selectedClass.tuesdayIntensityMedium,
+        !!this.selectedClass.tuesdayIntensityAverage,
         !!this.selectedClass.tuesdayIntensityHard
       ),
       wednesdayintensity: this.getIntensityFromFlags(
         !!this.selectedClass.wednesdayIntensityEasy,
-        !!this.selectedClass.wednesdayIntensityMedium,
+        !!this.selectedClass.wednesdayIntensityAverage,
         !!this.selectedClass.wednesdayIntensityHard
       ),
       thursdayintensity: this.getIntensityFromFlags(
         !!this.selectedClass.thursdayIntensityEasy,
-        !!this.selectedClass.thursdayIntensityMedium,
+        !!this.selectedClass.thursdayIntensityAverage,
         !!this.selectedClass.thursdayIntensityHard
       ),
       fridayintensity: this.getIntensityFromFlags(
         !!this.selectedClass.fridayIntensityEasy,
-        !!this.selectedClass.fridayIntensityMedium,
+        !!this.selectedClass.fridayIntensityAverage,
         !!this.selectedClass.fridayIntensityHard
       ),
       saturdayintensity: this.getIntensityFromFlags(
         !!this.selectedClass.saturdayIntensityEasy,
-        !!this.selectedClass.saturdayIntensityMedium,
+        !!this.selectedClass.saturdayIntensityAverage,
         !!this.selectedClass.saturdayIntensityHard
       ),
       sundayintensity: this.getIntensityFromFlags(
         !!this.selectedClass.sundayIntensityEasy,
-        !!this.selectedClass.sundayIntensityMedium,
+        !!this.selectedClass.sundayIntensityAverage,
         !!this.selectedClass.sundayIntensityHard
       )
     };
@@ -1068,26 +1068,26 @@ export class ClassComponent implements OnInit {
     });
   }
 
-  // Kick student methods
-  openKickModal(student: any) {
-    this.selectedStudentForKick = student;
-    this.kickReason = '';
-    this.showKickModal = true;
+  // Deactivate student methods
+  openDeactivateModal(student: any) {
+    this.selectedStudentForDeactivate = student;
+    this.deactivateReason = '';
+    this.showDeactivateModal = true;
   }
 
-  closeKickModal() {
-    this.showKickModal = false;
-    this.selectedStudentForKick = null;
-    this.kickReason = '';
-    this.isKickingStudent = false;
+  closeDeactivateModal() {
+    this.showDeactivateModal = false;
+    this.selectedStudentForDeactivate = null;
+    this.deactivateReason = '';
+    this.isDeactivatingStudent = false;
   }
 
-  confirmKickStudent() {
-    if (!this.selectedStudentForKick || !this.selectedClass || !this.kickReason || this.kickReason.trim().length === 0) {
+  confirmDeactivateStudent() {
+    if (!this.selectedStudentForDeactivate || !this.selectedClass || !this.deactivateReason || this.deactivateReason.trim().length === 0) {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'Please provide a reason for kicking the student.'
+        text: 'Please provide a reason for deactivating the student.'
       });
       return;
     }
@@ -1096,36 +1096,34 @@ export class ClassComponent implements OnInit {
     Swal.fire({
       icon: 'warning',
       title: 'Are you sure?',
-      text: `You are about to kick ${this.selectedStudentForKick.name} from this class. This action cannot be undone.`,
+      text: `You are about to deactivate ${this.selectedStudentForDeactivate.name} from this class. This action cannot be undone.`,
       showCancelButton: true,
       confirmButtonColor: '#dc2626',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, kick student',
+      confirmButtonText: 'Yes, deactivate student',
       cancelButtonText: 'Cancel'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.isKickingStudent = true;
+        this.isDeactivatingStudent = true;
         
-        // Step 1: Fetch codegen data to get class_id and user_id
-        const kickData = {
-          class_id: this.selectedClass.class_id,
-          user_id: this.selectedStudentForKick.user_id,
-          code: this.selectedStudentForKick.code,
-          reason: this.kickReason.trim()
+        // Use deactivateStudent endpoint with code_id instead of class_id and user_id
+        const deactivateData = {
+          code_id: this.selectedStudentForDeactivate.code_id,
+          reason: this.deactivateReason.trim()
         };
 
-        this.http.post(`${this.apiUrl}/routes.php?request=kickStudent`, kickData).subscribe({
+        this.http.post(`${this.apiUrl}/routes.php?request=deactivateStudent`, deactivateData).subscribe({
           next: (response: any) => {
-            this.isKickingStudent = false;
+            this.isDeactivatingStudent = false;
             if (response.status === 'success' || response.status?.remarks === 'success') {
               Swal.fire({
                 icon: 'success',
                 title: 'Success',
-                text: 'Student has been kicked from the class.',
+                text: 'Student has been deactivated from the class.',
                 timer: 2000,
                 showConfirmButton: false
               });
-              this.closeKickModal();
+              this.closeDeactivateModal();
               // Refresh the enrolled students list
               this.fetchEnrolledStudentsForClass(this.selectedClass.class_id);
               // Also refresh the grid view
@@ -1134,17 +1132,17 @@ export class ClassComponent implements OnInit {
               Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: response.message || response.status?.message || 'Failed to kick student. Please try again.'
+                text: response.message || response.status?.message || 'Failed to deactivate student. Please try again.'
               });
             }
           },
           error: (error) => {
-            this.isKickingStudent = false;
-            console.error('Error kicking student:', error);
+            this.isDeactivatingStudent = false;
+            console.error('Error deactivating student:', error);
             Swal.fire({
               icon: 'error',
               title: 'Error',
-              text: 'Failed to kick student. Please try again.'
+              text: 'Failed to deactivate student. Please try again.'
             });
           }
         });
@@ -1231,12 +1229,40 @@ export class ClassComponent implements OnInit {
     return dateStr + ' ' + (timeStr ? timeStr : '23:59:59');
   }
 
-  // Add property
-  dailyStatusFilter: 'all' | 'active' | 'inactive' = 'all';
+  // status filter
+  dailyStatusFilter: 'all' | 'active' | 'inactive' | 'deactivated' = 'all';
+  
+  private normalizeStudentStatus(status: any): string {
+    return String(status ?? '').toLowerCase().trim();
+  }
+
+  private hasCompletedThisWeek(student: any): boolean {
+    // backend returns 0/1; be defensive about string values
+    return (+student?.completed_this_week) === 1;
+  }
+
   get filteredStudents() {
     if (!this.selectedClass?.enrolledStudents) return [];
+
     if (this.dailyStatusFilter === 'all') return this.selectedClass.enrolledStudents;
-    return this.selectedClass.enrolledStudents.filter((s: any) => s.dailyStatus === this.dailyStatusFilter);
+
+    if (this.dailyStatusFilter === 'deactivated') {
+      return this.selectedClass.enrolledStudents.filter(
+        (s: any) => this.normalizeStudentStatus(s.student_status) === 'deactivated'
+      );
+    }
+
+    // active/inactive are based on routine_history (completed_this_week) and only for active students
+    if (this.dailyStatusFilter === 'active') {
+      return this.selectedClass.enrolledStudents.filter((s: any) =>
+        this.normalizeStudentStatus(s.student_status) === 'active' && this.hasCompletedThisWeek(s)
+      );
+    }
+
+    // inactive
+    return this.selectedClass.enrolledStudents.filter((s: any) =>
+      this.normalizeStudentStatus(s.student_status) === 'active' && !this.hasCompletedThisWeek(s)
+    );
   }
 
   studentHistoryModalOpen = false;

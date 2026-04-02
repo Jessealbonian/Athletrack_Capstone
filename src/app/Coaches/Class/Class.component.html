@@ -57,9 +57,9 @@
                 <td class="pr-1"><span class="text-gray-900">{{class[day.toLowerCase()+'Routine']||'-'}}</span></td>
                 <td>
                   <span *ngIf="class[day.toLowerCase()+'IntensityEasy']" class="inline-block px-2 py-0.5 rounded bg-green-200 text-green-900 font-semibold mr-1">Easy</span>
-                  <span *ngIf="class[day.toLowerCase()+'IntensityMedium']" class="inline-block px-2 py-0.5 rounded bg-yellow-100 text-[#fcbe31] font-semibold mr-1">Average</span>
+                  <span *ngIf="class[day.toLowerCase()+'IntensityAverage']" class="inline-block px-2 py-0.5 rounded bg-yellow-100 text-[#fcbe31] font-semibold mr-1">Average</span>
                   <span *ngIf="class[day.toLowerCase()+'IntensityHard']" class="inline-block px-2 py-0.5 rounded bg-red-100 text-red-700 font-semibold">Hard</span>
-                  <span *ngIf="!class[day.toLowerCase()+'IntensityEasy'] && !class[day.toLowerCase()+'IntensityMedium'] && !class[day.toLowerCase()+'IntensityHard']" class="text-gray-400 font-normal pl-1">-</span>
+                  <span *ngIf="!class[day.toLowerCase()+'IntensityEasy'] && !class[day.toLowerCase()+'IntensityAverage'] && !class[day.toLowerCase()+'IntensityHard']" class="text-gray-400 font-normal pl-1">-</span>
                 </td>
               </tr>
             </table>
@@ -122,7 +122,7 @@
                   <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityEasy']" (change)="onIntensityChange($any(day.toLowerCase()),'Easy')"> <span>Easy</span>
                 </label>
                 <label class="flex items-center gap-1 text-xs sm:text-sm">
-                  <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityMedium']" (change)="onIntensityChange($any(day.toLowerCase()),'Average')"> <span>Average</span>
+                  <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityAverage']" (change)="onIntensityChange($any(day.toLowerCase()),'Average')"> <span>Average</span>
                 </label>
                 <label class="flex items-center gap-1 text-xs sm:text-sm">
                   <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityHard']" (change)="onIntensityChange($any(day.toLowerCase()),'Hard')"> <span>Hard</span>
@@ -139,7 +139,7 @@
                   <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityEasy']" (change)="onIntensityChange($any(day.toLowerCase()),'Easy')"> <span>Easy</span>
                 </label>
                 <label class="flex items-center gap-1 text-xs sm:text-sm">
-                  <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityMedium']" (change)="onIntensityChange($any(day.toLowerCase()),'Average')"> <span>Average</span>
+                  <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityAverage']" (change)="onIntensityChange($any(day.toLowerCase()),'Average')"> <span>Average</span>
                 </label>
                 <label class="flex items-center gap-1 text-xs sm:text-sm">
                   <input type="checkbox" [(ngModel)]="newClass.routines[day.toLowerCase()+'IntensityHard']" (change)="onIntensityChange($any(day.toLowerCase()),'Hard')"> <span>Hard</span>
@@ -250,7 +250,7 @@
             <span class="font-semibold text-black mb-2 text-base sm:text-lg">Intensity Chart</span>
             <div class="flex flex-col gap-1 text-sm sm:text-base">
               <span class="text-600 font-semibold">Easy: Conditioning</span>
-              <span class="text-600 font-semibold">Medium: 50% to 70% power</span>
+              <span class="text-600 font-semibold">Average: 50% to 70% power</span>
               <span class="text-600 font-semibold">Hard: Full heavy Workout</span>
             </div>
           </div>
@@ -268,7 +268,7 @@
                   <th class="px-2 py-1 text-left">Day</th>
                   <th class="px-2 py-1 text-left">Routine</th>
                   <th class="px-2 py-1 text-left">Easy</th>
-                  <th class="px-2 py-1 text-left">Medium</th>
+                  <th class="px-2 py-1 text-left">Average</th>
                   <th class="px-2 py-1 text-left">Hard</th>
                 </tr>
               </thead>
@@ -284,9 +284,9 @@
                   </td>
                   <td class="px-2 py-1 text-center">
                     <span *ngIf="!isEditingClassDetails">
-                      <span *ngIf="selectedClass[day.toLowerCase()+'IntensityMedium']" class="inline-block px-1 py-0.5 rounded bg-yellow-200 text-yellow-800">✔</span>
+                      <span *ngIf="selectedClass[day.toLowerCase()+'IntensityAverage']" class="inline-block px-1 py-0.5 rounded bg-yellow-200 text-yellow-800">✔</span>
                     </span>
-                    <input *ngIf="isEditingClassDetails" type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityMedium']">
+                    <input *ngIf="isEditingClassDetails" type="checkbox" [(ngModel)]="selectedClass[day.toLowerCase()+'IntensityAverage']">
                   </td>
                   <td class="px-2 py-1 text-center">
                     <span *ngIf="!isEditingClassDetails">
@@ -309,19 +309,21 @@
         <div class="mb-4">
           <h3 class="text-black font-semibold mb-2">Class Lists</h3>
           <div class="flex mb-3 gap-4">
-            <label><input type="radio" [(ngModel)]="dailyStatusFilter" value="all"> All</label>
-            <label><input type="radio" [(ngModel)]="dailyStatusFilter" value="active"> Active</label>
-            <label><input type="radio" [(ngModel)]="dailyStatusFilter" value="inactive"> Inactive</label>
+            <label><input type="radio" name="dailyStatusFilter" [(ngModel)]="dailyStatusFilter" value="all"> All</label>
+            <label><input type="radio" name="dailyStatusFilter" [(ngModel)]="dailyStatusFilter" value="active"> Active</label>
+            <label><input type="radio" name="dailyStatusFilter" [(ngModel)]="dailyStatusFilter" value="inactive"> Inactive</label>
+            <label><input type="radio" name="dailyStatusFilter" [(ngModel)]="dailyStatusFilter" value="deactivated"> Deactivated</label>
           </div>
           <div *ngIf="filteredStudents.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div *ngFor="let student of filteredStudents" class="bg-gray-100 rounded p-3 border border-gray-300 flex flex-col justify-between cursor-pointer" (click)="openStudentHistoryModal(student)">
               <div class="text-sm mb-2">
                 <div class="font-medium text-gray-800">{{student.name}}</div>
                 <div class="text-gray-600 text-xs">Code: {{student.code}}</div>
-                <span *ngIf="student.dailyStatus === 'active'" class="inline-block mt-1 px-2 py-0.5 rounded-full bg-green-600 text-white text-xs">Active</span>
-                <span *ngIf="student.dailyStatus === 'inactive'" class="inline-block mt-1 px-2 py-0.5 rounded-full bg-gray-400 text-white text-xs">Inactive</span>
+                <span *ngIf="((student.student_status == null ? '' : student.student_status).toString().toLowerCase() === 'deactivated')" class="inline-block mt-1 px-2 py-0.5 rounded-full bg-gray-700 text-white text-xs">Deactivated</span>
+                <span *ngIf="((student.student_status == null ? '' : student.student_status).toString().toLowerCase() === 'active') && (+student.completed_this_week) === 1" class="inline-block mt-1 px-2 py-0.5 rounded-full bg-green-600 text-white text-xs">Active</span>
+                <span *ngIf="((student.student_status == null ? '' : student.student_status).toString().toLowerCase() === 'active') && (+student.completed_this_week) !== 1" class="inline-block mt-1 px-2 py-0.5 rounded-full bg-gray-400 text-white text-xs">Inactive</span>
               </div>
-              <button (click)="$event.stopPropagation(); openKickModal(student)" class="mt-2 px-3 py-1 text-xs rounded transition-colors duration-150 text-white font-semibold w-full" style="background-color: #dc2626;" onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">Kick</button>
+              <button (click)="$event.stopPropagation(); openDeactivateModal(student)" class="mt-2 px-3 py-1 text-xs rounded transition-colors duration-150 text-white font-semibold w-full" style="background-color: #333436;" onmouseover="this.style.backgroundColor='#333436'" onmouseout="this.style.backgroundColor='#333436'">Deactivate</button>
             </div>
           </div>
           <div *ngIf="!selectedClass.enrolledStudents || selectedClass.enrolledStudents.length === 0" class="text-center py-4 text-gray-500">
@@ -333,56 +335,56 @@
           <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <button *ngIf="!isEditingClassDetails" (click)="isEditingClassDetails = true" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'">Edit</button>
             <button *ngIf="isEditingClassDetails" (click)="confirmEditClassDetails()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'">Confirm</button>
-            <button *ngIf="!isEditingClassDetails" (click)="deleteClass()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#dc2626;" onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">Delete Class</button>
+            <button *ngIf="!isEditingClassDetails" (click)="deleteClass()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#333436;" onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">Delete Class</button>
             <button (click)="closeClassDetailsModal()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:gray" [ngClass]="'hover:bg-gray-700'">Cancel</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Kick Student Modal -->
-    <div *ngIf="showKickModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <!-- Deactivate Student Modal -->
+    <div *ngIf="showDeactivateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white shadow-lg p-4 sm:p-8 rounded-lg w-full max-w-md mx-2 overflow-y-auto max-h-[90vh]">
-        <h2 class="text-xl sm:text-2xl text-black font-bold mb-4 sm:mb-6">Kick Student</h2>
+        <h2 class="text-xl sm:text-2xl text-black font-bold mb-4 sm:mb-6">Deactivate Student</h2>
         
         <div class="mb-4">
           <p class="text-gray-700 mb-2">
-            <strong>Student:</strong> {{selectedStudentForKick?.name}}
+            <strong>Student:</strong> {{selectedStudentForDeactivate?.name}}
           </p>
           <p class="text-gray-600 text-sm mb-4">
-            <strong>Code:</strong> {{selectedStudentForKick?.code}}
+            <strong>Code:</strong> {{selectedStudentForDeactivate?.code}}
           </p>
         </div>
 
         <!-- Reason Input -->
         <div class="mb-6">
-          <label class="block text-black font-semibold mb-2">Reason for kicking:</label>
+          <label class="block text-black font-semibold mb-2">Reason for deactivation:</label>
           <textarea 
-            [(ngModel)]="kickReason" 
+            [(ngModel)]="deactivateReason" 
             rows="4"
             class="w-full p-3 rounded border border-gray-300 text-base"
-            placeholder="Enter the reason for kicking this student..."
+            placeholder="Enter the reason for deactivating this student..."
             maxlength="255"></textarea>
-          <p class="text-xs text-gray-500 mt-1">{{(kickReason || '').length}}/255 characters</p>
+          <p class="text-xs text-gray-500 mt-1">{{(deactivateReason || '').length}}/255 characters</p>
         </div>
 
         <!-- Buttons -->
         <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
           <button 
-            (click)="confirmKickStudent()" 
-            [disabled]="!kickReason || kickReason.trim().length === 0 || isKickingStudent"
+            (click)="confirmDeactivateStudent()" 
+            [disabled]="!deactivateReason || deactivateReason.trim().length === 0 || isDeactivatingStudent"
             class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto"
-            [style.background-color]="!isKickingStudent && kickReason && kickReason.trim().length > 0 ? '#dc2626' : '#9CA3AF'"
-            (mouseover)="!isKickingStudent && kickReason && kickReason.trim().length > 0 && (($any($event.target)).style.backgroundColor = '#b91c1c')"
-            (mouseout)="!isKickingStudent && kickReason && kickReason.trim().length > 0 && (($any($event.target)).style.backgroundColor = '#dc2626')"
+            [style.background-color]="!isDeactivatingStudent && deactivateReason && deactivateReason.trim().length > 0 ? '#dc2626' : '#9CA3AF'"
+            (mouseover)="!isDeactivatingStudent && deactivateReason && deactivateReason.trim().length > 0 && (($any($event.target)).style.backgroundColor = '#b91c1c')"
+            (mouseout)="!isDeactivatingStudent && deactivateReason && deactivateReason.trim().length > 0 && (($any($event.target)).style.backgroundColor = '#dc2626')"
             [ngClass]="{
-              'cursor-not-allowed': isKickingStudent || !kickReason || kickReason.trim().length === 0
+              'cursor-not-allowed': isDeactivatingStudent || !deactivateReason || deactivateReason.trim().length === 0
             }">
-            <span *ngIf="!isKickingStudent">Confirm Kick</span>
-            <span *ngIf="isKickingStudent">Processing...</span>
+            <span *ngIf="!isDeactivatingStudent">Confirm Deactivate</span>
+            <span *ngIf="isDeactivatingStudent">Processing...</span>
           </button>
           <button 
-            (click)="closeKickModal()" 
+            (click)="closeDeactivateModal()" 
             class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors duration-150 w-full sm:w-auto">
             Cancel
           </button>
