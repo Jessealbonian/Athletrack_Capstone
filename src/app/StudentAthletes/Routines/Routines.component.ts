@@ -61,6 +61,17 @@ export class RoutinesComponent implements OnInit {
     }
     const storedId = localStorage.getItem('hoa_user_id');
     this.studentUserId = storedId ? Number(storedId) : null;
+    if (this.studentUserId && !this.studentUsername) {
+      this.routinesService.getHoaUserProfById(this.studentUserId).subscribe({
+        next: (resp: any) => {
+          const row = resp?.data?.[0] ?? resp?.payload?.[0] ?? null;
+          if (row?.username) {
+            this.studentUsername = row.username;
+            localStorage.setItem('username', this.studentUsername);
+          }
+        }
+      });
+    }
     console.log('RoutinesComponent init - using studentUsername:', this.studentUsername);
     console.log('RoutinesComponent init - using studentUserId:', this.studentUserId);
     this.loadEnrolledClasses();

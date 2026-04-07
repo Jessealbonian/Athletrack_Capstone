@@ -89,6 +89,10 @@ export class RoutinesService {
            return this.http.get<any>(`${this.apiUrl}/routes.php?request=routine-history/${studentUsername}`);
          }
 
+        getHoaUserProfById(userId: number): Observable<any> {
+          return this.http.get<any>(`${this.apiUrl}/routes.php?request=getHoaUserProf/${userId}`);
+        }
+
            // Submit routine completion
          submitRoutineCompletion(routineId: number, userId?: number | null, imageFile?: File, routine?: string, intensity?: string, reflection?: string): Observable<any> {
            const formData = new FormData();

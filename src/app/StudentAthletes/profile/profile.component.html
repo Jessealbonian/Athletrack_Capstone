@@ -19,6 +19,38 @@
 
         <section class="bg-white p-5 rounded-lg shadow">
           <h3 class="text-lg font-bold mb-4 text-[#022F11]">Routine History</h3>
+          <div class="flex flex-col sm:flex-row gap-2 mb-4">
+            <select [(ngModel)]="reportYear" class="border border-gray-300 rounded px-3 py-2 text-sm">
+              <option value="all">All Years</option>
+              <option *ngFor="let y of availableYears" [ngValue]="y">{{ y }}</option>
+            </select>
+            <select [(ngModel)]="reportMonth" class="border border-gray-300 rounded px-3 py-2 text-sm">
+              <option value="all">All Months</option>
+              <option [ngValue]="1">January</option>
+              <option [ngValue]="2">February</option>
+              <option [ngValue]="3">March</option>
+              <option [ngValue]="4">April</option>
+              <option [ngValue]="5">May</option>
+              <option [ngValue]="6">June</option>
+              <option [ngValue]="7">July</option>
+              <option [ngValue]="8">August</option>
+              <option [ngValue]="9">September</option>
+              <option [ngValue]="10">October</option>
+              <option [ngValue]="11">November</option>
+              <option [ngValue]="12">December</option>
+            </select>
+            <select [(ngModel)]="reportWeek" class="border border-gray-300 rounded px-3 py-2 text-sm">
+              <option value="all">All Weeks</option>
+              <option [ngValue]="1">Week 1</option>
+              <option [ngValue]="2">Week 2</option>
+              <option [ngValue]="3">Week 3</option>
+              <option [ngValue]="4">Week 4</option>
+              <option [ngValue]="5">Week 5</option>
+            </select>
+            <button (click)="generateReportPdf()" class="px-3 py-2 rounded text-white text-sm bg-[#0A7664] hover:bg-[#22473F]">
+              Generate Report (PDF)
+            </button>
+          </div>
           <div *ngIf="isLoadingHistory" class="text-gray-500 text-sm">Loading routine history...</div>
 
           <div *ngIf="!isLoadingHistory" class="overflow-x-auto">
@@ -33,7 +65,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let item of routineHistory" class="border-b border-gray-100 hover:bg-gray-50">
+                <tr *ngFor="let item of filteredRoutineHistory" class="border-b border-gray-100 hover:bg-gray-50">
                   <td class="px-3 py-2">
                     <img *ngIf="item.img" [src]="getImageUrl(item.img)" alt="Routine image" class="w-14 h-14 object-cover rounded border border-gray-200" />
                     <span *ngIf="!item.img" class="text-xs text-gray-400">No image</span>
@@ -46,7 +78,7 @@
                   <td class="px-3 py-2 text-sm text-gray-700">{{ item.student_reflection || '-' }}</td>
                   <td class="px-3 py-2 text-sm text-gray-700">{{ item.coach_response || '-' }}</td>
                 </tr>
-                <tr *ngIf="routineHistory.length === 0">
+                <tr *ngIf="filteredRoutineHistory.length === 0">
                   <td colspan="5" class="px-3 py-6 text-center text-sm text-gray-500">No routine history yet.</td>
                 </tr>
               </tbody>
