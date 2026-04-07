@@ -34,6 +34,7 @@ export class RoutinesComponent implements OnInit {
   searchTerm = '';
   weekly: { [day: string]: { task: string; intensity: string } } | null = null;
   selectedClassDescription = '';
+  daysOfWeek: string[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
   // Upload related
   selectedFile: File | null = null;

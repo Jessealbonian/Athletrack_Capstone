@@ -1,149 +1,59 @@
 <div class="flex h-screen flex-col">
   <app-sidenav (navToggled)="onNavToggled($event)" class="fixed top-0 left-0 h-full z-10"></app-sidenav>
   <app-navbar class="relative z-20"></app-navbar>
-          <div class="dashboard-container">
-             <div class="transition-all duration-300 z-1 mt-16" 
-            [class.lg:ml-64]="isNavOpen"
-            [class.lg:ml-20]="!isNavOpen">
-      <div class="flex-1 p-6">
-        <section class="bg-white p-6 rounded-lg shadow-lg mt-4 relative">
-         <button class="absolute top-4 right-4 text-blue-500 hover:text-blue-600 transition-colors" (click)="toggleEdit()">
-          <i class="fas fa-pencil-alt text-xl">
-          </i>
-         </button>
-         <div *ngIf="profile?.username" class="flex items-center space-x-4">
-          <!-- <img alt="Profile picture of the homeowner" class="w-24 h-24 rounded-full" height="100" src="https://storage.googleapis.com/a1aa/image/LKGU5RMrEhq8FdxMUg1ewEF3Tuf17KmfL1fRxMRTIbWbjy7PB.jpg" width="100"/> -->
-          <div>
-           <h2 class="text-xl font-bold">
-            {{ profile.username }}
-           </h2>
-           <p class="text-gray-600">
-            Block 23 Lot 14
-           </p>
+
+  <div class="dashboard-container">
+    <div class="transition-all duration-300 z-1 mt-16" [class.lg:ml-64]="isNavOpen" [class.lg:ml-20]="!isNavOpen">
+      <div class="p-4 sm:p-6 space-y-6">
+        <section class="bg-white p-5 rounded-lg shadow">
+          <h2 class="text-xl font-bold text-[#022F11]">{{ profile?.username || 'Student Profile' }}</h2>
+          <p class="text-sm text-gray-600 mt-2">Classes Enrolled</p>
+          <div *ngIf="isLoadingClasses" class="text-gray-500 text-sm mt-2">Loading classes...</div>
+          <div *ngIf="!isLoadingClasses && enrolledClasses.length === 0" class="text-gray-500 text-sm mt-2">No enrolled classes found.</div>
+          <div *ngIf="!isLoadingClasses && enrolledClasses.length > 0" class="mt-3 flex flex-wrap gap-2">
+            <span *ngFor="let cls of enrolledClasses" class="px-3 py-1 text-xs rounded-full bg-green-100 text-[#022F11] font-semibold">
+              {{ cls.title }}
+            </span>
           </div>
-         </div>
-         <div  class="mt-4 hidden" id="editForm">
-          <form>
-           <div *ngIf="profile?.username" class="mb-4">
-            <label class="block text-gray-700" for="name">
-             Name
-            </label>
-            <input class="w-full p-2 border border-gray-300 rounded" id="name" name="name" type="text" value= "{{ profile.username }}"/>
-           </div>
-           <div class="mb-4">
-            <label class="block text-gray-700" for="street">
-             Street
-            </label>
-            <input class="w-full p-2 border border-gray-300 rounded" id="street" name="street" type="text" value="1234 Elm Street, Springfield"/>
-           </div>
-           <div class="mb-4">
-            <label class="block text-gray-700" for="image">
-             Upload Image
-            </label>
-            <input class="w-full p-2 border border-gray-300 rounded" id="image" name="image" type="file"/>
-           </div>
-           <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors" type="submit">
-            Save
-           </button>
-          </form>
-         </div>
         </section>
 
-        <section class="mt-6 bg-white p-6 rounded-lg shadow-lg relative">
-         <button class="absolute top-4 right-4 text-blue-500 hover:text-blue-600 transition-colors" (click)="toggleEditDetails()">
-          <i class="fas fa-pencil-alt text-xl">
-          </i>
-         </button>
-         <h3 class="text-lg font-bold mb-4">
-          Property Details
-         </h3>
-         <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="propertyDetails">
-          <div>
-           <p class="text-gray-700">
-            <span class="font-bold">
-             Square Footage:
-            </span>
-            300 sq ft
-           </p>
-           <p class="text-gray-700">
-            <span class="font-bold">
-             Bedrooms:
-            </span>
-            2
-           </p>
-           <p class="text-gray-700">
-            <span class="font-bold">
-             Bathrooms:
-            </span>
-            2
-           </p>
+        <section class="bg-white p-5 rounded-lg shadow">
+          <h3 class="text-lg font-bold mb-4 text-[#022F11]">Routine History</h3>
+          <div *ngIf="isLoadingHistory" class="text-gray-500 text-sm">Loading routine history...</div>
+
+          <div *ngIf="!isLoadingHistory" class="overflow-x-auto">
+            <table class="min-w-full border border-gray-200">
+              <thead class="bg-[#022F11] text-white">
+                <tr>
+                  <th class="px-3 py-2 text-left text-sm">Image</th>
+                  <th class="px-3 py-2 text-left text-sm">Date and Time</th>
+                  <th class="px-3 py-2 text-left text-sm">Routine Desc and Intensity</th>
+                  <th class="px-3 py-2 text-left text-sm">Reflection</th>
+                  <th class="px-3 py-2 text-left text-sm">Coach Response</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of routineHistory" class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-3 py-2">
+                    <img *ngIf="item.img" [src]="getImageUrl(item.img)" alt="Routine image" class="w-14 h-14 object-cover rounded border border-gray-200" />
+                    <span *ngIf="!item.img" class="text-xs text-gray-400">No image</span>
+                  </td>
+                  <td class="px-3 py-2 text-sm text-gray-700">{{ getDisplayDateTime(item) || '-' }}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700">
+                    <div class="font-medium">{{ item.routine || '-' }}</div>
+                    <div class="text-xs text-gray-500 mt-1">Intensity: {{ item.routine_intensity || '-' }}</div>
+                  </td>
+                  <td class="px-3 py-2 text-sm text-gray-700">{{ item.student_reflection || '-' }}</td>
+                  <td class="px-3 py-2 text-sm text-gray-700">{{ item.coach_response || '-' }}</td>
+                </tr>
+                <tr *ngIf="routineHistory.length === 0">
+                  <td colspan="5" class="px-3 py-6 text-center text-sm text-gray-500">No routine history yet.</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div>
-           <p class="text-gray-700">
-            <span class="font-bold">
-             HOA Fees:
-            </span>
-            ₱200/month
-           </p>
-           <p class="text-gray-700">
-            <span class="font-bold">
-             Status:
-            </span>
-            Active
-           </p>
-          </div>
-         </div>
-         <div class="mt-4 hidden" id="editDetailsForm">
-          <form>
-           <div class="mb-4">
-            <input class="w-full p-2 border border-gray-300 rounded" id="propertyType" name="propertyType" type="text" value="Single Family Home"/>
-           </div>
-           <div class="mb-4">
-            <label class="block text-gray-700" for="squareFootage">
-             Square Footage
-            </label>
-            <input class="w-full p-2 border border-gray-300 rounded" id="squareFootage" name="squareFootage" type="text" value="2,500 sq ft"/>
-           </div>
-           <div class="mb-4">
-            <label class="block text-gray-700" for="bedrooms">
-             Bedrooms
-            </label>
-            <input class="w-full p-2 border border-gray-300 rounded" id="bedrooms" name="bedrooms" type="text" value="4"/>
-           </div>
-           <div class="mb-4">
-            <label class="block text-gray-700" for="bathrooms">
-             Bathrooms
-            </label>
-            <input class="w-full p-2 border border-gray-300 rounded" id="bathrooms" name="bathrooms" type="text" value="3"/>
-           </div>
-           <div class="mb-4">
-            <input class="w-full p-2 border border-gray-300 rounded" id="yearBuilt" name="yearBuilt" type="text" value="2010"/>
-           </div>
-           <div class="mb-4">
-            <input class="w-full p-2 border border-gray-300 rounded" id="lotSize" name="lotSize" type="text" value="0.5 acres"/>
-           </div>
-           <div class="mb-4">
-            <label class="block text-gray-700" for="status">
-             Status
-            </label>
-            <input class="w-full p-2 border border-gray-300 rounded" id="status" name="status" type="text" value="Active"/>
-           </div>
-           <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors" type="submit">
-            Save
-           </button>
-          </form>
-         </div>
         </section>
-       </div>
       </div>
-     </div>
-     <script>
-      function toggleEdit() {
-               document.getElementById('editForm').classList.toggle('hidden');
-           }
-   
-           function toggleEditDetails() {
-               document.getElementById('editDetailsForm').classList.toggle('hidden');
-           }
-     </script>
-    
+    </div>
+  </div>
+</div>

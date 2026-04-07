@@ -22,11 +22,14 @@ export interface RoutineHistory {
   id: number;
   class_id: number;
   user_id: number;
+  class_name?: string;
   routine: string;
   routine_intensity: string;
   time_of_submission: string;
   date_of_submission: string;
   img: string;
+  student_reflection?: string;
+  coach_response?: string;
 }
 
 export interface ClassInfo {
@@ -118,5 +121,9 @@ export class RoutinesService {
   checkTodayRoutineById(classId: number, userId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/routes.php?request=check-today-by-id/${classId}/${userId}`);
          }
+
+  getRoutineHistoryForStudentInClass(classId: number, userId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/routes.php?request=getRoutineHistoryForStudentInClass&class_id=${classId}&user_id=${userId}`);
+  }
 
 }

@@ -4,24 +4,12 @@ import { NavbarComponent } from '../navbar/navbar.component';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { environment } from '../../../environments/environment';
 import { RoutinesService, ClassInfo, RoutineHistory } from '../../services/routines.service';
 import Swal from 'sweetalert2';
 import { finalize } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
-
-interface TaskData {
-  task_id?: number;
-  user_id?: number | null;
-  title: string;
-  date_due: string;
-  time_due: string;
-  status: 'Pending' | 'In Progress' | 'Completed';
-  description?: string | null;
-  image?: string | null;
-}
 
 interface Event {
   image: string;
@@ -52,10 +40,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isNavOpen = true;
   activeSection: string = 'overview';
 
-  // Task related properties
-  tasks: TaskData[] = [];
-  activeFilter: 'Pending' | 'In Progress' | 'Completed' = 'Pending';
-
   // Routine related properties
   enrolledClasses: ClassInfo[] = [];
   routineHistory: RoutineHistory[] = [];
@@ -71,7 +55,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   apiBaseUrl = 'http://localhost/demoproj1';
 
   // Charts
-  private taskStatusChart: Chart | null = null;
+  private weeklyCompletionChart: Chart | null = null;
   private routineTrendChart: Chart | null = null;
   private perClassBarChart: Chart | null = null;
   private completedTodayByClass: Map<number, boolean> = new Map();
@@ -94,14 +78,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.currentDayName = this.getCurrentDayName();
 
     // Load all data
-    this.fetchTasks();
     this.loadEnrolledClasses();
     this.loadEvents();
   }
 
   ngOnDestroy(): void {
     // Clean up charts to prevent memory leaks
-    this.taskStatusChart?.destroy();
+    this.weeklyCompletionChart?.destroy();
     this.routineTrendChart?.destroy();
     this.perClassBarChart?.destroy();
   }
@@ -119,59 +102,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const today = new Date();
     return days[today.getDay()];
-  }
-
-  // Task Methods (from task.component.ts)
-  private fetchTasks(): void {
-    const storedUserId = localStorage.getItem('hoa_user_id');
-    const userId = storedUserId ? Number(storedUserId) : null;
-
-    if (!userId) {
-      console.error('No user ID found in localStorage');
-      this.tasks = [];
-      return;
-    }
-
-    const url = `${environment.apiUrl}/routes.php?request=getTasks&user_id=${userId}`;
-    console.log('Fetching tasks from:', url);
-    this.http.get<{ status?: string; payload?: TaskData[] } | any>(url).subscribe({
-      next: (res: any) => {
-        const raw = Array.isArray(res)
-          ? (res as TaskData[])
-          : (res?.payload ?? []);
-        this.tasks = this.sortByStatusPriority(raw);
-        setTimeout(() => this.renderCharts(), 0);
-        console.log('Fetched tasks:', this.tasks);
-      },
-      error: (err) => {
-        console.error('Failed to load tasks', err);
-        this.tasks = [];
-      }
-    });
-  }
-
-  get filteredTasks(): TaskData[] {
-    const filtered = this.tasks.filter(t => this.activeFilter === t.status);
-    return this.sortByStatusPriority(filtered);
-  }
-
-  setFilter(filter: 'Pending' | 'In Progress' | 'Completed'): void {
-    this.activeFilter = filter;
-  }
-
-  private sortByStatusPriority(tasks: TaskData[]): TaskData[] {
-    const priority: Record<string, number> = { 'Pending': 1, 'In Progress': 2, 'Completed': 3 };
-    return [...tasks].sort((a, b) => {
-      const pa = priority[a.status] ?? 999;
-      const pb = priority[b.status] ?? 999;
-      if (pa !== pb) return pa - pb;
-      const ad = a.date_due ?? '';
-      const bd = b.date_due ?? '';
-      if (ad !== bd) return ad.localeCompare(bd);
-      const at = a.time_due ?? '';
-      const bt = b.time_due ?? '';
-      return at.localeCompare(bt);
-    });
   }
 
   // Routine Methods
@@ -365,10 +295,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  getTaskCount(status: 'Pending' | 'In Progress' | 'Completed'): number {
-    return this.tasks.filter(task => task.status === status).length;
-  }
-
   getCompletedRoutinesToday(): number {
     const philippineTime = new Date();
     philippineTime.setHours(philippineTime.getHours() + 8);
@@ -391,28 +317,54 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private renderCharts(): void {
-    this.renderTaskStatusChart();
+    this.renderWeeklyCompletionChart();
     this.renderRoutineTrendChart();
     this.renderPerClassBarChart();
   }
 
-  private renderTaskStatusChart(): void {
-    const el = document.getElementById('taskStatusChart') as HTMLCanvasElement | null;
+  getWeeklyUniqueCompletionDays(): number {
+    const now = new Date();
+    const start = new Date(now);
+    const day = start.getDay(); // Sun=0
+    const diffToMonday = day === 0 ? 6 : day - 1;
+    start.setDate(start.getDate() - diffToMonday);
+    start.setHours(0, 0, 0, 0);
+
+    const seenDays = new Set<string>();
+    for (const h of this.routineHistory) {
+      const d = new Date(h.date_of_submission);
+      if (d >= start && d <= now) {
+        seenDays.add(d.toDateString());
+      }
+    }
+    return Math.min(7, seenDays.size);
+  }
+
+  getWeeklyCompletionRatio(): string {
+    return `${this.getWeeklyUniqueCompletionDays()}/7`;
+  }
+
+  getWeeklyCompletionPercent(): number {
+    return Math.round((this.getWeeklyUniqueCompletionDays() / 7) * 100);
+  }
+
+  private renderWeeklyCompletionChart(): void {
+    const el = document.getElementById('weeklyCompletionChart') as HTMLCanvasElement | null;
     if (!el) return;
-    this.taskStatusChart?.destroy();
+    this.weeklyCompletionChart?.destroy();
     const ctx = el.getContext('2d');
     if (!ctx) return;
-    const pending = this.getTaskCount('Pending');
-    const inProgress = this.getTaskCount('In Progress');
-    const completed = this.getTaskCount('Completed');
-    this.taskStatusChart = new Chart(ctx, {
+    const completedDays = this.getWeeklyUniqueCompletionDays();
+    const remainingDays = Math.max(0, 7 - completedDays);
+
+    this.weeklyCompletionChart = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['Pending', 'In Progress', 'Completed'],
+        labels: ['Completed Days', 'Remaining Days'],
         datasets: [{
-          data: [pending, inProgress, completed],
-          backgroundColor: ['#F59E0B', '#EAB308', '#15957F'],
-          borderColor: ['#F59E0B', '#EAB308', '#0A7664'],
+          data: [completedDays, remainingDays],
+          backgroundColor: ['#15957F', '#E5E7EB'],
+          borderColor: ['#0A7664', '#D1D5DB'],
           borderWidth: 1
         }]
       },

@@ -1,69 +1,93 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { SidenavComponent } from '../sidenav/sidenav.component';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { AuthService } from '../../auth.service';
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { RoutinesService, ClassInfo, RoutineHistory } from '../../services/routines.service';
 
 @Component({
   selector: 'app-profile',
-  imports: [SidenavComponent,NavbarComponent,CommonModule],
+  standalone: true,
+  imports: [SidenavComponent, NavbarComponent, CommonModule],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
 })
-export class ProfileComponent {
-
-  userId: number = 0;
+export class ProfileComponent implements OnInit {
+  userId = 0;
   profile: any;
-  name:  any;
-
-  toggleEdit() {
-    document.getElementById('editForm')?.classList.toggle('hidden');
-  }
-
-  toggleEditDetails() {
-    document.getElementById('editDetailsForm')?.classList.toggle('hidden');
-  }
-
+  enrolledClasses: ClassInfo[] = [];
+  routineHistory: RoutineHistory[] = [];
+  isLoadingClasses = false;
+  isLoadingHistory = false;
   isNavOpen = true;
+
+  constructor(private auth: AuthService, private routinesService: RoutinesService) {}
 
   onNavToggled(isOpen: boolean) {
     this.isNavOpen = isOpen;
   }
-  constructor(private auth: AuthService, private http: HttpClient) {}
 
   ngOnInit() {
-    this.auth.getCurrentUser().subscribe(user => {
-      if (user) {
-        console.log("This is the User Id", user);
-        this.userId = user.id;
-        console.log("This is the User Id", this.userId);
-        this.getProfile(this.userId);
-      } else {
-        this.profile = null; // No user logged in
-        console.log("User not found");
+    this.auth.getCurrentUser().subscribe(async (user: any) => {
+      if (!user) {
+        this.profile = null;
+        return;
       }
-    });
-  }
-  
-  
-  getProfile(userId: number) {
-    const url = `http://localhost/DEMO2/demoproject/api/getHoaUserProf/${userId}`;
-    this.http.get(url).subscribe({
-      next: (resp: any) => {
-        console.log("API response:", resp);
-        if (resp?.data && Array.isArray(resp.data) && resp.data.length > 0) {
-          this.profile = resp.data[0];
-          console.log("Profile data:", this.profile);
-        } else {
-          console.error("No profile data found for userId:", userId);
-        }
-      },
-      error: (error) => {
-        console.error("Error fetching profile:", error);
-      }
-    });
-  }
-  }
-  
 
+      this.userId = user.id;
+      this.profile = user;
+      await this.loadClassesAndHistory();
+    });
+  }
+
+  private async loadClassesAndHistory() {
+    if (!this.userId) return;
+
+    this.isLoadingClasses = true;
+    try {
+      const classResponse = await this.routinesService.getEnrolledClassesById(this.userId).toPromise();
+      this.enrolledClasses = classResponse?.payload || [];
+    } catch {
+      this.enrolledClasses = [];
+    } finally {
+      this.isLoadingClasses = false;
+    }
+
+    this.isLoadingHistory = true;
+    try {
+      const historyRequests = this.enrolledClasses.map((cls) =>
+        this.routinesService.getRoutineHistoryForStudentInClass(cls.id, this.userId).toPromise()
+      );
+      const responses = await Promise.all(historyRequests);
+      const merged: RoutineHistory[] = [];
+
+      for (let i = 0; i < responses.length; i++) {
+        const className = this.enrolledClasses[i]?.title || `Class ${this.enrolledClasses[i]?.id}`;
+        const rows = responses[i]?.payload || [];
+        for (const row of rows) {
+          merged.push({ ...row, class_name: row.class_name || className });
+        }
+      }
+
+      this.routineHistory = merged.sort((a, b) => {
+        const aDt = `${a.date_of_submission || ''} ${a.time_of_submission || ''}`;
+        const bDt = `${b.date_of_submission || ''} ${b.time_of_submission || ''}`;
+        return bDt.localeCompare(aDt);
+      });
+    } catch {
+      this.routineHistory = [];
+    } finally {
+      this.isLoadingHistory = false;
+    }
+  }
+
+  getDisplayDateTime(item: RoutineHistory): string {
+    return `${item.date_of_submission || ''} ${item.time_of_submission || ''}`.trim();
+  }
+
+  getImageUrl(img?: string): string {
+    if (!img) return '';
+    if (img.startsWith('http')) return img;
+    return `https://capstonebackend-9wrj.onrender.com/api/uploads/routines/${img}`;
+  }
+}
