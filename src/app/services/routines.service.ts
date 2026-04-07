@@ -109,7 +109,7 @@ export class RoutinesService {
              formData.append('student_reflection', reflection);
            }
        
-           return this.http.post<any>(`${this.apiUrl}/submit-completion`, formData);
+           return this.http.post<any>(`${this.apiUrl}/routes.php?request=submit-completion`, formData);
          }
 
            // Check if routine is completed for today
