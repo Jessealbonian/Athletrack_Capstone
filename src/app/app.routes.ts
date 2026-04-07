@@ -38,14 +38,14 @@ export const routes: Routes = [
   // StudentAthletes routes
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard], data: { title: 'Dashboard' } },
   { path: 'Routines', component: RoutinesComponent, canActivate: [authGuard], data: { title: 'Community Rules' } },
-  { path: 'task', component: TaskComponent, canActivate: [authGuard], data: { title: 'Routines Requests' } },
+  { path: 'task', component: ProfileComponent, canActivate: [authGuard], data: { title: 'My Profile' } },
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard], data: { title: 'My Profile' } },
   { path: 'cmntyevents', component: CmntyeventsComponent,  data: { title: 'Community Events' } }, //canActivate: [authGuard],
   //{ path: 'userchat', component: ChatComponent, canActivate: [authGuard], data: { title: 'Communications' } },
   { path: 'login', component: LoginComponent, title: 'login' },
   { path: 'register', component: RegisterComponent, title: 'register' },
 
 //{ path: 'properties', component: PropertiesComponent, canActivate: [authGuard], title: 'Properties' },
-  //{ path: 'profile', component: ProfileComponent, canActivate: [authGuard], data: { title: 'My Profile' } },
   // { path: 'userdues', component: UserduesComponent, canActivate: [authGuard], data: { title: 'Coaches Dues' } },
 
 

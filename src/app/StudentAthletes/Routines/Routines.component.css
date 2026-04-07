@@ -18,11 +18,10 @@ body {
 
 .content-area {
     flex: 1;
-    padding: 10px;
+    width: 100%;
+    padding: 8px;
     background-color: #f7fafc;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    display: block;
     overflow-y: auto;
 }
 
