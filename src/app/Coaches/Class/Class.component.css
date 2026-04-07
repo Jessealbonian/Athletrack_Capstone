@@ -592,6 +592,27 @@ input[type="checkbox"]:focus {
 .class-table td, .class-table th {
   padding-left: 18px;
   padding-right: 18px;
+  vertical-align: top;
+}
+
+.class-table thead th:nth-child(1) {
+  width: 26%;
+}
+
+.class-table thead th:nth-child(2) {
+  width: 10%;
+}
+
+.class-table thead th:nth-child(3) {
+  width: 42%;
+}
+
+.class-table thead th:nth-child(4) {
+  width: 10%;
+}
+
+.class-table thead th:nth-child(5) {
+  width: 12%;
 }
 @media (max-width: 700px) {
   .class-table td, .class-table th {

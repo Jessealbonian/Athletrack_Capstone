@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -1281,5 +1281,90 @@ export class ClassComponent implements OnInit {
     this.studentHistoryModalOpen = false;
     this.selectedStudentDetails = null;
     this.selectedStudentHistory = [];
+  }
+
+  getStudentStatusLabel(student: any): 'Active' | 'Inactive' | 'Deactivated' {
+    if (this.normalizeStudentStatus(student?.student_status) === 'deactivated') {
+      return 'Deactivated';
+    }
+    return this.hasCompletedThisWeek(student) ? 'Active' : 'Inactive';
+  }
+
+  generateClassListPdf() {
+    if (!this.selectedClass) {
+      return;
+    }
+
+    const doc = new jsPDF();
+    const title = `${this.selectedClass.class_name || 'Class'} - Athlete List`;
+    doc.setFontSize(14);
+    doc.text(title, 14, 16);
+
+    const statusLabel = this.dailyStatusFilter === 'all'
+      ? 'All'
+      : this.dailyStatusFilter.charAt(0).toUpperCase() + this.dailyStatusFilter.slice(1);
+    doc.setFontSize(10);
+    doc.text(`Filter: ${statusLabel}`, 14, 24);
+
+    const rows = this.filteredStudents.map((student: any) => [
+      student?.name || '-',
+      student?.code || '-',
+      this.getStudentStatusLabel(student)
+    ]);
+
+    autoTable(doc, {
+      head: [['Name', 'Code', 'Status']],
+      body: rows.length ? rows : [['No athletes found for this filter.', '', '']],
+      startY: 28
+    });
+
+    const safeClassName = (this.selectedClass.class_name || 'class').toString().replace(/\s+/g, '_');
+    doc.save(`${safeClassName}_athlete_list.pdf`);
+  }
+
+  onModalBackdropClick(
+    event: MouseEvent,
+    modal: 'addClass' | 'addTask' | 'upload' | 'classDetails' | 'deactivate' | 'token' | 'studentHistory'
+  ) {
+    if (event.target === event.currentTarget) {
+      switch (modal) {
+        case 'addClass':
+          this.closeAddClassModal();
+          break;
+        case 'addTask':
+          this.closeAddTaskModal();
+          break;
+        case 'upload':
+          this.closeUploadModal();
+          break;
+        case 'classDetails':
+          this.closeClassDetailsModal();
+          break;
+        case 'deactivate':
+          this.closeDeactivateModal();
+          break;
+        case 'token':
+          this.closeTokenModal();
+          break;
+        case 'studentHistory':
+          this.closeStudentHistoryModal();
+          break;
+      }
+    }
+  }
+
+  private closeTopMostModal() {
+    if (this.studentHistoryModalOpen) return this.closeStudentHistoryModal();
+    if (this.showDeactivateModal) return this.closeDeactivateModal();
+    if (this.showTokenModal) return this.closeTokenModal();
+    if (this.showClassDetailsModal) return this.closeClassDetailsModal();
+    if (this.showUploadModal) return this.closeUploadModal();
+    if (this.showAddTaskModal) return this.closeAddTaskModal();
+    if (this.showAddClassModal) return this.closeAddClassModal();
+  }
+
+  @HostListener('document:keydown.escape')
+  handleEscKey() {
+    this.closeTopMostModal();
   }
 }
