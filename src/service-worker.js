@@ -1,6 +1,6 @@
-const CACHE_NAME = 'athletrack-v1.0.0';
-const STATIC_CACHE = 'athletrack-static-v1.0.0';
-const DYNAMIC_CACHE = 'athletrack-dynamic-v1.0.0';
+const CACHE_NAME = 'athletrack-v1.0.1';
+const STATIC_CACHE = 'athletrack-static-v1.0.1';
+const DYNAMIC_CACHE = 'athletrack-dynamic-v1.0.1';
 
 // Files to cache immediately
 const STATIC_FILES = [
@@ -91,6 +91,28 @@ self.addEventListener('fetch', event => {
 
 // Handle API requests with network-first strategy
 async function handleApiRequest(request) {
+  const method = (request.method || 'GET').toUpperCase();
+
+  // Never cache non-GET API requests (POST/PUT/PATCH/DELETE),
+  // especially uploads, since Cache.put only supports GET.
+  if (method !== 'GET') {
+    try {
+      return await fetch(request);
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error: 'Network unavailable',
+          message: 'Unable to submit request while offline.'
+        }),
+        {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+  }
+
   try {
     // Try network first
     const networkResponse = await fetch(request);
