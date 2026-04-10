@@ -1268,19 +1268,54 @@ export class ClassComponent implements OnInit {
   studentHistoryModalOpen = false;
   selectedStudentHistory: any[] = [];
   selectedStudentDetails: any = null;
+  coachResponseDraft: Record<number, string> = {};
+  isSavingCoachResponse: Record<number, boolean> = {};
   openStudentHistoryModal(student: any) {
     this.selectedStudentDetails = student;
     this.studentHistoryModalOpen = true;
     this.selectedStudentHistory = [];
+    this.coachResponseDraft = {};
     this.http.get(`${this.apiUrl}/routes.php?request=getRoutineHistoryForStudentInClass&class_id=${this.selectedClass.class_id}&user_id=${student.user_id}`)
       .subscribe((response: any) => {
         this.selectedStudentHistory = response?.payload || [];
+        for (const entry of this.selectedStudentHistory) {
+          if (entry?.id != null) {
+            this.coachResponseDraft[entry.id] = entry.coach_response || '';
+          }
+        }
       });
   }
   closeStudentHistoryModal() {
     this.studentHistoryModalOpen = false;
     this.selectedStudentDetails = null;
     this.selectedStudentHistory = [];
+    this.coachResponseDraft = {};
+  }
+
+  saveCoachResponse(entry: any) {
+    const historyId = Number(entry?.id);
+    if (!historyId) return;
+    const text = (this.coachResponseDraft[historyId] || '').toString().trim();
+
+    this.isSavingCoachResponse[historyId] = true;
+    this.http.post(`${this.apiUrl}/routes.php?request=setCoachResponse`, {
+      history_id: historyId,
+      coach_response: text
+    }).subscribe({
+      next: (resp: any) => {
+        if (resp?.status === 'success') {
+          entry.coach_response = text;
+          Swal.fire({ icon: 'success', title: 'Saved', text: 'Coach response saved.' });
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: resp?.message || 'Failed to save response.' });
+        }
+        this.isSavingCoachResponse[historyId] = false;
+      },
+      error: () => {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save response.' });
+        this.isSavingCoachResponse[historyId] = false;
+      }
+    });
   }
 
   getStudentStatusLabel(student: any): 'Active' | 'Inactive' | 'Deactivated' {

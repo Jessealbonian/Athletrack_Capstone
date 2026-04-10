@@ -8,18 +8,7 @@
 
 /* Rely on template's [class.lg:ml-64]/[class.lg:ml-20] for left spacing; no extra margin here */
 
-.aspect-square {
-  position: relative;
-}
-.aspect-square::before {
-  content: '';
-  display: block;
-  padding-top: 100%;
-}
-.aspect-square > * {
-  position: absolute;
-  inset: 0;
-}
+/* Let Tailwind's aspect-square handle sizing; avoid pseudo overlays */
 
 /* Modal stacking and positioning fixes */
 .modal-overlay {

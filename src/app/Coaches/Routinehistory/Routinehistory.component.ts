@@ -56,7 +56,6 @@ export class RoutinehistoryComponent implements OnInit {
 
   searchTerm = '';
   routines: RoutineClassRecord[] = [];
-  expanded: Record<number, boolean> = {};
 
   // Modal state
   isModalOpen = false;
@@ -69,16 +68,16 @@ export class RoutinehistoryComponent implements OnInit {
   attendeesForSelectedDay: AttendeeRecord[] = [];
   monthlyAttendanceCache: Map<number, AttendeeRecord[]> = new Map();
 
-  // Attendees modal
-  isAttendeesModalOpen = false;
+  // Day details modal
+  isDayDetailsModalOpen = false;
   attendeeStatusFilter: 'all' | 'active' | 'inactive' = 'all';
   get filteredAttendeesForSelectedDay() {
     if (this.attendeeStatusFilter === 'all') return this.attendeesForSelectedDay;
-    return this.attendeesForSelectedDay.filter((a: any) => {
-      // Assume all fetched are active; extend if backend supports real status
-      return this.attendeeStatusFilter === 'active';
-    });
+    return this.attendeesForSelectedDay.filter((a: any) => a.status === this.attendeeStatusFilter);
   }
+
+  // Report dropdown
+  isReportMenuOpen = false;
 
   attendeeHistoryModalOpen = false;
   selectedAttendeeHistory: any[] = [];
@@ -127,11 +126,6 @@ export class RoutinehistoryComponent implements OnInit {
     });
   }
 
-  toggleExpand(id: number | undefined) {
-    if (id == null) return;
-    this.expanded[id] = !this.expanded[id];
-  }
-
   openMonthModal(r: RoutineClassRecord) {
     this.selectedClass = r;
     const now = new Date();
@@ -141,6 +135,9 @@ export class RoutinehistoryComponent implements OnInit {
     this.selectedDay = null;
     this.attendeesForSelectedDay = [];
     this.monthlyAttendanceCache.clear();
+    this.attendeeStatusFilter = 'all';
+    this.isReportMenuOpen = false;
+    this.isDayDetailsModalOpen = false;
     this.isModalOpen = true;
     // Prevent background scrolling
     document.body.classList.add('modal-open');
@@ -152,6 +149,8 @@ export class RoutinehistoryComponent implements OnInit {
     this.selectedDay = null;
     this.attendeesForSelectedDay = [];
     this.monthlyAttendanceCache.clear();
+    this.isReportMenuOpen = false;
+    this.isDayDetailsModalOpen = false;
     // Restore background scrolling
     document.body.classList.remove('modal-open');
   }
@@ -191,7 +190,7 @@ export class RoutinehistoryComponent implements OnInit {
 
   selectDay(day: number) {
     this.selectedDay = day;
-    this.fetchAttendeesForDay(day);
+    this.openDayDetailsModal(day);
   }
 
   private fetchAttendeesForDay(day: number) {
@@ -208,6 +207,8 @@ export class RoutinehistoryComponent implements OnInit {
                 ? String(file)
                 : `${environment.apiUrl}/uploads/routines/${file}`)
             : null;
+          const rawStatus = (a.status ?? a.student_status ?? '').toString().toLowerCase().trim();
+          const status: 'active' | 'inactive' = rawStatus === 'active' ? 'active' : 'inactive';
           return {
             user_id: a.user_id ?? a.id ?? null,
             name: a.name ?? a.username ?? 'Student',
@@ -215,7 +216,7 @@ export class RoutinehistoryComponent implements OnInit {
             routine: a.routine || '',
             routine_intensity: a.routine_intensity || '',
             time_of_submission: a.time_of_submission || '',
-            status: a.status === 'inactive' ? 'inactive' : 'active'
+            status
           } as AttendeeRecord;
         });
         this.attendeesForSelectedDay = attendees;
@@ -230,17 +231,168 @@ export class RoutinehistoryComponent implements OnInit {
     });
   }
 
-  openAttendeesModal() {
-    if (!this.selectedDay) return;
-    this.isAttendeesModalOpen = true;
-    // Prevent background scrolling
-    document.body.classList.add('modal-open');
+  openDayDetailsModal(day: number) {
+    this.selectedDay = day;
+    this.isDayDetailsModalOpen = true;
+    this.attendeeStatusFilter = 'all';
+    // Use cache if available
+    const cached = this.monthlyAttendanceCache.get(day);
+    if (cached) {
+      this.attendeesForSelectedDay = cached;
+      this.isLoadingAttendees = false;
+      return;
+    }
+    this.fetchAttendeesForDay(day);
   }
 
-  closeAttendeesModal() {
-    this.isAttendeesModalOpen = false;
-    // Restore background scrolling
-    document.body.classList.remove('modal-open');
+  closeDayDetailsModal() {
+    this.isDayDetailsModalOpen = false;
+    this.attendeeStatusFilter = 'all';
+  }
+
+  setYear(y: number) {
+    this.selectedYear = y;
+    this.daysInMonth = this.computeDaysInMonth(this.selectedYear, this.selectedMonth);
+    this.selectedDay = null;
+    this.attendeesForSelectedDay = [];
+    this.monthlyAttendanceCache.clear();
+    this.isDayDetailsModalOpen = false;
+  }
+
+  setMonth(m: number) {
+    this.selectedMonth = m;
+    this.daysInMonth = this.computeDaysInMonth(this.selectedYear, this.selectedMonth);
+    this.selectedDay = null;
+    this.attendeesForSelectedDay = [];
+    this.monthlyAttendanceCache.clear();
+    this.isDayDetailsModalOpen = false;
+  }
+
+  get availableYears(): number[] {
+    const now = new Date().getFullYear();
+    return Array.from({ length: 7 }, (_, i) => now - i);
+  }
+
+  get months(): { value: number; label: string }[] {
+    return [
+      { value: 1, label: 'Jan' }, { value: 2, label: 'Feb' }, { value: 3, label: 'Mar' },
+      { value: 4, label: 'Apr' }, { value: 5, label: 'May' }, { value: 6, label: 'Jun' },
+      { value: 7, label: 'Jul' }, { value: 8, label: 'Aug' }, { value: 9, label: 'Sep' },
+      { value: 10, label: 'Oct' }, { value: 11, label: 'Nov' }, { value: 12, label: 'Dec' }
+    ];
+  }
+
+  toggleReportMenu() {
+    this.isReportMenuOpen = !this.isReportMenuOpen;
+  }
+
+  closeReportMenu() {
+    this.isReportMenuOpen = false;
+  }
+
+  async generateYearlyReport() {
+    if (!this.selectedClass?.class_id) return;
+
+    // Build rows across the whole year
+    const year = this.selectedYear;
+    const rows: { date: string; name: string; routine: string; intensity: string; time: string; imageUrl: string | null }[] = [];
+
+    for (let month = 1; month <= 12; month++) {
+      const days = this.computeDaysInMonth(year, month);
+      for (const day of days) {
+        // fetch per-day attendance
+        // eslint-disable-next-line no-await-in-loop
+        const list: AttendeeRecord[] = await new Promise((resolve) => {
+          const url = `${environment.apiUrl}/routes.php?request=getClassAttendance&class_id=${this.selectedClass?.class_id}&year=${year}&month=${month}&day=${day}`;
+          this.http.get<any>(url).subscribe({
+            next: (res) => {
+              const raw = Array.isArray(res) ? res : (res?.data ?? res?.payload ?? []);
+              const attendees: AttendeeRecord[] = (raw || []).map((a: any) => {
+                const file = a.img ?? a.image ?? a.photo ?? null;
+                const image = file
+                  ? (String(file).startsWith('http')
+                      ? String(file)
+                      : `${environment.apiUrl}/uploads/routines/${file}`)
+                  : null;
+                const rawStatus = (a.status ?? a.student_status ?? '').toString().toLowerCase().trim();
+                const status: 'active' | 'inactive' = rawStatus === 'active' ? 'active' : 'inactive';
+                return {
+                  user_id: a.user_id ?? a.id ?? null,
+                  name: a.name ?? a.username ?? 'Student',
+                  image,
+                  routine: a.routine || '',
+                  routine_intensity: a.routine_intensity || '',
+                  time_of_submission: a.time_of_submission || '',
+                  status
+                } as AttendeeRecord;
+              });
+              resolve(attendees);
+            },
+            error: () => resolve([])
+          });
+        });
+
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        if (list.length === 0) {
+          rows.push({ date: dateStr, name: '(none)', routine: 'N/A', intensity: 'N/A', time: 'N/A', imageUrl: null });
+        } else {
+          for (const a of list) {
+            rows.push({
+              date: dateStr,
+              name: a.name || 'Student',
+              routine: a.routine || 'N/A',
+              intensity: a.routine_intensity || 'N/A',
+              time: a.time_of_submission || 'N/A',
+              imageUrl: a.image || null
+            });
+          }
+        }
+      }
+    }
+
+    const images: string[] = await Promise.all(rows.map(async r => (r.imageUrl ? await this.toDataURL(r.imageUrl) : '')));
+
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text('Routine Attendance Report (Yearly)', 14, 18);
+    doc.setFontSize(12);
+    doc.text(`${this.selectedClass.class_name || 'Class'} — ${year}`, 14, 26);
+
+    const imageSizeMm = 13.2;
+    autoTable(doc, {
+      startY: 32,
+      head: [['Date', 'Name', 'Routine', 'Intensity', 'Time', 'Image']],
+      body: rows.map(() => ['', '', '', '', '', '']),
+      styles: { fontSize: 8, cellPadding: 2, minCellHeight: imageSizeMm + 4 },
+      headStyles: { fillColor: [10, 118, 100] },
+      columnStyles: { 0: { cellWidth: 30 }, 1: { cellWidth: 45 }, 2: { cellWidth: 55 }, 3: { cellWidth: 25 }, 4: { cellWidth: 25 }, 5: { cellWidth: imageSizeMm + 6 } },
+      didParseCell: (data) => {
+        if (data.section === 'body') {
+          const idx = data.row.index;
+          if (data.column.index === 0) data.cell.text = [rows[idx].date];
+          if (data.column.index === 1) data.cell.text = [rows[idx].name];
+          if (data.column.index === 2) data.cell.text = [rows[idx].routine];
+          if (data.column.index === 3) data.cell.text = [rows[idx].intensity];
+          if (data.column.index === 4) data.cell.text = [rows[idx].time];
+        }
+      },
+      didDrawCell: (data) => {
+        if (data.section === 'body' && data.column.index === 5) {
+          const idx = data.row.index;
+          const imgData = images[idx];
+          if (imgData) {
+            const w = imageSizeMm;
+            const h = imageSizeMm;
+            const x = data.cell.x + (data.cell.width - w) / 2;
+            const y = data.cell.y + (data.cell.height - h) / 2;
+            try { (doc as any).addImage(imgData, 'PNG', x, y, w, h); } catch {}
+          }
+        }
+      }
+    });
+
+    const fileName = `routine_report_year_${(this.selectedClass.class_name || 'class').toString().replace(/\\s+/g, '_')}_${year}.pdf`;
+    doc.save(fileName);
   }
 
   private async toDataURL(url: string): Promise<string> {

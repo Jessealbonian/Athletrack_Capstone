@@ -21,60 +21,32 @@
           <div *ngIf="!isLoading && errorMessage" class="text-red-600">{{ errorMessage }}</div>
 
           <div *ngIf="!isLoading && !errorMessage">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div class="bg-gray-200 p-4 rounded-lg shadow hover:bg-gray-300 flex flex-col" *ngFor="let r of filteredRoutines">
-                <div class="flex flex-col sm:flex-row items-start justify-between gap-2">
-                  <div>
-                    <h3 class="font-semibold">{{ r.class_name || 'Class' }} <span class="text-sm opacity-70">#{{ r.class_id }}</span></h3>
-                    <p class="text-sm text-gray-700" *ngIf="r.description">{{ r.description }}</p>
-                  </div>
-                  <div class="flex gap-2 mt-2 sm:mt-0">
-                    <button class="text-sm underline" (click)="toggleExpand(r.class_id)">{{ expanded[r.class_id || 0] ? 'Hide' : 'View' }} details</button>
-                    <button class="text-sm text-white px-3 py-1 rounded transition-colors duration-150" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'" (click)="openMonthModal(r)">Open Month</button>
-                  </div>
-                </div>
-
-                <div class="mt-3 text-sm" *ngIf="expanded[r.class_id || 0]">
-                  <div class="grid grid-cols-1 gap-2">
-                    <!-- Days of week routines (unchanged) -->
-                    <div class="bg-white rounded p-2">
-                      <div class="font-semibold mb-1">Monday</div>
-                      <div class="text-gray-800">{{ r.mondayRoutine || '-' }}</div>
-                      <div class="text-xs text-gray-500">Intensity: {{ r.mondayintensity || '-' }}</div>
-                    </div>
-                    <div class="bg-white rounded p-2">
-                      <div class="font-semibold mb-1">Tuesday</div>
-                      <div class="text-gray-800">{{ r.tuesdayRoutine || '-' }}</div>
-                      <div class="text-xs text-gray-500">Intensity: {{ r.tuesdayintensity || '-' }}</div>
-                    </div>
-                    <div class="bg-white rounded p-2">
-                      <div class="font-semibold mb-1">Wednesday</div>
-                      <div class="text-gray-800">{{ r.wednesdayRoutine || '-' }}</div>
-                      <div class="text-xs text-gray-500">Intensity: {{ r.wednesdayintensity || '-' }}</div>
-                    </div>
-                    <div class="bg-white rounded p-2">
-                      <div class="font-semibold mb-1">Thursday</div>
-                      <div class="text-gray-800">{{ r.thursdayRoutine || '-' }}</div>
-                      <div class="text-xs text-gray-500">Intensity: {{ r.thursdayintensity || '-' }}</div>
-                    </div>
-                    <div class="bg-white rounded p-2">
-                      <div class="font-semibold mb-1">Friday</div>
-                      <div class="text-gray-800">{{ r.fridayRoutine || '-' }}</div>
-                      <div class="text-xs text-gray-500">Intensity: {{ r.fridayintensity || '-' }}</div>
-                    </div>
-                    <div class="bg-white rounded p-2">
-                      <div class="font-semibold mb-1">Saturday</div>
-                      <div class="text-gray-800">{{ r.saturdayRoutine || '-' }}</div>
-                      <div class="text-xs text-gray-500">Intensity: {{ r.saturdayintensity || '-' }}</div>
-                    </div>
-                    <div class="bg-white rounded p-2">
-                      <div class="font-semibold mb-1">Sunday</div>
-                      <div class="text-gray-800">{{ r.sundayRoutine || '-' }}</div>
-                      <div class="text-xs text-gray-500">Intensity: {{ r.sundayintensity || '-' }}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div class="overflow-x-auto bg-white rounded-lg shadow">
+              <table class="min-w-full text-sm">
+                <thead class="text-white" style="background:#0A7664;">
+                  <tr>
+                    <th class="text-left p-3">Class</th>
+                    <th class="text-left p-3">Description</th>
+                    <th class="text-left p-3">Created</th>
+                    <th class="text-right p-3">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let r of filteredRoutines; let i = index" [class.bg-gray-50]="i % 2 === 1" class="hover:bg-gray-100">
+                    <td class="p-3">
+                      <div class="font-semibold">{{ r.class_name || 'Class' }}</div>
+                      <div class="text-xs text-gray-600">#{{ r.class_id }}</div>
+                    </td>
+                    <td class="p-3 text-gray-700">{{ r.description || '-' }}</td>
+                    <td class="p-3 text-gray-700">{{ r.created_at || '-' }}</td>
+                    <td class="p-3 text-right">
+                      <button class="text-sm text-white px-3 py-2 rounded transition-colors duration-150" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'" (click)="openMonthModal(r)">
+                        Open Month
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             <div *ngIf="filteredRoutines.length === 0" class="text-gray-600 mt-8">
@@ -93,25 +65,51 @@
     <div class="flex flex-col sm:flex-row items-center justify-between p-4 border-b gap-2 sticky top-0 bg-white">
       <div class="w-full sm:w-auto">
         <div class="text-base sm:text-lg font-semibold">{{ selectedClass?.class_name || 'Class' }} — Month View</div>
-        <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-          <button class="px-2 py-1 rounded border" (click)="goToPrevMonth()">Prev</button>
-          <span>{{ selectedYear }}-{{ selectedMonth < 10 ? '0' + selectedMonth : selectedMonth }}</span>
-          <button class="px-2 py-1 rounded border" (click)="goToNextMonth()">Next</button>
+        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-700">
+          <span class="font-semibold">Year</span>
+          <button *ngFor="let y of availableYears" class="px-2 py-1 rounded border"
+                  [class.bg-gray-900]="y === selectedYear" [class.text-white]="y === selectedYear"
+                  (click)="setYear(y)">{{ y }}</button>
+        </div>
+        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-700">
+          <span class="font-semibold">Month</span>
+          <button *ngFor="let m of months" class="px-2 py-1 rounded border"
+                  [class.bg-gray-900]="m.value === selectedMonth" [class.text-white]="m.value === selectedMonth"
+                  (click)="setMonth(m.value)">{{ m.label }}</button>
         </div>
       </div>
       <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-        <button *ngIf="selectedDay" class="text-sm text-white px-3 py-2 rounded w-full sm:w-auto transition-colors duration-150" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'" (click)="openAttendeesModal()">View Attendees</button>
-        <button *ngIf="selectedDay" class="text-sm text-white px-3 py-2 rounded w-full sm:w-auto transition-colors duration-150" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'" (click)="generateMonthlyReport()">Create Report (Day)</button>
-        <button class="text-sm text-white px-3 py-2 rounded w-full sm:w-auto transition-colors duration-150" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'" (click)="generateWholeMonthReport()">Whole Month Report</button>
+        <div class="relative w-full sm:w-auto">
+          <button class="text-sm text-white px-3 py-2 rounded w-full sm:w-auto transition-colors duration-150"
+                  style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'"
+                  (click)="toggleReportMenu()">
+            Generate Report
+          </button>
+          <div *ngIf="isReportMenuOpen" class="absolute right-0 mt-2 w-52 bg-white border rounded shadow z-50">
+            <button class="w-full text-left px-3 py-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    [disabled]="!selectedDay"
+                    (click)="generateMonthlyReport(); closeReportMenu()">
+              Day report
+            </button>
+            <button class="w-full text-left px-3 py-2 hover:bg-gray-100"
+                    (click)="generateWholeMonthReport(); closeReportMenu()">
+              Month report
+            </button>
+            <button class="w-full text-left px-3 py-2 hover:bg-gray-100"
+                    (click)="generateYearlyReport(); closeReportMenu()">
+              Yearly report
+            </button>
+          </div>
+        </div>
         <button class="text-sm px-3 py-2 rounded border w-full sm:w-auto" (click)="closeMonthModal()">Close</button>
       </div>
     </div>
 
-    <div class="p-2 sm:p-4 overflow-auto flex-1">
-      <div class="grid grid-cols-7 gap-2">
+    <div class="p-2 sm:p-4 flex-1 overflow-hidden">
+      <div class="grid grid-cols-7 gap-1 sm:gap-2">
         <button
           *ngFor="let d of daysInMonth"
-          class="aspect-square min-h-[44px] sm:min-h-[60px] rounded border flex items-center justify-center hover:bg-gray-100 text-xs sm:text-base transition-colors"
+          class="aspect-square min-h-[32px] sm:min-h-[44px] rounded border flex items-center justify-center hover:bg-gray-100 text-xs sm:text-base transition-colors"
           [class.bg-indigo-100]="selectedDay === d"
           (click)="selectDay(d)"
         >
@@ -119,27 +117,77 @@
         </button>
       </div>
 
-      <div class="mt-4">
-        <div class="text-xs sm:text-sm text-gray-700" *ngIf="!selectedDay">Select a day to view attendees.</div>
-        <div *ngIf="selectedDay">
-          <div class="flex items-center justify-between mb-2">
-            <div class="font-semibold text-xs sm:text-base">Attendees for {{ selectedYear }}-{{ selectedMonth < 10 ? '0' + selectedMonth : selectedMonth }}-{{ selectedDay && selectedDay < 10 ? ('0' + selectedDay) : selectedDay }}</div>
-          </div>
-          <div class="flex gap-4 mb-2">
-            <label><input type="radio" [(ngModel)]="attendeeStatusFilter" value="all"> All</label>
-            <label><input type="radio" [(ngModel)]="attendeeStatusFilter" value="active"> Active</label>
-            <label><input type="radio" [(ngModel)]="attendeeStatusFilter" value="inactive"> Inactive</label>
-          </div>
-          <div *ngIf="isLoadingAttendees" class="text-gray-600">Loading attendees...</div>
-          <div *ngIf="!isLoadingAttendees && filteredAttendeesForSelectedDay.length === 0" class="text-gray-600">No attendees recorded.</div>
-          <div *ngIf="!isLoadingAttendees && filteredAttendeesForSelectedDay.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            <div class="flex items-center gap-3 p-2 border rounded cursor-pointer" *ngFor="let a of filteredAttendeesForSelectedDay" (click)="onAttendeeClick(a)">
-              <img *ngIf="a.image" [src]="a.image" alt="photo" class="w-10 h-10 rounded-full object-cover" />
-              <div class="text-xs sm:text-sm">{{ a.name }}</div>
-              <span class="inline-block ml-2 px-2 py-0.5 rounded-full text-white text-xs" [ngClass]="a.status === 'active' ? 'bg-green-600' : 'bg-gray-400'">{{ a.status || 'Active' }}</span>
-            </div>
-          </div>
+      <div class="mt-3 text-xs sm:text-sm text-gray-600">
+        Click a day to open the details modal.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Day Details Modal -->
+<div *ngIf="isDayDetailsModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10050] p-4">
+  <div class="bg-white rounded-lg w-full sm:w-[95vw] max-w-5xl max-h-[90vh] overflow-y-auto flex flex-col shadow-2xl">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b gap-3 sticky top-0 bg-white">
+      <div>
+        <div class="text-base sm:text-lg font-semibold">
+          Day View — {{ selectedYear }}-{{ selectedMonth < 10 ? '0' + selectedMonth : selectedMonth }}-{{ selectedDay && selectedDay < 10 ? ('0' + selectedDay) : selectedDay }}
         </div>
+        <div class="text-xs sm:text-sm text-gray-600">{{ selectedClass?.class_name || 'Class' }}</div>
+      </div>
+      <div class="flex gap-2 w-full sm:w-auto">
+        <button class="text-sm text-white px-3 py-2 rounded w-full sm:w-auto transition-colors duration-150"
+                style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'"
+                (click)="generateMonthlyReport()">
+          Generate Day Report
+        </button>
+        <button class="text-sm px-3 py-2 rounded border w-full sm:w-auto" (click)="closeDayDetailsModal()">Close</button>
+      </div>
+    </div>
+
+    <div class="p-4">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
+        <label class="text-sm font-semibold text-gray-700">Status</label>
+        <select [(ngModel)]="attendeeStatusFilter" class="border rounded px-3 py-2 text-sm w-full sm:w-56">
+          <option value="all">All</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div *ngIf="isLoadingAttendees" class="text-gray-600">Loading attendees...</div>
+      <div *ngIf="!isLoadingAttendees && filteredAttendeesForSelectedDay.length === 0" class="text-gray-600">No attendees recorded.</div>
+
+      <div *ngIf="!isLoadingAttendees && filteredAttendeesForSelectedDay.length > 0" class="overflow-x-auto">
+        <table class="min-w-full text-sm bg-white rounded border">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="text-left p-3">Athlete</th>
+              <th class="text-left p-3">Routine</th>
+              <th class="text-left p-3">Intensity</th>
+              <th class="text-left p-3">Time</th>
+              <th class="text-left p-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of filteredAttendeesForSelectedDay" class="hover:bg-gray-50 cursor-pointer" (click)="onAttendeeClick(a)">
+              <td class="p-3">
+                <div class="flex items-center gap-3">
+                  <img *ngIf="a.image" [src]="a.image" alt="photo" class="w-10 h-10 rounded-full object-cover" />
+                  <div class="font-semibold">{{ a.name }}</div>
+                </div>
+              </td>
+              <td class="p-3">{{ a.routine || '-' }}</td>
+              <td class="p-3">{{ a.routine_intensity || '-' }}</td>
+              <td class="p-3">{{ a.time_of_submission || '-' }}</td>
+              <td class="p-3">
+                <span class="inline-block px-2 py-0.5 rounded-full text-white text-xs"
+                      [ngClass]="a.status === 'active' ? 'bg-green-600' : 'bg-gray-500'">
+                  {{ a.status || 'active' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -165,23 +213,3 @@
     <button (click)="closeAttendeeHistoryModal()" class="px-4 py-2 rounded bg-gray-600 text-white font-semibold">Close</button>
   </div>
 </div>
-
-<!-- Attendees Modal -->
-<div *ngIf="isAttendeesModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000] p-4">
-  <div class="bg-white rounded-lg w-full sm:w-[90vw] max-w-4xl max-h-[85vh] overflow-y-auto flex flex-col shadow-2xl">
-    <div class="flex flex-col sm:flex-row items-center justify-between p-4 border-b gap-2 sticky top-0 bg-white">
-      <div class="text-base sm:text-lg font-semibold">Attendees — {{ selectedYear }}-{{ selectedMonth < 10 ? '0' + selectedMonth : selectedMonth }}-{{ selectedDay && selectedDay < 10 ? ('0' + selectedDay) : selectedDay }}</div>
-      <button class="text-sm px-3 py-2 rounded border w-full sm:w-auto mt-2 sm:mt-0" (click)="closeAttendeesModal()">Close</button>
-    </div>
-    <div class="p-2 sm:p-4 overflow-auto flex-1">
-      <div *ngIf="attendeesForSelectedDay.length === 0" class="text-gray-600">No attendees.</div>
-      <div *ngIf="attendeesForSelectedDay.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <div class="border rounded p-3 flex flex-col items-center" *ngFor="let a of attendeesForSelectedDay">
-          <img *ngIf="a.image" [src]="a.image" alt="photo" class="w-20 h-20 sm:w-24 sm:h-24 rounded object-cover mb-2" />
-          <div class="text-xs sm:text-sm text-center">{{ a.name }}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-

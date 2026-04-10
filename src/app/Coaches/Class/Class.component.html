@@ -341,7 +341,7 @@
           <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <button *ngIf="!isEditingClassDetails" (click)="isEditingClassDetails = true" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'">Edit</button>
             <button *ngIf="isEditingClassDetails" (click)="confirmEditClassDetails()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'">Confirm</button>
-            <button *ngIf="!isEditingClassDetails" (click)="deleteClass()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:#333436;" onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">Delete Class</button>
+            <button *ngIf="!isEditingClassDetails" (click)="deleteClass()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto bg-red-600 hover:bg-red-700">Delete Class</button>
             <button (click)="closeClassDetailsModal()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:gray" [ngClass]="'hover:bg-gray-700'">Cancel</button>
           </div>
         </div>
@@ -466,30 +466,50 @@
     </div>
   </div>
 </div>
-<div *ngIf="studentHistoryModalOpen" (click)="onModalBackdropClick($event, 'studentHistory')" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div (click)="$event.stopPropagation()" class="bg-white shadow-lg p-4 sm:p-8 rounded-lg w-full max-w-2xl mx-2 overflow-y-auto max-h-[90vh]">
+<div *ngIf="studentHistoryModalOpen" (click)="onModalBackdropClick($event, 'studentHistory')" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+  <div (click)="$event.stopPropagation()" class="bg-white shadow-lg p-4 sm:p-8 rounded-lg w-full sm:w-[95vw] max-w-6xl mx-2 overflow-y-auto max-h-[90vh]">
     <h2 class="text-xl sm:text-2xl text-black font-bold mb-2">Submission History: {{selectedStudentDetails?.name}}</h2>
     <div class="mb-2 text-gray-700 text-xs">Code: {{selectedStudentDetails?.code}}</div>
-    <table class="w-full mb-4">
+    <div class="overflow-x-auto">
+    <table class="w-full mb-4 text-xs sm:text-sm">
       <thead>
         <tr>
-          <th>Date</th>
-          <th>Time</th>
-          <th>Routine</th>
-          <th>Reflection</th>
-          <th>Coach Response</th>
+          <th class="text-left p-2">Date</th>
+          <th class="text-left p-2">Time</th>
+          <th class="text-left p-2">Routine</th>
+          <th class="text-left p-2">Reflection</th>
+          <th class="text-left p-2">Coach Response</th>
+          <th class="text-left p-2">Action</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let entry of selectedStudentHistory">
-          <td>{{entry.date_of_submission}}</td>
-          <td>{{entry.time_of_submission}}</td>
-          <td>{{entry.routine}}</td>
-          <td>{{entry.student_reflection}}</td>
-          <td>{{entry.coach_response}}</td>
+          <td class="align-top p-2 whitespace-nowrap">{{entry.date_of_submission}}</td>
+          <td class="align-top p-2 whitespace-nowrap">{{entry.time_of_submission}}</td>
+          <td class="align-top p-2 min-w-[220px]">
+            <div class="font-semibold">{{entry.routine}}</div>
+            <div class="text-gray-600 text-xs">Intensity: {{entry.routine_intensity || '-'}}</div>
+          </td>
+          <td class="align-top p-2 min-w-[240px] whitespace-pre-wrap">{{entry.student_reflection || '-'}}</td>
+          <td class="align-top p-2 min-w-[280px]">
+            <textarea
+              [(ngModel)]="coachResponseDraft[entry.id]"
+              rows="3"
+              class="w-full border rounded p-2"
+              placeholder="Type coach response..."></textarea>
+          </td>
+          <td class="align-top p-2 whitespace-nowrap">
+            <button
+              (click)="saveCoachResponse(entry)"
+              [disabled]="isSavingCoachResponse[entry.id]"
+              class="px-3 py-2 rounded text-white font-semibold bg-[#0A7664] hover:bg-[#22473F] disabled:opacity-60 disabled:cursor-not-allowed">
+              {{ isSavingCoachResponse[entry.id] ? 'Saving...' : 'Save' }}
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
+    </div>
     <button (click)="closeStudentHistoryModal()" class="px-4 py-2 rounded bg-gray-600 text-white font-semibold">Close</button>
   </div>
 </div>
