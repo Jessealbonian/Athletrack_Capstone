@@ -55,9 +55,9 @@
 }
 
 .brand-logo {
-  height: clamp(64px, 10vw, 100px);
+  height: 250px;
   width: auto;
-  max-height: 100px;
+  max-height: 250px;
   filter: brightness(1.05);
 }
 
