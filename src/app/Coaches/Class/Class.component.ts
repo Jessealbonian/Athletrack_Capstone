@@ -1270,11 +1270,13 @@ export class ClassComponent implements OnInit {
   selectedStudentDetails: any = null;
   coachResponseDraft: Record<number, string> = {};
   isSavingCoachResponse: Record<number, boolean> = {};
+  activeHistoryEntryId: number | null = null;
   openStudentHistoryModal(student: any) {
     this.selectedStudentDetails = student;
     this.studentHistoryModalOpen = true;
     this.selectedStudentHistory = [];
     this.coachResponseDraft = {};
+    this.activeHistoryEntryId = null;
     this.http.get(`${this.apiUrl}/routes.php?request=getRoutineHistoryForStudentInClass&class_id=${this.selectedClass.class_id}&user_id=${student.user_id}`)
       .subscribe((response: any) => {
         this.selectedStudentHistory = response?.payload || [];
@@ -1290,6 +1292,27 @@ export class ClassComponent implements OnInit {
     this.selectedStudentDetails = null;
     this.selectedStudentHistory = [];
     this.coachResponseDraft = {};
+    this.activeHistoryEntryId = null;
+  }
+
+  setActiveHistoryEntry(entry: any) {
+    const id = Number(entry?.id);
+    this.activeHistoryEntryId = id || null;
+  }
+
+  formatTime12h(timeStr: any): string {
+    const raw = String(timeStr ?? '').trim();
+    if (!raw) return '-';
+    // Accept "YYYY-MM-DD HH:mm:ss" or "HH:mm:ss" or "HH:mm"
+    const timePart = raw.includes(' ') ? raw.split(' ').pop() || '' : raw;
+    const m = timePart.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+    if (!m) return timePart;
+    let h = Number(m[1]);
+    const min = m[2];
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h === 0) h = 12;
+    return `${h}:${min} ${ampm}`;
   }
 
   saveCoachResponse(entry: any) {

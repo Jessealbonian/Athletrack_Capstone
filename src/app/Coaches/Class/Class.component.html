@@ -37,15 +37,17 @@
     <table class="class-table min-w-full bg-white rounded shadow-md">
       <thead style="background:#022F11; color:#fff;">
         <tr>
-          <th class="px-4 py-2 text-left">Class</th>
+          <th class="px-4 py-2 text-center">Class</th>
           <th class="px-4 py-2 text-center">Athletes</th>
-          <th class="px-4 py-2 text-left">Weekly Routines</th>
+          <th class="px-4 py-2 text-center">Weekly Routines</th>
           <th class="px-4 py-2 text-center">Status</th>
           <th class="px-4 py-2 text-center">Edit</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let class of classes; index as i" [class.bg-green-50]="i%2===1" class="hover:bg-green-100 transition">
+        <tr *ngFor="let class of classes; index as i"
+            [class.bg-green-50]="i%2===1"
+            class="hover:bg-green-100 transition">
           <td class="px-4 py-3">
             <div class="font-bold text-[#022F11] text-base">{{class.class_name}}</div>
             <div class="text-xs text-gray-600 mt-1">{{class.description}}</div>
@@ -474,37 +476,51 @@
     <table class="w-full mb-4 text-xs sm:text-sm">
       <thead>
         <tr>
-          <th class="text-left p-2">Date</th>
-          <th class="text-left p-2">Time</th>
-          <th class="text-left p-2">Routine</th>
-          <th class="text-left p-2">Reflection</th>
-          <th class="text-left p-2">Coach Response</th>
-          <th class="text-left p-2">Action</th>
+          <th class="text-center p-2">Image</th>
+          <th class="text-center p-2">Date</th>
+          <th class="text-center p-2">Time</th>
+          <th class="text-center p-2">Routine</th>
+          <th class="text-center p-2">Reflection</th>
+          <th class="text-center p-2">Coach Response</th>
+          <th class="text-center p-2">Action</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let entry of selectedStudentHistory">
-          <td class="align-top p-2 whitespace-nowrap">{{entry.date_of_submission}}</td>
-          <td class="align-top p-2 whitespace-nowrap">{{entry.time_of_submission}}</td>
+        <tr *ngFor="let entry of selectedStudentHistory"
+            (click)="setActiveHistoryEntry(entry)"
+            [class.bg-green-50]="activeHistoryEntryId === entry.id"
+            class="cursor-pointer hover:bg-green-50 transition-colors">
+          <td class="align-top p-2 text-center">
+            <img *ngIf="entry.img" [src]="entry.img" alt="submission" class="w-12 h-12 object-cover rounded border inline-block" />
+            <span *ngIf="!entry.img" class="text-xs text-gray-400">—</span>
+          </td>
+          <td class="align-top p-2 whitespace-nowrap text-center">{{entry.date_of_submission}}</td>
+          <td class="align-top p-2 whitespace-nowrap text-center">{{formatTime12h(entry.time_of_submission)}}</td>
           <td class="align-top p-2 min-w-[220px]">
             <div class="font-semibold">{{entry.routine}}</div>
             <div class="text-gray-600 text-xs">Intensity: {{entry.routine_intensity || '-'}}</div>
           </td>
           <td class="align-top p-2 min-w-[240px] whitespace-pre-wrap">{{entry.student_reflection || '-'}}</td>
           <td class="align-top p-2 min-w-[280px]">
+            <div *ngIf="activeHistoryEntryId !== entry.id" class="whitespace-pre-wrap text-gray-700">
+              {{ (entry.coach_response || '-').toString() }}
+            </div>
             <textarea
+              *ngIf="activeHistoryEntryId === entry.id"
               [(ngModel)]="coachResponseDraft[entry.id]"
               rows="3"
               class="w-full border rounded p-2"
               placeholder="Type coach response..."></textarea>
           </td>
-          <td class="align-top p-2 whitespace-nowrap">
+          <td class="align-top p-2 whitespace-nowrap text-center">
             <button
-              (click)="saveCoachResponse(entry)"
+              *ngIf="activeHistoryEntryId === entry.id"
+              (click)="$event.stopPropagation(); saveCoachResponse(entry)"
               [disabled]="isSavingCoachResponse[entry.id]"
               class="px-3 py-2 rounded text-white font-semibold bg-[#0A7664] hover:bg-[#22473F] disabled:opacity-60 disabled:cursor-not-allowed">
               {{ isSavingCoachResponse[entry.id] ? 'Saving...' : 'Save' }}
             </button>
+            <span *ngIf="activeHistoryEntryId !== entry.id" class="text-xs text-gray-400">Click row</span>
           </td>
         </tr>
       </tbody>

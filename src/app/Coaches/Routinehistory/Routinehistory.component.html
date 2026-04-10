@@ -25,10 +25,10 @@
               <table class="min-w-full text-sm">
                 <thead class="text-white" style="background:#0A7664;">
                   <tr>
-                    <th class="text-left p-3">Class</th>
-                    <th class="text-left p-3">Description</th>
-                    <th class="text-left p-3">Created</th>
-                    <th class="text-right p-3">Action</th>
+                    <th class="text-center p-3">Class</th>
+                    <th class="text-center p-3">Description</th>
+                    <th class="text-center p-3">Created</th>
+                    <th class="text-center p-3">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -37,9 +37,9 @@
                       <div class="font-semibold">{{ r.class_name || 'Class' }}</div>
                       <div class="text-xs text-gray-600">#{{ r.class_id }}</div>
                     </td>
-                    <td class="p-3 text-gray-700">{{ r.description || '-' }}</td>
-                    <td class="p-3 text-gray-700">{{ r.created_at || '-' }}</td>
-                    <td class="p-3 text-right">
+                    <td class="p-3 text-gray-700 text-center">{{ r.description || '-' }}</td>
+                    <td class="p-3 text-gray-700 text-center">{{ r.created_at || '-' }}</td>
+                    <td class="p-3 text-center">
                       <button class="text-sm text-white px-3 py-2 rounded transition-colors duration-150" style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'" (click)="openMonthModal(r)">
                         Open Month
                       </button>
@@ -65,17 +65,23 @@
     <div class="flex flex-col sm:flex-row items-center justify-between p-4 border-b gap-2 sticky top-0 bg-white">
       <div class="w-full sm:w-auto">
         <div class="text-base sm:text-lg font-semibold">{{ selectedClass?.class_name || 'Class' }} — Month View</div>
-        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-700">
-          <span class="font-semibold">Year</span>
-          <button *ngFor="let y of availableYears" class="px-2 py-1 rounded border"
-                  [class.bg-gray-900]="y === selectedYear" [class.text-white]="y === selectedYear"
-                  (click)="setYear(y)">{{ y }}</button>
-        </div>
-        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-700">
-          <span class="font-semibold">Month</span>
-          <button *ngFor="let m of months" class="px-2 py-1 rounded border"
-                  [class.bg-gray-900]="m.value === selectedMonth" [class.text-white]="m.value === selectedMonth"
-                  (click)="setMonth(m.value)">{{ m.label }}</button>
+        <div class="mt-3 flex flex-col sm:flex-row sm:items-center gap-2 text-xs sm:text-sm text-gray-700">
+          <div class="flex items-center gap-2">
+            <span class="font-semibold">Year</span>
+            <select class="border rounded px-2 py-1"
+                    [ngModel]="selectedYear"
+                    (ngModelChange)="setYear($event)">
+              <option *ngFor="let y of availableYears" [ngValue]="y">{{ y }}</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="font-semibold">Month</span>
+            <select class="border rounded px-2 py-1"
+                    [ngModel]="selectedMonth"
+                    (ngModelChange)="setMonth($event)">
+              <option *ngFor="let m of months" [ngValue]="m.value">{{ m.label }}</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-2 sm:mt-0">
@@ -109,7 +115,7 @@
       <div class="grid grid-cols-7 gap-1 sm:gap-2">
         <button
           *ngFor="let d of daysInMonth"
-          class="aspect-square min-h-[32px] sm:min-h-[44px] rounded border flex items-center justify-center hover:bg-gray-100 text-xs sm:text-base transition-colors"
+          class="rounded border flex items-center justify-center hover:bg-gray-100 text-xs sm:text-base transition-colors h-[clamp(40px,9vh,72px)] sm:h-[clamp(44px,7vh,70px)]"
           [class.bg-indigo-100]="selectedDay === d"
           (click)="selectDay(d)"
         >
@@ -137,7 +143,7 @@
       <div class="flex gap-2 w-full sm:w-auto">
         <button class="text-sm text-white px-3 py-2 rounded w-full sm:w-auto transition-colors duration-150"
                 style="background-color: #0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'"
-                (click)="generateMonthlyReport()">
+                (click)="generateDayReportPrompt()">
           Generate Day Report
         </button>
         <button class="text-sm px-3 py-2 rounded border w-full sm:w-auto" (click)="closeDayDetailsModal()">Close</button>
@@ -161,11 +167,11 @@
         <table class="min-w-full text-sm bg-white rounded border">
           <thead class="bg-gray-50">
             <tr>
-              <th class="text-left p-3">Athlete</th>
-              <th class="text-left p-3">Routine</th>
-              <th class="text-left p-3">Intensity</th>
-              <th class="text-left p-3">Time</th>
-              <th class="text-left p-3">Status</th>
+              <th class="text-center p-3">Athlete</th>
+              <th class="text-center p-3">Routine</th>
+              <th class="text-center p-3">Intensity</th>
+              <th class="text-center p-3">Time</th>
+              <th class="text-center p-3">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -176,10 +182,10 @@
                   <div class="font-semibold">{{ a.name }}</div>
                 </div>
               </td>
-              <td class="p-3">{{ a.routine || '-' }}</td>
-              <td class="p-3">{{ a.routine_intensity || '-' }}</td>
-              <td class="p-3">{{ a.time_of_submission || '-' }}</td>
-              <td class="p-3">
+              <td class="p-3 text-center">{{ a.routine || '-' }}</td>
+              <td class="p-3 text-center">{{ a.routine_intensity || '-' }}</td>
+              <td class="p-3 text-center">{{ formatTime12h(a.time_of_submission) }}</td>
+              <td class="p-3 text-center">
                 <span class="inline-block px-2 py-0.5 rounded-full text-white text-xs"
                       [ngClass]="a.status === 'active' ? 'bg-green-600' : 'bg-gray-500'">
                   {{ a.status || 'active' }}

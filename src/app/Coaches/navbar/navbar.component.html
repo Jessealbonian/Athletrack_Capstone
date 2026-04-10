@@ -1,17 +1,16 @@
 <body class="bg-gray-100">
   <div
     class="navbar-container fixed top-0 left-0 right-0 z-50 flex justify-between items-center p-4 bg-white shadow-md">
-    <!-- Left-aligned title with icon -->
+    <!-- Left-aligned logo -->
     <div class="page-title text-xl font-bold flex items-center">
-      <i class="fas fa-home text-blue-500 text-2xl mr-2"></i>
-      Athletrack
-      <span class="coach-badge ml-3 animate-coach">COACH</span>
+      <img src="assets/Athletrack.png" alt="Athletrack" class="h-8 w-auto" />
     </div>
     <!-- Right-aligned user section -->
     <div class="user-section flex items-center space-x-4">
       <!-- Profile and Dropdown -->
       <div class="relative">
         <button (click)="toggleDropdown()" class="flex items-center gap-2">
+          <span class="coach-badge ml-0 mr-2 animate-coach">COACH</span>
           <span *ngIf="username" class="username font-medium mr-2">{{ username }}</span>
           <i class="fa-regular fa-user text-xl cursor-pointer"></i>
         </button>

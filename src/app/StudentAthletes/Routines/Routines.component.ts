@@ -44,6 +44,7 @@ export class RoutinesComponent implements OnInit {
   selectedDay: string = '';
   selectedRoutineData: { task: string; intensity: string } | null = null;
   reflectionText: string = '';
+  submissionDate: string = ''; // YYYY-MM-DD, derived from selectedDay in current week
   
   // Loading states
   isLoading = false;
@@ -356,6 +357,7 @@ export class RoutinesComponent implements OnInit {
     this.showRoutineCompletionModal = true;
     this.selectedFile = null;
     this.reflectionText = '';
+    this.submissionDate = this.getCurrentWeekDateForDay(day);
   }
 
   closeRoutineCompletionModal() {
@@ -364,6 +366,38 @@ export class RoutinesComponent implements OnInit {
     this.selectedRoutineData = null;
     this.selectedFile = null;
     this.reflectionText = '';
+    this.submissionDate = '';
+  }
+
+  private getPhilippineNow(): Date {
+    const d = new Date();
+    d.setHours(d.getHours() + 8);
+    return d;
+  }
+
+  private toYmd(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  private getCurrentWeekDateForDay(dayName: string): string {
+    // Monday..Sunday for the current week, using PH time as the reference.
+    const now = this.getPhilippineNow();
+    const dayMap: Record<string, number> = {
+      Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6, Sunday: 7
+    };
+    const targetDow = dayMap[dayName] ?? 0;
+    if (!targetDow) return this.toYmd(now);
+
+    // JS getDay(): 0=Sun..6=Sat → convert to 1=Mon..7=Sun
+    const jsDow = now.getDay(); // 0..6
+    const isoDow = jsDow === 0 ? 7 : jsDow; // 1..7
+    const diff = targetDow - isoDow;
+    const target = new Date(now);
+    target.setDate(now.getDate() + diff);
+    return this.toYmd(target);
   }
 
   async confirmRoutineCompletion() {
@@ -398,7 +432,8 @@ export class RoutinesComponent implements OnInit {
         this.selectedFile,
         `${this.selectedDay}: ${this.selectedRoutineData?.task}`,
         dbIntensity,
-        this.reflectionText
+        this.reflectionText,
+        this.submissionDate
       ).toPromise();
       if (response && response.status !== 'success') throw new Error(response.message || 'Unknown error from API');
       await Swal.fire({
@@ -435,38 +470,32 @@ export class RoutinesComponent implements OnInit {
   }
 
   // Check if routine is completed today (for weekly structure)
+  isRoutineCompletedForWeekday(dayName: string): boolean {
+    if (!this.selectedClass) return false;
+    const ymd = this.getCurrentWeekDateForDay(dayName);
+    return this.routineHistory.some(history =>
+      history.class_id === this.selectedClass?.id &&
+      String(history.date_of_submission || '').slice(0, 10) === ymd &&
+      String(history.routine || '').includes(dayName)
+    );
+  }
+
+  // Legacy / card mode check: still treat as "completed today"
   isRoutineCompletedToday(dayOrId: string | number): boolean {
-    // Get current date in Philippine timezone (UTC+8)
-    const philippineTime = new Date();
-    philippineTime.setHours(philippineTime.getHours() + 8); // Adjust to Philippine time
-    const today = philippineTime.toDateString();
-    
+    const now = this.getPhilippineNow();
+    const todayYmd = this.toYmd(now);
     if (typeof dayOrId === 'string') {
-      // For weekly structure, check by day name - we need to check if this specific day's routine was completed today
       if (!this.selectedClass) return false;
-      return this.routineHistory.some(history => {
-        // Convert history date to Philippine timezone for comparison
-        const historyDate = new Date(history.date_of_submission);
-        historyDate.setHours(historyDate.getHours() + 8); // Adjust to Philippine time
-        const historyDateString = historyDate.toDateString();
-        
-        // Check if the routine was completed today for this class and includes the day name
-        return historyDateString === today && 
-               history.class_id === this.selectedClass?.id && 
-               history.routine.includes(dayOrId);
-      });
-    } else {
-      // For individual routines, check by class ID
-      return this.routineHistory.some(history => {
-        // Convert history date to Philippine timezone for comparison
-        const historyDate = new Date(history.date_of_submission);
-        historyDate.setHours(historyDate.getHours() + 8); // Adjust to Philippine time
-        const historyDateString = historyDate.toDateString();
-        
-        return history.class_id === dayOrId && 
-               historyDateString === today;
-      });
+      return this.routineHistory.some(history =>
+        history.class_id === this.selectedClass?.id &&
+        String(history.date_of_submission || '').slice(0, 10) === todayYmd &&
+        String(history.routine || '').includes(dayOrId)
+      );
     }
+    return this.routineHistory.some(history =>
+      history.class_id === dayOrId &&
+      String(history.date_of_submission || '').slice(0, 10) === todayYmd
+    );
   }
 
   // Routine completion methods (legacy)

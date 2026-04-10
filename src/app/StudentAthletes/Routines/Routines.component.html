@@ -65,31 +65,31 @@
                             <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
                                 <thead class="bg-[#022F11] text-white">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-sm">Day</th>
-                                        <th class="px-4 py-3 text-left text-sm">Routine</th>
-                                        <th class="px-4 py-3 text-left text-sm">Intensity</th>
-                                        <th class="px-4 py-3 text-left text-sm">Status</th>
+                                        <th class="px-4 py-3 text-center text-sm">Day</th>
+                                        <th class="px-4 py-3 text-center text-sm">Routine</th>
+                                        <th class="px-4 py-3 text-center text-sm">Intensity</th>
+                                        <th class="px-4 py-3 text-center text-sm">Status</th>
                                         <th class="px-4 py-3 text-center text-sm">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr *ngFor="let day of daysOfWeek" class="border-b border-gray-100 hover:bg-gray-50">
-                                        <td class="px-4 py-3 font-semibold text-gray-800">{{ day }}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-700">{{ weekly[day]?.task || '-' }}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-700">{{ weekly[day]?.intensity || '-' }}</td>
-                                        <td class="px-4 py-3 text-sm">
-                                            <span *ngIf="isRoutineCompletedToday(day)" class="text-green-700 font-semibold">Completed Today</span>
-                                            <span *ngIf="!isRoutineCompletedToday(day) && weekly[day]?.task" class="text-yellow-700 font-semibold">Pending</span>
+                                        <td class="px-4 py-3 font-semibold text-gray-800 text-center">{{ day }}</td>
+                                        <td class="px-4 py-3 text-sm text-gray-700 text-center">{{ weekly[day]?.task || '-' }}</td>
+                                        <td class="px-4 py-3 text-sm text-gray-700 text-center">{{ weekly[day]?.intensity || '-' }}</td>
+                                        <td class="px-4 py-3 text-sm text-center">
+                                            <span *ngIf="isRoutineCompletedForWeekday(day)" class="text-green-700 font-semibold">Completed</span>
+                                            <span *ngIf="!isRoutineCompletedForWeekday(day) && weekly[day]?.task" class="text-yellow-700 font-semibold">Pending</span>
                                             <span *ngIf="!weekly[day]?.task" class="text-gray-400">No routine</span>
                                         </td>
                                         <td class="px-4 py-3 text-center">
                                             <button
                                                 *ngIf="weekly[day]?.task"
-                                                [disabled]="isRoutineCompletedToday(day)"
-                                                (click)="!isRoutineCompletedToday(day) && openRoutineCompletionModal(day, weekly[day])"
-                                                [ngClass]="isRoutineCompletedToday(day) ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#0A7664] hover:bg-[#22473F]'"
+                                                [disabled]="isRoutineCompletedForWeekday(day)"
+                                                (click)="!isRoutineCompletedForWeekday(day) && openRoutineCompletionModal(day, weekly[day])"
+                                                [ngClass]="isRoutineCompletedForWeekday(day) ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#0A7664] hover:bg-[#22473F]'"
                                                 class="px-3 py-1 rounded text-white text-xs transition-colors">
-                                                {{ isRoutineCompletedToday(day) ? 'Completed' : 'Complete' }}
+                                                {{ isRoutineCompletedForWeekday(day) ? 'Completed' : 'Complete' }}
                                             </button>
                                         </td>
                                     </tr>
@@ -98,6 +98,7 @@
                         </div>
                         </div>
                       </div>
+                      <div class="h-[30px]"></div>
 
                     <!-- Fallback: list routines as cards -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" *ngIf="selectedClass && !weekly && classRoutines.length > 0">

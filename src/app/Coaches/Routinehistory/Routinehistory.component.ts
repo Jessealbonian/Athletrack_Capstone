@@ -8,6 +8,7 @@ import { environment } from '../../../environments/environment';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AuthService } from '../../auth.service';
+import Swal from 'sweetalert2';
 
 interface RoutineClassRecord {
   class_id?: number;
@@ -196,7 +197,7 @@ export class RoutinehistoryComponent implements OnInit {
   private fetchAttendeesForDay(day: number) {
     if (!this.selectedClass?.class_id) return;
     this.isLoadingAttendees = true;
-    const url = `${environment.apiUrl}/routes.php?request=getClassAttendance&class_id=${this.selectedClass.class_id}&year=${this.selectedYear}&month=${this.selectedMonth}&day=${day}`;
+    const url = `${environment.apiUrl}/routes.php?request=getClassRosterByDate&class_id=${this.selectedClass.class_id}&year=${this.selectedYear}&month=${this.selectedMonth}&day=${day}`;
     this.http.get<any>(url).subscribe({
       next: (res) => {
         const raw = Array.isArray(res) ? res : (res?.data ?? res?.payload ?? []);
@@ -288,6 +289,42 @@ export class RoutinehistoryComponent implements OnInit {
 
   closeReportMenu() {
     this.isReportMenuOpen = false;
+  }
+
+  async generateDayReportPrompt() {
+    if (!this.selectedDay) return;
+
+    const choice = await Swal.fire({
+      title: 'Generate report for…',
+      input: 'select',
+      inputOptions: {
+        all: 'All',
+        active: 'Active',
+        inactive: 'Inactive'
+      },
+      inputValue: 'all',
+      showCancelButton: true,
+      confirmButtonText: 'Generate',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#0A7664'
+    });
+
+    if (!choice.isConfirmed) return;
+    await this.generateMonthlyReport(choice.value as any);
+  }
+
+  formatTime12h(timeStr: any): string {
+    const raw = String(timeStr ?? '').trim();
+    if (!raw) return '-';
+    const timePart = raw.includes(' ') ? raw.split(' ').pop() || '' : raw;
+    const m = timePart.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+    if (!m) return timePart;
+    let h = Number(m[1]);
+    const min = m[2];
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h === 0) h = 12;
+    return `${h}:${min} ${ampm}`;
   }
 
   async generateYearlyReport() {
@@ -410,12 +447,13 @@ export class RoutinehistoryComponent implements OnInit {
     }
   }
 
-  async generateMonthlyReport() {
+  async generateMonthlyReport(filter: 'all' | 'active' | 'inactive' = 'all') {
     if (!this.selectedClass?.class_id || !this.selectedDay) return;
 
     // Make sure attendees list is ready for the selected day
     const day = this.selectedDay;
-    const list = this.monthlyAttendanceCache.get(day) || [];
+    const base = this.monthlyAttendanceCache.get(day) || [];
+    const list = filter === 'all' ? base : base.filter(a => (a.status || 'active') === filter);
 
     // Preload images as data URLs
     const images: string[] = await Promise.all(
@@ -443,7 +481,7 @@ export class RoutinehistoryComponent implements OnInit {
         r.name, 
         (list[idx]?.routine || 'N/A'),
         (list[idx]?.routine_intensity || 'N/A'),
-        (list[idx]?.time_of_submission || 'N/A'),
+        (this.formatTime12h(list[idx]?.time_of_submission) || 'N/A'),
         ''
       ]),
       styles: { fontSize: 9, cellPadding: 2, minCellHeight: imageSizeMm + 4 },

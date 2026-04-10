@@ -94,7 +94,15 @@ export class RoutinesService {
         }
 
            // Submit routine completion
-         submitRoutineCompletion(routineId: number, userId?: number | null, imageFile?: File, routine?: string, intensity?: string, reflection?: string): Observable<any> {
+         submitRoutineCompletion(
+           routineId: number,
+           userId?: number | null,
+           imageFile?: File,
+           routine?: string,
+           intensity?: string,
+           reflection?: string,
+           dateOfSubmission?: string
+         ): Observable<any> {
            const formData = new FormData();
            formData.append('routine_id', routineId.toString());
            if (imageFile) {
@@ -111,6 +119,9 @@ export class RoutinesService {
            }
            if (reflection) {
              formData.append('student_reflection', reflection);
+           }
+           if (dateOfSubmission) {
+             formData.append('date_of_submission', dateOfSubmission);
            }
        
            return this.http.post<any>(`${this.apiUrl}/routes.php?request=submit-completion`, formData);
