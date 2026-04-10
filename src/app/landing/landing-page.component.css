@@ -20,7 +20,7 @@
 .landing-bg-layer {
   position: absolute;
   inset: 0;
-  background-image: url('../../assets/landing%20page.jpg');
+  background-image: url('../../assets/landing-page.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
