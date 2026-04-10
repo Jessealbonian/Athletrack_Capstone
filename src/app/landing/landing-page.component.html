@@ -1,111 +1,86 @@
 <div class="landing-wrapper">
+  <div class="landing-bg-layer" aria-hidden="true"></div>
+  <div class="landing-overlay" aria-hidden="true"></div>
+
   <nav class="landing-nav">
     <div class="brand">
-      <span class="brand-dot"></span>
-      AthleTrack
+      <img src="assets/Athletrack.png" alt="" class="brand-logo" />
+      <span class="brand-name">AthleTrack</span>
     </div>
-    <div class="nav-actions">
-      <a routerLink="/login" class="nav-btn primary">Get Started</a>
-      <a routerLink="/admin_login" class="nav-btn outline">Coach Login</a>
+    <div class="nav-links">
+      <button type="button" class="nav-link" (click)="focusFeatures()">Features</button>
+      <button type="button" class="nav-link" (click)="focusFeatures()">How it Works</button>
+      <a routerLink="/login" class="nav-link">Login</a>
     </div>
   </nav>
 
   <main class="landing-main">
-    <section class="hero">
-      <div class="hero-grid">
-        <div class="hero-left">
-          <div class="hero-badge">Bridging the Gap</div>
-          <h1 class="hero-title">Bridging the Gap in Training & Academics</h1>
-          <p class="hero-subtitle">
-            Streamline communication & performance tracking for coaches and student-athletes.
-          </p>
-          <p class="hero-desc">
-            AthleTrack keeps your workouts and feedback aligned, even when schedules don't match - so athletes can
-            stay consistent and coaches can respond with clarity.
-          </p>
-
-          <div class="hero-cta">
-            <a routerLink="/login" class="cta-btn primary">Get Started</a>
-            <button type="button" class="cta-btn secondary" (click)="watchDemo()">Watch Demo</button>
-          </div>
-
-          <div class="visits-row animate-scale">
-            <span class="visits-label">Unique Visits:</span>
-            <span class="visits-counter">{{ visitCount | number }}</span>
-            <span
-              class="actual-counter"
-              style="font-size:12px;color:#999;padding-left:8px;"
-              *ngIf="visitCount !== displayedCount"
-            >
-              (actual: {{ visitCount | number }})
-            </span>
-            <span *ngIf="isLoading" class="loading-dots">...</span>
-          </div>
+    <div class="hero-inner">
+      <div class="hero-left">
+        <h1 class="hero-title">Bridging the Gap in Training &amp; Academics</h1>
+        <p class="hero-subtitle">
+          Streamline Communication &amp; Performance Tracking for Coaches and Student-Athletes
+        </p>
+        <div class="hero-cta">
+          <a routerLink="/login" class="cta-btn primary">Get Started</a>
+          <button type="button" class="cta-btn secondary" (click)="watchDemo()">
+            <span class="play-icon" aria-hidden="true">▶</span>
+            Watch Demo
+          </button>
         </div>
-
-        <div class="hero-right">
-          <div class="workout-card">
-            <div class="card-title">Today's Workout</div>
-            <div class="check-list">
-              <div class="check-item">
-                <span class="check-icon">✔</span>
-                <span>Speed Drills</span>
-              </div>
-              <div class="check-item">
-                <span class="check-icon">✔</span>
-                <span>Strength Training</span>
-              </div>
-              <div class="check-item muted">
-                <span class="check-icon dim">✔</span>
-                <span>Finish + Reflect</span>
-              </div>
-            </div>
-
-            <div class="workout-meter">
-              <div class="meter-label">Today's Focus</div>
-              <div class="meter-bars" aria-hidden="true">
-                <span class="bar bar-1"></span>
-                <span class="bar bar-2"></span>
-                <span class="bar bar-3"></span>
-                <span class="bar bar-4"></span>
-                <span class="bar bar-5"></span>
-              </div>
-            </div>
-
-            <button type="button" class="submit-btn" (click)="watchDemo()">Submit Report</button>
-          </div>
-
-          <div class="feedback-card">
-            <div class="card-title with-icon">
-              <span class="icon-circle">F</span>
-              Coach Feedback
-            </div>
-            <div class="feedback-bubble">
-              Great job today! Remember to work on your form. Keep it up!
-            </div>
-          </div>
+        <div class="visits-row animate-scale" *ngIf="!lastError">
+          <span class="visits-label">Unique Visits</span>
+          <span class="visits-counter">{{ displayedCount | number }}</span>
+          <span *ngIf="isLoading" class="loading-dots">…</span>
         </div>
       </div>
-    </section>
 
-    <section class="features-row">
-      <div class="feature-card">
-        <div class="feature-icon">1</div>
-        <div class="feature-title">Log Training & Progress</div>
-        <div class="feature-desc">Track routines and improvements in one place.</div>
-      </div>
+      <div class="hero-right">
+        <div class="workout-card">
+          <div class="card-header">
+            <span class="card-title">Today's Workout</span>
+            <button type="button" class="card-menu" aria-label="Menu">⋯</button>
+          </div>
+          <div class="check-list">
+            <div class="check-item">
+              <span class="check-icon">✓</span>
+              <span>Speed Drills</span>
+            </div>
+            <div class="check-item">
+              <span class="check-icon">✓</span>
+              <span>Strength Training</span>
+            </div>
+          </div>
+          <button type="button" class="submit-btn" (click)="watchDemo()">Submit Report</button>
+        </div>
 
-      <div class="feature-card">
-        <div class="feature-icon">2</div>
-        <div class="feature-title">Receive Coach Feedback</div>
-        <div class="feature-desc">Get clear, timely guidance after every session.</div>
+        <div class="feedback-card">
+          <div class="card-title-row">
+            <span class="feedback-icon" aria-hidden="true">💬</span>
+            <span class="card-title">Coach Feedback</span>
+          </div>
+          <p class="feedback-bubble">
+            Great job today! Remember to work on your form. Keep it up! 👍
+          </p>
+        </div>
       </div>
+    </div>
 
-      <div class="feature-card">
-        <div class="feature-icon">3</div>
-        <div class="feature-title">Track & Improve Performance</div>
-        <div class="feature-desc">Stay consistent and progress faster over time.</div>
+    <footer class="features-bar" id="features" [class.features-pulse]="featuresHighlight">
+      <div class="feature-item">
+        <span class="feature-glyph" aria-hidden="true">📋</span>
+        <span>Log Training &amp; Progress</span>
       </div>
-    </section>
+      <div class="feature-divider" aria-hidden="true"></div>
+      <div class="feature-item">
+        <span class="feature-glyph" aria-hidden="true">💬</span>
+        <span>Receive Coach Feedback</span>
+      </div>
+      <div class="feature-divider" aria-hidden="true"></div>
+      <div class="feature-item">
+        <span class="feature-glyph" aria-hidden="true">📈</span>
+        <span>Track &amp; Improve Performance</span>
+      </div>
+    </footer>
   </main>
 </div>

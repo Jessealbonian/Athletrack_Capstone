@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
@@ -11,17 +11,25 @@ import { RouterLink } from '@angular/router';
   templateUrl: './landing-page.component.html',
   styleUrls: ['./landing-page.component.css']
 })
-export class LandingPageComponent implements OnInit {
+export class LandingPageComponent implements OnInit, OnDestroy {
   visitCount = 0;
   displayedCount = 0;
   isLoading = true;
   lastError: string | null = null;
   dbStatus: string = 'Not queried';
+  featuresHighlight = false;
 
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
     this.loadAndIncrement();
+  }
+
+  ngOnDestroy() {
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
   }
 
   loadAndIncrement() {
@@ -73,5 +81,12 @@ export class LandingPageComponent implements OnInit {
 
   watchDemo() {
     window.alert('Demo coming soon!');
+  }
+
+  focusFeatures() {
+    this.featuresHighlight = true;
+    window.setTimeout(() => {
+      this.featuresHighlight = false;
+    }, 1200);
   }
 }
