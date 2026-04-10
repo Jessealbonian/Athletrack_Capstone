@@ -28,13 +28,25 @@ export class RoutinesComponent implements OnInit {
   
   // Class and routine data
   enrolledClasses: ClassInfo[] = [];
-  selectedClass: ClassInfo | null = null;
-  classRoutines: any[] = [];
+  selectedClass: ClassInfo | null = null; // used by modals/actions
+  classRoutines: any[] = []; // legacy/single-view fallback
   routineHistory: RoutineHistory[] = [];
   searchTerm = '';
-  weekly: { [day: string]: { task: string; intensity: string } } | null = null;
-  selectedClassDescription = '';
+  weekly: { [day: string]: { task: string; intensity: string } } | null = null; // legacy/single-view fallback
+  selectedClassDescription = ''; // legacy/single-view fallback
   daysOfWeek: string[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  // Multi-class view state (render all enrolled classes)
+  classViews: Array<{
+    classInfo: ClassInfo;
+    title?: string;
+    coach_username?: string;
+    description?: string;
+    weekly: { [day: string]: { task: string; intensity: string } } | null;
+    classRoutines: any[];
+    isLoading: boolean;
+    error?: string;
+  }> = [];
   
   // Upload related
   selectedFile: File | null = null;
@@ -232,13 +244,23 @@ export class RoutinesComponent implements OnInit {
       if (response && response.payload) {
         this.enrolledClasses = response.payload || [];
         console.log('✅ Classes loaded successfully:', this.enrolledClasses);
-        if (this.enrolledClasses.length > 0) {
-          // Auto-load first class (no dropdown)
-          await this.selectClass(this.enrolledClasses[0]);
-        }
+        // Load ALL enrolled classes so multiple can be shown
+        this.classViews = this.enrolledClasses.map(cls => ({
+          classInfo: cls,
+          weekly: null,
+          classRoutines: [],
+          isLoading: true
+        }));
+        // Keep legacy fields in a safe state
+        this.selectedClass = null;
+        this.weekly = null;
+        this.classRoutines = [];
+        this.selectedClassDescription = '';
+        await this.loadAllClassViews();
       } else {
         console.log('ℹ️ No response or payload, setting empty array');
         this.enrolledClasses = [];
+        this.classViews = [];
       }
     } catch (error: any) {
       console.log('💥 Error loading classes:');
@@ -271,67 +293,58 @@ export class RoutinesComponent implements OnInit {
     }
   }
 
-  // Select a class and load its routines
-  async selectClass(classInfo: ClassInfo) {
-    this.selectedClass = classInfo;
-    this.isLoadingRoutines = true;
-    
+  private async loadAllClassViews() {
+    // Load in sequence to avoid spamming backend; could be parallelized later.
+    for (const view of this.classViews) {
+      // eslint-disable-next-line no-await-in-loop
+      await this.loadClassView(view);
+    }
+    // history is user-wide; load once after views are populated
+    this.loadRoutineHistory();
+  }
+
+  private async loadClassView(view: (typeof this.classViews)[number]) {
+    view.isLoading = true;
+    view.error = undefined;
+    view.weekly = null;
+    view.classRoutines = [];
+
     try {
       // fetch class meta (title/description/coach)
-      const meta = await this.routinesService.getClassInfo(classInfo.id).toPromise();
+      const meta = await this.routinesService.getClassInfo(view.classInfo.id).toPromise();
       if (meta?.payload) {
         const p = meta.payload;
-        
-        // Resolve coach username from ID if it's a numeric value
         let coachUsername = p.coach_username;
         if (p.coach_username && !isNaN(Number(p.coach_username))) {
           try {
             const coachInfo = await this.routinesService.getCoachUsername(Number(p.coach_username)).toPromise();
-            if (coachInfo?.payload?.username) {
-              coachUsername = coachInfo.payload.username;
-            }
+            if (coachInfo?.payload?.username) coachUsername = coachInfo.payload.username;
           } catch (coachError) {
             console.warn('Failed to resolve coach username:', coachError);
-            // Keep the original coach_username if resolution fails
           }
         }
-        
-        this.selectedClass = { 
-          ...(this.selectedClass || {} as any), 
-          title: p.title, 
-          coach_username: coachUsername 
-        } as any;
-        (this as any).selectedClassDescription = p.description || '';
+        view.title = p.title;
+        view.coach_username = coachUsername;
+        view.description = p.description || '';
       }
 
-      const response = await this.routinesService.getClassRoutines(classInfo.id).toPromise();
-      if (response && response.payload) {
-        const r = response.payload;
-        // Expect payload.weekly when backend returns weekly structure
-        if (r && r.weekly) {
-          this.weekly = r.weekly;
-        } else if (Array.isArray(r)) {
-          this.classRoutines = r || [];
-        }
-        this.loadRoutineHistory();
+      const response = await this.routinesService.getClassRoutines(view.classInfo.id).toPromise();
+      const payload = response?.payload;
+      if (payload && payload.weekly) {
+        view.weekly = payload.weekly;
+      } else if (Array.isArray(payload)) {
+        view.classRoutines = payload || [];
       } else {
-        this.classRoutines = [];
-        this.weekly = null;
+        view.weekly = null;
+        view.classRoutines = [];
       }
-    } catch (error) {
-      console.error('Error loading routines:', error);
-      this.classRoutines = [];
-      this.weekly = null;
-      
-      // Show user-friendly error
-      Swal.fire({
-        icon: 'warning',
-        title: 'Routines Unavailable',
-        text: 'Unable to load routines for this class. Please try again later.',
-        confirmButtonColor: '#0A7664'
-      });
+    } catch (error: any) {
+      console.error('Error loading routines for class:', view.classInfo?.id, error);
+      view.error = 'Unable to load routines for this class.';
+      view.weekly = null;
+      view.classRoutines = [];
     } finally {
-      this.isLoadingRoutines = false;
+      view.isLoading = false;
     }
   }
 
@@ -351,7 +364,8 @@ export class RoutinesComponent implements OnInit {
   }
 
   // New routine completion modal methods
-  openRoutineCompletionModal(day: string, routineData: { task: string; intensity: string }) {
+  openRoutineCompletionModal(classInfo: ClassInfo, day: string, routineData: { task: string; intensity: string }) {
+    this.selectedClass = classInfo;
     this.selectedDay = day;
     this.selectedRoutineData = routineData;
     this.showRoutineCompletionModal = true;
@@ -426,7 +440,7 @@ export class RoutinesComponent implements OnInit {
         'Hard': 'High'
       };
       const dbIntensity = intensityMap[this.selectedRoutineData?.intensity || 'Medium'] || 'Medium';
-      const response = await this.routinesService.submitRoutineCompletion(
+      const response: any = await this.routinesService.submitRoutineCompletion(
         this.selectedClass.id,
         this.studentUserId,
         this.selectedFile,
@@ -435,7 +449,11 @@ export class RoutinesComponent implements OnInit {
         this.reflectionText,
         this.submissionDate
       ).toPromise();
-      if (response && response.status !== 'success') throw new Error(response.message || 'Unknown error from API');
+      const ok =
+        response?.status === 'success' ||
+        response?.status?.remarks === 'success' ||
+        response?.remarks === 'success';
+      if (response && !ok) throw new Error(response?.message || response?.status?.message || 'Unknown error from API');
       await Swal.fire({
         icon: 'success',
         title: 'Routine Completed!',
@@ -470,11 +488,10 @@ export class RoutinesComponent implements OnInit {
   }
 
   // Check if routine is completed today (for weekly structure)
-  isRoutineCompletedForWeekday(dayName: string): boolean {
-    if (!this.selectedClass) return false;
+  isRoutineCompletedForWeekday(classId: number, dayName: string): boolean {
     const ymd = this.getCurrentWeekDateForDay(dayName);
     return this.routineHistory.some(history =>
-      history.class_id === this.selectedClass?.id &&
+      history.class_id === classId &&
       String(history.date_of_submission || '').slice(0, 10) === ymd &&
       String(history.routine || '').includes(dayName)
     );
@@ -574,5 +591,17 @@ export class RoutinesComponent implements OnInit {
       cls.coach_username?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
       cls.sport?.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
+  }
+
+  get filteredClassViews() {
+    const term = (this.searchTerm || '').toLowerCase().trim();
+    if (!term) return this.classViews;
+    return this.classViews.filter(v => {
+      const title = (v.title || v.classInfo?.title || '').toString().toLowerCase();
+      const coach = (v.coach_username || v.classInfo?.coach_username || '').toString().toLowerCase();
+      const sport = (v.classInfo?.sport || '').toString().toLowerCase();
+      const desc = (v.description || '').toString().toLowerCase();
+      return title.includes(term) || coach.includes(term) || sport.includes(term) || desc.includes(term);
+    });
   }
 }
