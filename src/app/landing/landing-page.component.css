@@ -55,17 +55,10 @@
 }
 
 .brand-logo {
-  height: 40px;
+  height: clamp(64px, 10vw, 100px);
   width: auto;
-  max-height: 40px;
+  max-height: 100px;
   filter: brightness(1.05);
-}
-
-.brand-name {
-  font-size: clamp(1rem, 2.2vw, 1.25rem);
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  color: #fff;
 }
 
 .nav-links {
