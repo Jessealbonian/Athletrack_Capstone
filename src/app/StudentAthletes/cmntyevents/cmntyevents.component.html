@@ -2,7 +2,7 @@
     <app-sidenav (navToggled)="onNavToggled($event)" class="fixed top-0 left-0 h-full z-10"></app-sidenav>
     <app-navbar class="relative z-20"></app-navbar>
     <div class="content-area">
-        <div class="transition-all duration-300 w-full z-1 mt-16" [class.lg:ml-64]="isNavOpen" [class.lg:ml-20]="!isNavOpen">
+        <div class="transition-all duration-300 w-full z-1 mt-16" [class.ml-64]="isNavOpen" [class.ml-20]="!isNavOpen" [class.pl-5]="!isNavOpen">
             <div class="dashboard-container">
 
                 <div class="px-4 py-8 flex-1">

@@ -3,7 +3,7 @@
   <app-navbar class="relative z-20"></app-navbar>
 
   <div class="dashboard-container">
-    <div class="transition-all duration-300 z-1 mt-16" [class.lg:ml-64]="isNavOpen" [class.lg:ml-20]="!isNavOpen">
+    <div class="transition-all duration-300 z-1 mt-16" [class.ml-64]="isNavOpen" [class.ml-20]="!isNavOpen" [class.pl-5]="!isNavOpen">
       <div class="p-4 sm:p-6 space-y-6">
         <section class="bg-white p-5 rounded-lg shadow">
           <h2 class="text-xl font-bold text-[#022F11]">{{ profile?.username || 'Student Profile' }}</h2>

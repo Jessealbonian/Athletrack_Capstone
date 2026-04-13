@@ -18,8 +18,17 @@ export class LandingPageComponent implements OnInit, OnDestroy {
   lastError: string | null = null;
   dbStatus: string = 'Not queried';
   featuresHighlight = false;
+  navMenuOpen = false;
 
   constructor(private http: HttpClient) {}
+
+  toggleLandingNav(): void {
+    this.navMenuOpen = !this.navMenuOpen;
+  }
+
+  closeLandingNav(): void {
+    this.navMenuOpen = false;
+  }
 
   ngOnInit() {
     document.documentElement.style.overflow = 'hidden';

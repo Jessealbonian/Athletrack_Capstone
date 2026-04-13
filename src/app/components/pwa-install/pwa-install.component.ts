@@ -12,7 +12,7 @@ import { Subscription } from 'rxjs';
       <div class="pwa-install-card">
         <div class="pwa-install-header">
           <div class="pwa-install-icon">
-            <i class="fas fa-download text-purple-600 text-2xl"></i>
+            <i class="fas fa-download pwa-install-icon-glyph text-2xl"></i>
           </div>
           <div class="pwa-install-title">
             <h3 class="text-lg font-semibold text-gray-800">Install AthleTrack</h3>
@@ -82,9 +82,9 @@ import { Subscription } from 'rxjs';
     .pwa-install-card {
       background: white;
       border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.12);
       padding: 20px;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #c7d2fe;
     }
 
     .pwa-install-header {
@@ -137,7 +137,7 @@ import { Subscription } from 'rxjs';
 
     .install-btn {
       flex: 1;
-      background: #735DA5;
+      background: #818cf8;
       color: white;
       border: none;
       padding: 12px 16px;
@@ -148,7 +148,7 @@ import { Subscription } from 'rxjs';
     }
 
     .install-btn:hover:not(:disabled) {
-      background: #5a4a7a;
+      background: #6366f1;
       transform: translateY(-1px);
     }
 

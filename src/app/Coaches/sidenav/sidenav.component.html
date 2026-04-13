@@ -1,9 +1,7 @@
 <aside [class.w-64]="isNavOpen"
        [class.w-20]="!isNavOpen"
-       [class.translate-x-0]="isNavOpen" 
-       [class.-translate-x-full]="!isNavOpen"
-       class="fixed top-14 left-0 h-[calc(100vh-3.5rem)] border-r bg-white transform 
-              transition-all duration-300 ease-in-out lg:translate-x-0 z-40">
+       class="fixed top-14 left-0 h-[calc(100vh-3.5rem)] border-r bg-white transform translate-x-0
+              transition-all duration-300 ease-in-out z-40">
   
   <!-- Toggle button inside navbar -->
   <button 
@@ -19,10 +17,10 @@
     </svg>
   </button>
 
-  <!-- Mobile overlay -->
-  <div *ngIf="!isNavOpen" 
+  <!-- Mobile overlay when expanded -->
+  <div *ngIf="isNavOpen"
        (click)="toggleNav()"
-       class="fixed inset-0 bg-opacity-50 lg:hidden z-30">
+       class="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30">
   </div>
 
   <nav class="space-y-1 p-4">

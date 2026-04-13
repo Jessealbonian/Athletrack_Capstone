@@ -3,7 +3,7 @@
   <app-navbar class="relative z-20"></app-navbar>
   <div class="content-area px-2 sm:px-4 md:px-8">
     <div class="dashboard-container">
-      <div class="transition-all duration-300 z-1 mt-16" [class.lg:ml-64]="isNavOpen" [class.lg:ml-20]="!isNavOpen">
+      <div class="transition-all duration-300 z-1 mt-16" [class.ml-64]="isNavOpen" [class.ml-20]="!isNavOpen" [class.pl-5]="!isNavOpen">
         <!-- Student Info -->
         <div class="bg-[#022F11] text-white rounded-lg p-5 mb-6 flex flex-col sm:flex-row items-center gap-5 shadow">
           <div class="text-4xl bg-white text-[#022F11] font-bold rounded-full px-5 py-3">{{ studentProfile?.name?.charAt(0) || '?' }}</div>

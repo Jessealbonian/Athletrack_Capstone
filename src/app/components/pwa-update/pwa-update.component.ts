@@ -46,7 +46,7 @@ import { Subscription } from 'rxjs';
       background: white;
       border-radius: 12px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-      border: 1px solid #e5e7eb;
+      border: 1px solid #c7d2fe;
       z-index: 10000;
       max-width: 400px;
       width: 90%;
@@ -100,13 +100,13 @@ import { Subscription } from 'rxjs';
     }
 
     .update-btn {
-      background: #3b82f6;
+      background: #818cf8;
       color: white;
       flex: 2;
     }
 
     .update-btn:hover:not(:disabled) {
-      background: #2563eb;
+      background: #6366f1;
       transform: translateY(-1px);
     }
 

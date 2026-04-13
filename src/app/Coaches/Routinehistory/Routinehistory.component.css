@@ -6,7 +6,7 @@
   width: 100%;
 }
 
-/* Rely on template's [class.lg:ml-64]/[class.lg:ml-20] for left spacing; no extra margin here */
+/* Rely on template's ml-64 / ml-20 and pl-5 when collapsed for left spacing */
 
 /* Let Tailwind's aspect-square handle sizing; avoid pseudo overlays */
 

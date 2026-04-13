@@ -6,12 +6,31 @@
     <div class="brand">
       <img src="assets/athletrack2.png" alt="" class="brand-logo" />
     </div>
-    <div class="nav-links">
-      <button type="button" class="nav-link" (click)="focusFeatures()">Features</button>
-      <button type="button" class="nav-link" (click)="focusFeatures()">How it Works</button>
-      <a routerLink="/login" class="nav-link">Login</a>
+    <button
+      type="button"
+      class="landing-nav-burger"
+      (click)="toggleLandingNav()"
+      [attr.aria-expanded]="navMenuOpen"
+      aria-controls="landing-nav-menu"
+      aria-label="Open menu">
+      <span class="burger-line" aria-hidden="true"></span>
+      <span class="burger-line" aria-hidden="true"></span>
+      <span class="burger-line" aria-hidden="true"></span>
+    </button>
+    <div
+      id="landing-nav-menu"
+      class="nav-links"
+      [class.nav-links--open]="navMenuOpen">
+      <button type="button" class="nav-link" (click)="focusFeatures(); closeLandingNav()">Features</button>
+      <button type="button" class="nav-link" (click)="focusFeatures(); closeLandingNav()">How it Works</button>
+      <a routerLink="/login" class="nav-link" (click)="closeLandingNav()">Login</a>
     </div>
   </nav>
+  <div
+    *ngIf="navMenuOpen"
+    class="landing-nav-scrim"
+    (click)="closeLandingNav()"
+    aria-hidden="true"></div>
 
   <main class="landing-main">
     <div class="hero-inner">
