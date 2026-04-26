@@ -462,7 +462,7 @@ export class ClassComponent implements OnInit {
 
   
   exportToPDF() {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'landscape' });
   
     // Add title to the PDF
     // doc.text('Class Requests', 14, 16);
@@ -884,7 +884,8 @@ export class ClassComponent implements OnInit {
         !!this.selectedClass.sundayIntensityEasy,
         !!this.selectedClass.sundayIntensityAverage,
         !!this.selectedClass.sundayIntensityHard
-      )
+      ),
+      expiration_date: this.selectedClass.expiration_date || null
     };
 
     console.log('Updating class data:', payload);
@@ -1353,7 +1354,7 @@ export class ClassComponent implements OnInit {
       return;
     }
 
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'landscape' });
     const title = `${this.selectedClass.class_name || 'Class'} - Athlete List`;
     doc.setFontSize(14);
     doc.text(title, 14, 16);
@@ -1424,5 +1425,101 @@ export class ClassComponent implements OnInit {
   @HostListener('document:keydown.escape')
   handleEscKey() {
     this.closeTopMostModal();
+  }
+
+  async reactivateClass(classObj: any) {
+    if (!classObj?.class_id) return;
+
+    const now = new Date();
+    const defaultDate = now.toISOString().split('T')[0];
+    const defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    const prompt = await Swal.fire({
+      title: 'Reactivate Class',
+      html: `
+        <div style="text-align:left;display:flex;flex-direction:column;gap:10px;">
+          <label>New expiration date</label>
+          <input id="reactivate-date" type="date" class="swal2-input" value="${defaultDate}" style="margin:0;width:100%;" />
+          <label>New expiration time</label>
+          <input id="reactivate-time" type="time" class="swal2-input" value="${defaultTime}" style="margin:0;width:100%;" />
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Reactivate',
+      preConfirm: () => {
+        const date = (document.getElementById('reactivate-date') as HTMLInputElement)?.value;
+        const time = (document.getElementById('reactivate-time') as HTMLInputElement)?.value;
+        if (!date || !time) {
+          Swal.showValidationMessage('Please provide both date and time.');
+          return null;
+        }
+        return { date, time };
+      }
+    });
+
+    if (!prompt.isConfirmed || !prompt.value) return;
+
+    const payload = {
+      class_id: classObj.class_id,
+      mondayRoutine: classObj.mondayRoutine || '',
+      tuesdayRoutine: classObj.tuesdayRoutine || '',
+      wednesdayRoutine: classObj.wednesdayRoutine || '',
+      thursdayRoutine: classObj.thursdayRoutine || '',
+      fridayRoutine: classObj.fridayRoutine || '',
+      saturdayRoutine: classObj.saturdayRoutine || '',
+      sundayRoutine: classObj.sundayRoutine || '',
+      mondayintensity: classObj.mondayintensity || '',
+      tuesdayintensity: classObj.tuesdayintensity || '',
+      wednesdayintensity: classObj.wednesdayintensity || '',
+      thursdayintensity: classObj.thursdayintensity || '',
+      fridayintensity: classObj.fridayintensity || '',
+      saturdayintensity: classObj.saturdayintensity || '',
+      sundayintensity: classObj.sundayintensity || '',
+      expiration_date: this.combineExpirationDateTime(prompt.value.date, prompt.value.time),
+      archived: 0
+    };
+
+    this.http.post(`${this.apiUrl}/routes.php?request=editClass`, payload).subscribe({
+      next: (response: any) => {
+        if (response?.status === 'success') {
+          Swal.fire({ icon: 'success', title: 'Reactivated', text: 'Class is active again.' });
+          this.fetchClasses();
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: response?.message || 'Failed to reactivate class.' });
+        }
+      },
+      error: () => Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to reactivate class.' })
+    });
+  }
+
+  reactivateStudent(student: any) {
+    if (!student?.user_id || !this.selectedClass?.class_id) return;
+
+    Swal.fire({
+      icon: 'question',
+      title: 'Reactivate student?',
+      text: `Set ${student.name} back to active?`,
+      showCancelButton: true,
+      confirmButtonText: 'Reactivate'
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      this.http.post(`${this.apiUrl}/routes.php?request=set-student-status`, {
+        class_id: this.selectedClass.class_id,
+        user_id: student.user_id,
+        status: 'active'
+      }).subscribe({
+        next: (resp: any) => {
+          if (resp?.status === 'success') {
+            Swal.fire({ icon: 'success', title: 'Updated', text: 'Student is now active.' });
+            this.fetchEnrolledStudentsForClass(this.selectedClass.class_id);
+            this.fetchClasses();
+          } else {
+            Swal.fire({ icon: 'error', title: 'Error', text: resp?.message || 'Failed to reactivate student.' });
+          }
+        },
+        error: () => Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to reactivate student.' })
+      });
+    });
   }
 }

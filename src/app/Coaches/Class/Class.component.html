@@ -73,10 +73,18 @@
             <span *ngIf="!class.isArchived && class.isExpired" class="status-badge status-expired">Expired</span>
           </td>
           <td class="px-4 py-3 text-center">
-            <button (click)="openClassDetailsModal(class)" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold bg-[#022F11] hover:bg-[#095024] text-sm flex items-center gap-1">
+            <div class="flex flex-col gap-2 items-center">
+              <button (click)="openClassDetailsModal(class)" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold bg-[#022F11] hover:bg-[#095024] text-sm flex items-center gap-1">
               <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4' viewBox='0 0 20 20' fill='currentColor'><path d='M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z'/></svg>
               Edit
-            </button>
+              </button>
+              <button
+                *ngIf="class.isArchived || class.isExpired"
+                (click)="reactivateClass(class)"
+                class="px-3 py-1 rounded transition-colors duration-150 text-white text-xs font-semibold bg-[#0A7664] hover:bg-[#22473F]">
+                Reactivate
+              </button>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -331,7 +339,31 @@
                 <span *ngIf="((student.student_status == null ? '' : student.student_status).toString().toLowerCase() === 'active') && (+student.completed_this_week) === 1" class="inline-block mt-1 px-2 py-0.5 rounded-full bg-green-600 text-white text-xs">Active</span>
                 <span *ngIf="((student.student_status == null ? '' : student.student_status).toString().toLowerCase() === 'active') && (+student.completed_this_week) !== 1" class="inline-block mt-1 px-2 py-0.5 rounded-full bg-gray-400 text-white text-xs">Inactive</span>
               </div>
-              <button (click)="$event.stopPropagation(); openDeactivateModal(student)" class="mt-2 px-3 py-1 text-xs rounded transition-colors duration-150 text-white font-semibold w-full" style="background-color: #333436;" onmouseover="this.style.backgroundColor='#1f2022'" onmouseout="this.style.backgroundColor='#333436'">Deactivate</button>
+              <div class="mt-2 flex items-center gap-2">
+                <button
+                  (click)="$event.stopPropagation(); openStudentHistoryModal(student)"
+                  title="View submission report"
+                  class="h-8 w-8 rounded flex items-center justify-center text-white bg-[#0A7664] hover:bg-[#22473F] transition-colors duration-150">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V8l-6-5H4zm8 1.5L16.5 9H12V4.5zM6 11h8v1.5H6V11zm0 3h8v1.5H6V14zm0-6h4v1.5H6V8z"/>
+                  </svg>
+                </button>
+                <button
+                  *ngIf="((student.student_status == null ? '' : student.student_status).toString().toLowerCase() !== 'deactivated')"
+                  (click)="$event.stopPropagation(); openDeactivateModal(student)"
+                  class="px-3 py-1 text-xs rounded transition-colors duration-150 text-white font-semibold flex-1"
+                  style="background-color: #333436;"
+                  onmouseover="this.style.backgroundColor='#1f2022'"
+                  onmouseout="this.style.backgroundColor='#333436'">
+                  Deactivate
+                </button>
+                <button
+                  *ngIf="((student.student_status == null ? '' : student.student_status).toString().toLowerCase() === 'deactivated')"
+                  (click)="$event.stopPropagation(); reactivateStudent(student)"
+                  class="px-3 py-1 text-xs rounded transition-colors duration-150 text-white font-semibold flex-1 bg-[#0A7664] hover:bg-[#22473F]">
+                  Reactivate
+                </button>
+              </div>
             </div>
           </div>
           <div *ngIf="!selectedClass.enrolledStudents || selectedClass.enrolledStudents.length === 0" class="text-center py-4 text-gray-500">

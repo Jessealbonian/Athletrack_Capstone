@@ -83,18 +83,63 @@ export class RoutinehistoryComponent implements OnInit {
   attendeeHistoryModalOpen = false;
   selectedAttendeeHistory: any[] = [];
   selectedAttendee: any = null;
+  attendeeCoachResponseDraft: Record<number, string> = {};
+  isSavingAttendeeCoachResponse: Record<number, boolean> = {};
+  activeAttendeeHistoryEntryId: number | null = null;
   onAttendeeClick(attendee: any) {
     this.selectedAttendee = attendee;
     this.attendeeHistoryModalOpen = true;
+    this.attendeeCoachResponseDraft = {};
+    this.isSavingAttendeeCoachResponse = {};
+    this.activeAttendeeHistoryEntryId = null;
     const url = `${environment.apiUrl}/routes.php?request=getRoutineHistoryForStudentInClass&class_id=${this.selectedClass?.class_id}&user_id=${attendee.user_id}`;
     this.http.get<any>(url).subscribe(res => {
       this.selectedAttendeeHistory = res?.payload || [];
+      for (const entry of this.selectedAttendeeHistory) {
+        if (entry?.id != null) {
+          this.attendeeCoachResponseDraft[entry.id] = entry.coach_response || '';
+        }
+      }
     });
   }
   closeAttendeeHistoryModal() {
     this.attendeeHistoryModalOpen = false;
     this.selectedAttendee = null;
     this.selectedAttendeeHistory = [];
+    this.attendeeCoachResponseDraft = {};
+    this.isSavingAttendeeCoachResponse = {};
+    this.activeAttendeeHistoryEntryId = null;
+  }
+
+  setActiveAttendeeHistoryEntry(entry: any) {
+    const id = Number(entry?.id);
+    this.activeAttendeeHistoryEntryId = id || null;
+  }
+
+  saveAttendeeCoachResponse(entry: any) {
+    const historyId = Number(entry?.id);
+    if (!historyId) return;
+    const text = (this.attendeeCoachResponseDraft[historyId] || '').toString().trim();
+
+    this.isSavingAttendeeCoachResponse[historyId] = true;
+    this.http.post(`${environment.apiUrl}/routes.php?request=setCoachResponse`, {
+      history_id: historyId,
+      coach_response: text
+    }).subscribe({
+      next: (resp: any) => {
+        if (resp?.status === 'success') {
+          entry.coach_response = text;
+          Swal.fire({ icon: 'success', title: 'Saved', text: 'Coach response saved.' });
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: resp?.message || 'Failed to save response.' });
+        }
+        this.isSavingAttendeeCoachResponse[historyId] = false;
+      },
+      error: () => {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save response.' });
+        this.isSavingAttendeeCoachResponse[historyId] = false;
+      }
+    });
   }
 
   constructor(private http: HttpClient, private auth: AuthService) {}
@@ -389,7 +434,7 @@ export class RoutinehistoryComponent implements OnInit {
 
     const images: string[] = await Promise.all(rows.map(async r => (r.imageUrl ? await this.toDataURL(r.imageUrl) : '')));
 
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'landscape' });
     doc.setFontSize(16);
     doc.text('Routine Attendance Report (Yearly)', 14, 18);
     doc.setFontSize(12);
@@ -460,7 +505,7 @@ export class RoutinehistoryComponent implements OnInit {
       (list || []).map(async a => (a.image ? await this.toDataURL(a.image) : ''))
     );
 
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'landscape' });
     const title = `Routine Attendance Report`;
     const sub = `${this.selectedClass.class_name || 'Class'} — ${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
@@ -581,7 +626,7 @@ export class RoutinehistoryComponent implements OnInit {
       rows.map(async r => (r.imageUrl ? await this.toDataURL(r.imageUrl) : ''))
     );
 
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'landscape' });
     const title = `Routine Attendance Report (Whole Month)`;
     const sub = `${this.selectedClass.class_name || 'Class'} — ${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
     doc.setFontSize(16);
