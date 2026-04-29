@@ -470,10 +470,12 @@ export class RoutinesComponent implements OnInit {
       this.reflectionText = '';
       this.loadRoutineHistory();
     } catch(err:any) {
+      console.error('[Routine Completion] Upload error details:', err);
+      const uploadErrorMessage = this.getUploadErrorMessage(err);
       await Swal.fire({
         icon: 'error',
         title: 'Upload Failed',
-        text: err.message || err,
+        text: uploadErrorMessage,
         confirmButtonColor: '#022F11'
       });
     }
@@ -639,6 +641,27 @@ export class RoutinesComponent implements OnInit {
     });
   }
 
+  private getUploadErrorMessage(err: any): string {
+    const backendMessage =
+      err?.error?.message ||
+      err?.error?.error ||
+      err?.error?.status?.message ||
+      err?.message;
+
+    const message = backendMessage ? String(backendMessage) : 'Unknown upload error.';
+    const lower = message.toLowerCase();
+
+    if (
+      lower.includes('upload failed') ||
+      lower.includes('failed to upload') ||
+      lower.includes('image upload failed')
+    ) {
+      return `${message} (Server may be rejecting file size. Check PHP upload_max_filesize and post_max_size.)`;
+    }
+
+    return message;
+  }
+
   async confirmUpload() {
     if (!this.selectedFile || !this.selectedRoutine || !this.reflectionText) {
       Swal.fire({
@@ -668,10 +691,12 @@ export class RoutinesComponent implements OnInit {
       this.reflectionText = '';
       this.loadRoutineHistory();
     } catch(err:any) {
+      console.error('[Legacy Upload] Upload error details:', err);
+      const uploadErrorMessage = this.getUploadErrorMessage(err);
       await Swal.fire({
         icon: 'error',
         title: 'Upload Failed',
-        text: err.message || err,
+        text: uploadErrorMessage,
         confirmButtonColor: '#022F11'
       });
     }
