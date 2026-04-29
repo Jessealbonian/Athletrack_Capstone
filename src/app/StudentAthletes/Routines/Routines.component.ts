@@ -15,6 +15,9 @@ import { RoutinesService, ClassInfo, Routine, RoutineHistory } from '../../servi
   styleUrl: './Routines.component.css'
 })
 export class RoutinesComponent implements OnInit {
+  private readonly maxUploadBytes = 10 * 1024 * 1024; // 10MB upload cap
+  private readonly supportedMimeTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+
   isNavOpen = true;
   showEnrollmentModal = false;
   showUploadModal = false;
@@ -51,6 +54,7 @@ export class RoutinesComponent implements OnInit {
   // Upload related
   selectedFile: File | null = null;
   selectedRoutine: Routine | null = null;
+  fileValidationMessage = '';
   
   // New routine completion modal properties
   selectedDay: string = '';
@@ -370,6 +374,7 @@ export class RoutinesComponent implements OnInit {
     this.selectedRoutineData = routineData;
     this.showRoutineCompletionModal = true;
     this.selectedFile = null;
+    this.fileValidationMessage = '';
     this.reflectionText = '';
     this.submissionDate = this.getCurrentWeekDateForDay(day);
   }
@@ -379,6 +384,7 @@ export class RoutinesComponent implements OnInit {
     this.selectedDay = '';
     this.selectedRoutineData = null;
     this.selectedFile = null;
+    this.fileValidationMessage = '';
     this.reflectionText = '';
     this.submissionDate = '';
   }
@@ -520,6 +526,7 @@ export class RoutinesComponent implements OnInit {
     this.selectedRoutine = routine;
     this.showUploadModal = true;
     this.selectedFile = null;
+    this.fileValidationMessage = '';
     this.reflectionText = '';
   }
 
@@ -527,14 +534,109 @@ export class RoutinesComponent implements OnInit {
     this.showUploadModal = false;
     this.selectedRoutine = null;
     this.selectedFile = null;
+    this.fileValidationMessage = '';
     this.reflectionText = '';
   }
 
-  onFileSelected(event: Event) {
+  async onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
+    this.fileValidationMessage = '';
     if (input.files && input.files.length > 0) {
-      this.selectedFile = input.files[0];
+      const rawFile = input.files[0];
+      const fileType = (rawFile.type || '').toLowerCase();
+      if (fileType && !this.supportedMimeTypes.includes(fileType)) {
+        this.selectedFile = null;
+        input.value = '';
+        this.fileValidationMessage = 'Unsupported file type. Please upload JPG, PNG, or PDF only.';
+        return;
+      }
+
+      try {
+        this.selectedFile = await this.prepareUploadFile(rawFile);
+      } catch (error: any) {
+        this.selectedFile = null;
+        input.value = '';
+        this.fileValidationMessage = error?.message || 'The selected file is too large to upload.';
+      }
     }
+  }
+
+  private async prepareUploadFile(file: File): Promise<File> {
+    if (file.size <= this.maxUploadBytes) {
+      return file;
+    }
+
+    if (file.type === 'application/pdf') {
+      throw new Error('PDF is too large. Please upload a PDF under 10MB.');
+    }
+
+    if (!file.type.startsWith('image/')) {
+      throw new Error('File is too large to upload.');
+    }
+
+    const compressedImage = await this.compressImageToLimit(file, this.maxUploadBytes);
+    if (compressedImage.size > this.maxUploadBytes) {
+      throw new Error('Image is still too large after compression. Please use a smaller photo.');
+    }
+    return compressedImage;
+  }
+
+  private async compressImageToLimit(file: File, maxBytes: number): Promise<File> {
+    const imageUrl = await this.readFileAsDataUrl(file);
+    const image = await this.loadImage(imageUrl);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return file;
+    }
+
+    // Reduce very large mobile captures before quality compression.
+    const maxDimension = 1600;
+    const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    const outputType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+    let quality = 0.85;
+    let result = await this.canvasToFile(canvas, outputType, quality, file.name);
+
+    while (result.size > maxBytes && quality > 0.35) {
+      quality -= 0.1;
+      result = await this.canvasToFile(canvas, outputType, quality, file.name);
+    }
+
+    return result;
+  }
+
+  private readFileAsDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error('Failed to read image file.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  private loadImage(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error('Failed to process selected image.'));
+      image.src = src;
+    });
+  }
+
+  private canvasToFile(canvas: HTMLCanvasElement, type: string, quality: number, fileName: string): Promise<File> {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('Failed to compress image.'));
+          return;
+        }
+        resolve(new File([blob], fileName, { type, lastModified: Date.now() }));
+      }, type, quality);
+    });
   }
 
   async confirmUpload() {

@@ -181,7 +181,8 @@
                 accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
                 (change)="onFileSelected($event)"
                 class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50">
-            <p class="text-xs text-gray-500 mt-1 mb-3">Allowed: JPG, JPEG, PNG, PDF</p>
+            <p class="text-xs text-gray-500 mt-1 mb-3">Allowed: JPG, JPEG, PNG, PDF (max 10MB; large photos auto-compress)</p>
+            <p *ngIf="fileValidationMessage" class="text-xs text-red-600 mb-2">{{ fileValidationMessage }}</p>
             <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Reflection Response <span class="text-red-600">*</span></label>
             <textarea [(ngModel)]="reflectionText" rows="3" required
                     class="w-full p-2 rounded border border-gray-300 bg-gray-50"
@@ -220,7 +221,8 @@
                 accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
              (change)="onFileSelected($event)"
                 class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50">
-            <p class="text-xs text-gray-500 mt-1">Allowed: JPG, JPEG, PNG, PDF</p>
+            <p class="text-xs text-gray-500 mt-1">Allowed: JPG, JPEG, PNG, PDF (max 10MB; large photos auto-compress)</p>
+            <p *ngIf="fileValidationMessage" class="text-xs text-red-600 mt-1">{{ fileValidationMessage }}</p>
             <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2 mt-3">Reflection Response <span class="text-red-600">*</span></label>
             <textarea [(ngModel)]="reflectionText" rows="3" required
                 class="w-full p-2 rounded border border-gray-300 bg-gray-50"
