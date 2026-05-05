@@ -1439,14 +1439,12 @@ export class ClassComponent implements OnInit {
 
     addSection(
       'Active this week',
-      `There ${active.length === 1 ? 'is' : 'are'} ${active.length} active student${active.length === 1 ? '' : 's'} with at least one submission during ${weekLabel}.`,
-      ['Name', 'Code', 'Email', 'Day active (submission)', 'Weekly engagement'],
+      `There ${active.length === 1 ? 'is' : 'are'} ${active.length} active student${active.length === 1 ? '' : 's'} with at least one submission during ${weekLabel}. Exact submission dates are available under Routine History.`,
+      ['Name', 'Code', 'Activity this week'],
       active.map((s: any) => [
         s?.name ?? '—',
         s?.code ?? '—',
-        s?.student_email ?? s?.email ?? '—',
-        this.formatPdfDayActive(s?.last_active_date_in_week),
-        'Completed'
+        this.formatPdfWeeklyActivitySummary(s)
       ]),
       [22, 101, 52]
     );
@@ -1454,12 +1452,11 @@ export class ClassComponent implements OnInit {
     addSection(
       'Inactive (enrolled, no submission this week)',
       `There ${inactive.length === 1 ? 'is' : 'are'} ${inactive.length} inactive student${inactive.length === 1 ? '' : 's'} — still enrolled but no routine logged between the week boundaries above.`,
-      ['Name', 'Code', 'Email', 'Weekly engagement'],
+      ['Name', 'Code', 'Activity this week'],
       inactive.map((s: any) => [
         s?.name ?? '—',
         s?.code ?? '—',
-        s?.student_email ?? s?.email ?? '—',
-        'Not completed yet'
+        this.formatPdfWeeklyActivitySummary(s)
       ]),
       [107, 114, 128]
     );
@@ -1467,14 +1464,13 @@ export class ClassComponent implements OnInit {
     addSection(
       'Deactivated students',
       deactivated.length
-        ? `The following ${deactivated.length} student${deactivated.length === 1 ? '' : 's'} ${deactivated.length === 1 ? 'was' : 'were'} deactivated from this class. Reasons are recorded where provided.`
+        ? `The following ${deactivated.length} student${deactivated.length === 1 ? '' : 's'} ${deactivated.length === 1 ? 'was' : 'were'} deactivated from this class. The reason entered at deactivation is visible in the Class Details screen (not stored on this export).`
         : 'No deactivated students in this roster.',
-      ['Name', 'Code', 'Email', 'Deactivation reason'],
+      ['Name', 'Code', 'Notes'],
       deactivated.map((s: any) => [
         s?.name ?? '—',
         s?.code ?? '—',
-        s?.student_email ?? s?.email ?? '—',
-        (s?.deactivation_reason ?? '—').toString()
+        'Deactivated — see Class Details for recorded reason'
       ]),
       [185, 28, 28]
     );
@@ -1513,20 +1509,14 @@ export class ClassComponent implements OnInit {
     return `${fmt(monday)} – ${fmt(sunday)}`;
   }
 
-  private formatPdfDayActive(iso: string | null | undefined): string {
-    if (!iso) {
-      return 'No dated activity this week';
+  /** PDF-only copy using fields already returned by getEnrolledStudentsForClass (no extra API). */
+  private formatPdfWeeklyActivitySummary(student: any): string {
+    if (this.normalizeStudentStatus(student?.student_status) === 'deactivated') {
+      return '—';
     }
-    const d = new Date(String(iso).includes('T') ? iso : `${iso}T12:00:00`);
-    if (Number.isNaN(d.getTime())) {
-      return String(iso);
-    }
-    return d.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    return this.hasCompletedThisWeek(student)
+      ? 'Logged ≥1 routine during this reporting week'
+      : 'No routine logged yet during this reporting week';
   }
 
   private drawEnrollmentStackedBarPdf(
