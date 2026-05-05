@@ -1584,9 +1584,9 @@ export class ClassComponent implements OnInit {
   }
 
   private getHighlightLabel(flag: 'never' | 'inactive-recently' | 'consistent'): string {
-    if (flag === 'consistent') return '🟢 Consistent';
-    if (flag === 'inactive-recently') return '🟡 Inactive recently';
-    return '🔴 Never submitted';
+    if (flag === 'consistent') return 'Consistent';
+    if (flag === 'inactive-recently') return 'Inactive recently';
+    return 'Never submitted';
   }
 
   private async fetchStudentReportMetrics(classId: number, userId: number): Promise<{

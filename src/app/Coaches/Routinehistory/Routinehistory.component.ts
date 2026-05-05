@@ -494,28 +494,28 @@ export class RoutinehistoryComponent implements OnInit {
     doc.rect(0, 0, pageW, 22, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(15);
-    doc.text('Athletrack — Routine history (yearly)', 14, 13);
+    doc.text('Athletrack — Yearly Routine Report', 14, 13);
     doc.setFontSize(10);
     doc.text(`${this.selectedClass.class_name || 'Class'} · ${year}`, 14, 19);
     doc.setTextColor(0, 0, 0);
 
     doc.setFontSize(10);
     doc.text(
-      `Demographics: ${submissions.length} submission rows across ${year}; ${placeholders.length} calendar day slots with no uploads. Unique athletes with submissions — roster-active: ${uniqActive}, roster-inactive marker: ${uniqInactive}.`,
+      `Summary: ${submissions.length} routine submissions across ${year}, ${placeholders.length} days with no upload, and ${uniqActive + uniqInactive} unique athletes who submitted.`,
       14,
       30,
       { maxWidth: pageW - 28 }
     );
 
     this.drawRoutineDayMixBarPdf(doc, 14, 42, submissions.length, placeholders.length, {
-      title: 'Volume: submissions vs empty-day placeholders',
+      title: 'Submission Volume vs No-Upload Days',
       leftLabel: 'Submissions',
       rightLabel: 'Empty days'
     });
     this.drawRoutineDayMixBarPdf(doc, 150, 42, subActive.length, subInactive.length, {
-      title: 'Among submissions — roster status marker',
-      leftLabel: 'Active-marked',
-      rightLabel: 'Inactive-marked'
+      title: 'Submission Status Split',
+      leftLabel: 'Active',
+      rightLabel: 'Inactive'
     });
 
     autoTable(doc, {
@@ -523,11 +523,11 @@ export class RoutinehistoryComponent implements OnInit {
       head: [['Metric', 'Count']],
       body: [
         ['Submission rows', String(submissions.length)],
-        ['Placeholder days', String(placeholders.length)],
-        ['Submissions — active-marked rows', String(subActive.length)],
-        ['Submissions — inactive-marked rows', String(subInactive.length)],
-        ['Unique athletes (active-marked submissions)', String(uniqActive)],
-        ['Unique athletes (inactive-marked submissions)', String(uniqInactive)]
+        ['Days with no upload', String(placeholders.length)],
+        ['Active submissions', String(subActive.length)],
+        ['Inactive submissions', String(subInactive.length)],
+        ['Unique active athletes', String(uniqActive)],
+        ['Unique inactive athletes', String(uniqInactive)]
       ],
       styles: { fontSize: 9, cellPadding: 2 },
       headStyles: { fillColor: [34, 71, 63] },
@@ -544,14 +544,14 @@ export class RoutinehistoryComponent implements OnInit {
 
     chartY += 36;
     doc.setTextColor(34, 71, 63);
-    doc.text('Intensity — active-marked submissions', 14, chartY);
+    doc.text('Intensity Mix — Active Submissions', 14, chartY);
     this.drawIntensityDistribution(doc, 14, chartY + 3, histActive);
-    doc.text('Intensity — inactive-marked submissions', 130, chartY);
+    doc.text('Intensity Mix — Inactive Submissions', 130, chartY);
     this.drawIntensityDistribution(doc, 130, chartY + 3, histInactive);
 
     chartY += 42;
-    chartY = this.appendYearSubmissionPhotoTable(doc, 'Active-marked submissions', subActive, imagesSubActive, chartY, pageW, [22, 101, 52]);
-    this.appendYearSubmissionPhotoTable(doc, 'Inactive-marked submissions', subInactive, imagesSubInactive, chartY, pageW, [107, 114, 128]);
+    chartY = this.appendYearSubmissionPhotoTable(doc, 'Active Submissions', subActive, imagesSubActive, chartY, pageW, [22, 101, 52]);
+    this.appendYearSubmissionPhotoTable(doc, 'Inactive Submissions', subInactive, imagesSubInactive, chartY, pageW, [107, 114, 128]);
 
     const fileName = `routine_report_year_${(this.selectedClass.class_name || 'class').toString().replace(/\s+/g, '_')}_${year}.pdf`;
     doc.save(fileName);
@@ -596,29 +596,29 @@ export class RoutinehistoryComponent implements OnInit {
     doc.rect(0, 0, pageW, 22, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(15);
-    doc.text('Athletrack — Routine day report', 14, 13);
+    doc.text('Athletrack — Daily Routine Report', 14, 13);
     doc.setFontSize(10);
     doc.text(`${this.selectedClass.class_name || 'Class'} · ${dateLabel}`, 14, 19);
     doc.setTextColor(0, 0, 0);
 
     const scope =
-      filter === 'all' ? 'full roster export' : filter === 'active' ? 'active-only sections' : 'inactive-only sections';
+      filter === 'all' ? 'full class view' : filter === 'active' ? 'active-only view' : 'inactive-only view';
 
     doc.setFontSize(10);
     doc.text(
-      `Demographics (${scope}): ${full.length} roster rows — ${activeAttendees.length} active-marked (submitted), ${inactiveAttendees.length} inactive-marked (no submission). Unique athletes: ${uniqActive} active cohort vs ${uniqInactive} inactive cohort.`,
+      `Summary (${scope}): ${full.length} roster rows, ${activeAttendees.length} completed submissions, ${inactiveAttendees.length} missed submissions, and ${uniqActive + uniqInactive} unique athletes.`,
       14,
       30,
       { maxWidth: pageW - 28 }
     );
 
     this.drawRoutineDayMixBarPdf(doc, 14, 42, activeAttendees.length, inactiveAttendees.length, {
-      title: 'Row counts — active vs inactive roster markers',
+      title: 'Submission Status Split',
       leftLabel: 'Active',
       rightLabel: 'Inactive'
     });
     this.drawRoutineDayMixBarPdf(doc, 158, 42, uniqActive, uniqInactive, {
-      title: 'Unique athletes — active vs inactive',
+      title: 'Unique Athletes Split',
       leftLabel: 'Unique active',
       rightLabel: 'Unique inactive'
     });
@@ -627,12 +627,12 @@ export class RoutinehistoryComponent implements OnInit {
       startY: 58,
       head: [['Metric', 'Value']],
       body: [
-        ['Calendar date', dateLabel],
-        ['Total roster rows', String(full.length)],
-        ['Active-marked rows', String(activeAttendees.length)],
-        ['Inactive-marked rows', String(inactiveAttendees.length)],
-        ['Unique athletes (active)', String(uniqActive)],
-        ['Unique athletes (inactive)', String(uniqInactive)]
+        ['Report date', dateLabel],
+        ['Total students in report', String(full.length)],
+        ['Completed routines (Active)', String(activeAttendees.length)],
+        ['Missed routines (Inactive)', String(inactiveAttendees.length)],
+        ['Unique active athletes', String(uniqActive)],
+        ['Unique inactive athletes', String(uniqInactive)]
       ],
       styles: { fontSize: 9, cellPadding: 2 },
       headStyles: { fillColor: [10, 118, 100] },
@@ -644,9 +644,9 @@ export class RoutinehistoryComponent implements OnInit {
     let chartY = ((doc as any).lastAutoTable?.finalY ?? 74) + 10;
     doc.setFontSize(9);
     doc.setTextColor(34, 71, 63);
-    doc.text('Training intensity — active cohort', 14, chartY);
+    doc.text('Intensity Mix — Active Cohort', 14, chartY);
     this.drawIntensityDistribution(doc, 14, chartY + 3, histActive);
-    doc.text('Training intensity — inactive cohort', 130, chartY);
+    doc.text('Intensity Mix — Inactive Cohort', 130, chartY);
     this.drawIntensityDistribution(doc, 130, chartY + 3, histInactive);
 
     chartY += 42;
@@ -657,7 +657,7 @@ export class RoutinehistoryComponent implements OnInit {
     if (showActive) {
       chartY = this.appendDayRosterPhotoTable(
         doc,
-        'Active roster — submitted today',
+        'Active Students — Completed Today',
         activeAttendees,
         imagesActive,
         chartY,
@@ -668,7 +668,7 @@ export class RoutinehistoryComponent implements OnInit {
     if (showInactive) {
       this.appendDayRosterPhotoTable(
         doc,
-        'Inactive roster — missing submission',
+        'Inactive Students — Missed Submission',
         inactiveAttendees,
         imagesInactive,
         chartY,
@@ -777,28 +777,28 @@ export class RoutinehistoryComponent implements OnInit {
     doc.rect(0, 0, pageW, 22, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(15);
-    doc.text('Athletrack — Routine history (full month)', 14, 13);
+    doc.text('Athletrack — Monthly Routine Report', 14, 13);
     doc.setFontSize(10);
     doc.text(`${this.selectedClass.class_name || 'Class'} · ${ym}`, 14, 19);
     doc.setTextColor(0, 0, 0);
 
     doc.setFontSize(10);
     doc.text(
-      `Demographics: ${submissions.length} submission rows; ${placeholders.length} empty calendar placeholders; active-marked rows ${activeSlice.length}; inactive-marked rows ${inactiveSlice.length}; unique athletes ${uniqA} (active) / ${uniqI} (inactive).`,
+      `Summary: ${submissions.length} routine submissions this month, ${placeholders.length} days with no upload, and ${uniqA + uniqI} unique athletes with submissions.`,
       14,
       30,
       { maxWidth: pageW - 28 }
     );
 
     this.drawRoutineDayMixBarPdf(doc, 14, 42, submissions.length, placeholders.length, {
-      title: 'Volume — uploads vs empty-day placeholders',
-      leftLabel: 'Submission rows',
-      rightLabel: 'Empty days'
+      title: 'Submission Volume vs No-Upload Days',
+      leftLabel: 'Submissions',
+      rightLabel: 'No-upload days'
     });
     this.drawRoutineDayMixBarPdf(doc, 158, 42, activeSlice.length, inactiveSlice.length, {
-      title: 'Among uploads — roster markers',
-      leftLabel: 'Active-marked',
-      rightLabel: 'Inactive-marked'
+      title: 'Submission Status Split',
+      leftLabel: 'Active',
+      rightLabel: 'Inactive'
     });
 
     autoTable(doc, {
@@ -806,11 +806,11 @@ export class RoutinehistoryComponent implements OnInit {
       head: [['Metric', 'Count']],
       body: [
         ['Submission rows', String(submissions.length)],
-        ['Placeholder days', String(placeholders.length)],
-        ['Active-marked submissions', String(activeSlice.length)],
-        ['Inactive-marked submissions', String(inactiveSlice.length)],
-        ['Unique athletes (active cohort)', String(uniqA)],
-        ['Unique athletes (inactive cohort)', String(uniqI)]
+        ['Days with no upload', String(placeholders.length)],
+        ['Active submissions', String(activeSlice.length)],
+        ['Inactive submissions', String(inactiveSlice.length)],
+        ['Unique active athletes', String(uniqA)],
+        ['Unique inactive athletes', String(uniqI)]
       ],
       styles: { fontSize: 9, cellPadding: 2 },
       headStyles: { fillColor: [34, 71, 63] },
@@ -822,18 +822,18 @@ export class RoutinehistoryComponent implements OnInit {
     let chartY = ((doc as any).lastAutoTable?.finalY ?? 74) + 10;
     doc.setFontSize(9);
     doc.setTextColor(34, 71, 63);
-    doc.text('Intensity — active-marked uploads', 14, chartY);
+    doc.text('Intensity Mix — Active Submissions', 14, chartY);
     this.drawIntensityDistribution(doc, 14, chartY + 3, histA);
-    doc.text('Intensity — inactive-marked uploads', 130, chartY);
+    doc.text('Intensity Mix — Inactive Submissions', 130, chartY);
     this.drawIntensityDistribution(doc, 130, chartY + 3, histI);
 
     chartY += 42;
     this.appendMonthSplitPhotoTables(
       doc,
-      'Active-marked submissions — detail',
+      'Active Submissions — Details',
       activeSlice,
       imagesActive,
-      'Inactive-marked submissions — detail',
+      'Inactive Submissions — Details',
       inactiveSlice,
       imagesInactive,
       chartY,
@@ -938,7 +938,7 @@ export class RoutinehistoryComponent implements OnInit {
     doc.setTextColor(0, 0, 0);
     autoTable(doc, {
       startY: startY + 12,
-      head: [['Date', 'Athlete', 'Exercise', 'Intensity', 'Time', 'Photo']],
+      head: [['Date', 'Athlete', 'Exercise', 'Intensity', 'Time', 'Submitted Image']],
       body: slice.map(() => ['', '', '', '', '', '']),
       styles: { fontSize: 7.5, cellPadding: 1.5, minCellHeight: imageSizeMm + 3 },
       headStyles: { fillColor: [bannerRgb[0], bannerRgb[1], bannerRgb[2]] },
@@ -955,9 +955,9 @@ export class RoutinehistoryComponent implements OnInit {
         if (data.section === 'body') {
           const idx = data.row.index;
           const r = slice[idx];
-          const cols = [r.date, r.name, r.routine, r.intensity, this.formatTime12h(r.time) || r.time, ''];
+          const cols = [r.date, r.name, r.routine, r.intensity, this.formatTime12h(r.time) || r.time, 'No image'];
           const ci = data.column.index;
-          if (ci >= 0 && ci < 5) {
+          if (ci >= 0 && ci < 6) {
             data.cell.text = [cols[ci]];
           }
         }
@@ -1008,7 +1008,7 @@ export class RoutinehistoryComponent implements OnInit {
     doc.setTextColor(0, 0, 0);
     autoTable(doc, {
       startY: startY + 12,
-      head: [['Athlete', 'Exercise', 'Intensity', 'Time', 'Photo']],
+      head: [['Athlete', 'Exercise', 'Intensity', 'Time', 'Submitted Image']],
       body: attendees.map(() => ['', '', '', '', '']),
       styles: { fontSize: 8.5, cellPadding: 2, minCellHeight: imageSizeMm + 4 },
       headStyles: { fillColor: [bannerRgb[0], bannerRgb[1], bannerRgb[2]] },
@@ -1029,10 +1029,10 @@ export class RoutinehistoryComponent implements OnInit {
             a.routine || 'N/A',
             a.routine_intensity || 'N/A',
             this.formatTime12h(a.time_of_submission) || 'N/A',
-            ''
+            'No image'
           ];
           const ci = data.column.index;
-          if (ci >= 0 && ci < 4) {
+          if (ci >= 0 && ci < 5) {
             data.cell.text = [cols[ci]];
           }
         }
@@ -1092,7 +1092,7 @@ export class RoutinehistoryComponent implements OnInit {
       doc.setTextColor(0, 0, 0);
       autoTable(doc, {
         startY: y + 12,
-        head: [['Date', 'Athlete', 'Exercise', 'Intensity', 'Time', 'Photo']],
+        head: [['Date', 'Athlete', 'Exercise', 'Intensity', 'Time', 'Submitted Image']],
         body: slice.map(() => ['', '', '', '', '', '']),
         styles: { fontSize: 7, cellPadding: 1.4, minCellHeight: imageSizeMm + 3 },
         headStyles: { fillColor: [rgb[0], rgb[1], rgb[2]], fontSize: 8 },
@@ -1115,10 +1115,10 @@ export class RoutinehistoryComponent implements OnInit {
               r.routine,
               r.intensity,
               r.time,
-              ''
+              'No image'
             ];
             const ci = data.column.index;
-            if (ci >= 0 && ci < 5) {
+            if (ci >= 0 && ci < 6) {
               data.cell.text = [cols[ci]];
             }
           }
