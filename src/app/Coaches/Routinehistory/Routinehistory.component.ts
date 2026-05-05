@@ -35,10 +35,13 @@ interface RoutineClassRecord {
 interface AttendeeRecord {
   user_id?: number;
   name?: string;
+  student_email?: string | null;
   image?: string | null;
   routine?: string;
   routine_intensity?: string;
   time_of_submission?: string;
+  student_reflection?: string | null;
+  coach_response?: string | null;
   status?: 'active' | 'inactive';
 }
 
@@ -258,10 +261,13 @@ export class RoutinehistoryComponent implements OnInit {
           return {
             user_id: a.user_id ?? a.id ?? null,
             name: a.name ?? a.username ?? 'Student',
+            student_email: a.student_email ?? a.email ?? null,
             image,
             routine: a.routine || '',
             routine_intensity: a.routine_intensity || '',
             time_of_submission: a.time_of_submission || '',
+            student_reflection: a.student_reflection ?? null,
+            coach_response: a.coach_response ?? null,
             status
           } as AttendeeRecord;
         });
@@ -375,14 +381,23 @@ export class RoutinehistoryComponent implements OnInit {
   async generateYearlyReport() {
     if (!this.selectedClass?.class_id) return;
 
-    // Build rows across the whole year
     const year = this.selectedYear;
-    const rows: { date: string; name: string; routine: string; intensity: string; time: string; imageUrl: string | null }[] = [];
+    type YearRow = {
+      date: string;
+      name: string;
+      email: string;
+      routine: string;
+      intensity: string;
+      time: string;
+      reflection: string;
+      coach: string;
+      imageUrl: string | null;
+    };
+    const rows: YearRow[] = [];
 
     for (let month = 1; month <= 12; month++) {
       const days = this.computeDaysInMonth(year, month);
       for (const day of days) {
-        // fetch per-day attendance
         // eslint-disable-next-line no-await-in-loop
         const list: AttendeeRecord[] = await new Promise((resolve) => {
           const url = `${environment.apiUrl}/routes.php?request=getClassAttendance&class_id=${this.selectedClass?.class_id}&year=${year}&month=${month}&day=${day}`;
@@ -401,10 +416,13 @@ export class RoutinehistoryComponent implements OnInit {
                 return {
                   user_id: a.user_id ?? a.id ?? null,
                   name: a.name ?? a.username ?? 'Student',
+                  student_email: a.student_email ?? a.email ?? null,
                   image,
                   routine: a.routine || '',
                   routine_intensity: a.routine_intensity || '',
                   time_of_submission: a.time_of_submission || '',
+                  student_reflection: a.student_reflection ?? null,
+                  coach_response: a.coach_response ?? null,
                   status
                 } as AttendeeRecord;
               });
@@ -416,15 +434,28 @@ export class RoutinehistoryComponent implements OnInit {
 
         const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         if (list.length === 0) {
-          rows.push({ date: dateStr, name: '(none)', routine: 'N/A', intensity: 'N/A', time: 'N/A', imageUrl: null });
+          rows.push({
+            date: dateStr,
+            name: '(none)',
+            email: '—',
+            routine: 'N/A',
+            intensity: 'N/A',
+            time: 'N/A',
+            reflection: '—',
+            coach: '—',
+            imageUrl: null
+          });
         } else {
           for (const a of list) {
             rows.push({
               date: dateStr,
               name: a.name || 'Student',
+              email: a.student_email || '—',
               routine: a.routine || 'N/A',
               intensity: a.routine_intensity || 'N/A',
-              time: a.time_of_submission || 'N/A',
+              time: this.formatTime12h(a.time_of_submission) || 'N/A',
+              reflection: this.clipPdfText(a.student_reflection || '—', 320),
+              coach: this.clipPdfText(a.coach_response || '—', 320),
               imageUrl: a.image || null
             });
           }
@@ -435,31 +466,70 @@ export class RoutinehistoryComponent implements OnInit {
     const images: string[] = await Promise.all(rows.map(async r => (r.imageUrl ? await this.toDataURL(r.imageUrl) : '')));
 
     const doc = new jsPDF({ orientation: 'landscape' });
-    doc.setFontSize(16);
-    doc.text('Routine Attendance Report (Yearly)', 14, 18);
-    doc.setFontSize(12);
-    doc.text(`${this.selectedClass.class_name || 'Class'} — ${year}`, 14, 26);
+    const pageW = doc.internal.pageSize.getWidth();
+    doc.setFillColor(10, 118, 100);
+    doc.rect(0, 0, pageW, 22, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(15);
+    doc.text('Athletrack — Routine history (yearly)', 14, 13);
+    doc.setFontSize(10);
+    doc.text(`${this.selectedClass.class_name || 'Class'} · ${year}`, 14, 19);
+    doc.setTextColor(0, 0, 0);
 
-    const imageSizeMm = 13.2;
+    const logged = rows.filter(r => r.name !== '(none)').length;
+    doc.setFontSize(10);
+    doc.text(
+      `There are ${logged} submission row${logged === 1 ? '' : 's'} with athlete reflections and coach responses where captured. Placeholder rows mark days with no uploads.`,
+      14,
+      30,
+      { maxWidth: pageW - 28 }
+    );
+
+    const activeLike = rows.filter(r => r.name !== '(none)').length;
+    const inactiveLike = rows.filter(r => r.name === '(none)').length;
+    this.drawRoutineDayMixBarPdf(doc, 14, 38, activeLike, inactiveLike);
+
+    const imageSizeMm = 12;
     autoTable(doc, {
-      startY: 32,
-      head: [['Date', 'Name', 'Routine', 'Intensity', 'Time', 'Image']],
-      body: rows.map(() => ['', '', '', '', '', '']),
-      styles: { fontSize: 8, cellPadding: 2, minCellHeight: imageSizeMm + 4 },
-      headStyles: { fillColor: [10, 118, 100] },
-      columnStyles: { 0: { cellWidth: 30 }, 1: { cellWidth: 45 }, 2: { cellWidth: 55 }, 3: { cellWidth: 25 }, 4: { cellWidth: 25 }, 5: { cellWidth: imageSizeMm + 6 } },
+      startY: 54,
+      head: [['Date', 'Athlete', 'Email', 'Exercise', 'Intensity', 'Time', 'Reflection', 'Coach response', 'Photo']],
+      body: rows.map(() => new Array(9).fill('')),
+      styles: { fontSize: 6.5, cellPadding: 1.2, overflow: 'linebreak', minCellHeight: imageSizeMm + 3 },
+      headStyles: { fillColor: [10, 118, 100], fontSize: 7 },
+      columnStyles: {
+        0: { cellWidth: 22 },
+        1: { cellWidth: 28 },
+        2: { cellWidth: 32 },
+        3: { cellWidth: 38 },
+        4: { cellWidth: 18 },
+        5: { cellWidth: 18 },
+        6: { cellWidth: 42 },
+        7: { cellWidth: 42 },
+        8: { cellWidth: imageSizeMm + 5 }
+      },
       didParseCell: (data) => {
         if (data.section === 'body') {
           const idx = data.row.index;
-          if (data.column.index === 0) data.cell.text = [rows[idx].date];
-          if (data.column.index === 1) data.cell.text = [rows[idx].name];
-          if (data.column.index === 2) data.cell.text = [rows[idx].routine];
-          if (data.column.index === 3) data.cell.text = [rows[idx].intensity];
-          if (data.column.index === 4) data.cell.text = [rows[idx].time];
+          const r = rows[idx];
+          const cells = [
+            r.date,
+            r.name,
+            r.email,
+            r.routine,
+            r.intensity,
+            r.time,
+            r.reflection,
+            r.coach,
+            ''
+          ];
+          const col = data.column.index;
+          if (col >= 0 && col < 8) {
+            data.cell.text = [cells[col]];
+          }
         }
       },
       didDrawCell: (data) => {
-        if (data.section === 'body' && data.column.index === 5) {
+        if (data.section === 'body' && data.column.index === 8) {
           const idx = data.row.index;
           const imgData = images[idx];
           if (imgData) {
@@ -467,13 +537,17 @@ export class RoutinehistoryComponent implements OnInit {
             const h = imageSizeMm;
             const x = data.cell.x + (data.cell.width - w) / 2;
             const y = data.cell.y + (data.cell.height - h) / 2;
-            try { (doc as any).addImage(imgData, 'PNG', x, y, w, h); } catch {}
+            try {
+              (doc as any).addImage(imgData, 'PNG', x, y, w, h);
+            } catch {
+              /* ignore */
+            }
           }
         }
       }
     });
 
-    const fileName = `routine_report_year_${(this.selectedClass.class_name || 'class').toString().replace(/\\s+/g, '_')}_${year}.pdf`;
+    const fileName = `routine_report_year_${(this.selectedClass.class_name || 'class').toString().replace(/\s+/g, '_')}_${year}.pdf`;
     doc.save(fileName);
   }
 
@@ -495,51 +569,75 @@ export class RoutinehistoryComponent implements OnInit {
   async generateMonthlyReport(filter: 'all' | 'active' | 'inactive' = 'all') {
     if (!this.selectedClass?.class_id || !this.selectedDay) return;
 
-    // Make sure attendees list is ready for the selected day
     const day = this.selectedDay;
     const base = this.monthlyAttendanceCache.get(day) || [];
     const list = filter === 'all' ? base : base.filter(a => (a.status || 'active') === filter);
 
-    // Preload images as data URLs
     const images: string[] = await Promise.all(
       (list || []).map(async a => (a.image ? await this.toDataURL(a.image) : ''))
     );
 
     const doc = new jsPDF({ orientation: 'landscape' });
-    const title = `Routine Attendance Report`;
-    const sub = `${this.selectedClass.class_name || 'Class'} — ${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const pageW = doc.internal.pageSize.getWidth();
+    const dateLabel = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-    doc.setFontSize(16);
-    doc.text(title, 14, 18);
-    doc.setFontSize(12);
-    doc.text(sub, 14, 26);
+    doc.setFillColor(2, 47, 17);
+    doc.rect(0, 0, pageW, 22, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(15);
+    doc.text('Athletrack — Routine day report', 14, 13);
+    doc.setFontSize(10);
+    doc.text(`${this.selectedClass.class_name || 'Class'} · ${dateLabel}`, 14, 19);
+    doc.setTextColor(0, 0, 0);
 
-    type RowType = { name: string; img: string; };
-    const body: RowType[] = (list || []).map((a, idx) => ({ name: a.name || 'Student', img: images[idx] }));
+    const activeC = list.filter(a => (a.status || 'active') === 'active').length;
+    const inactiveC = list.filter(a => (a.status || 'active') === 'inactive').length;
+    const scope =
+      filter === 'all' ? 'all roster statuses' : filter === 'active' ? 'active submissions only' : 'inactive / no submission rows';
 
-    const imageSizeMm = 13.2; // ~50px at 96DPI
+    doc.setFontSize(10);
+    doc.text(
+      `There ${list.length === 1 ? 'is' : 'are'} ${list.length} athlete row${list.length === 1 ? '' : 's'} on ${dateLabel} (${scope}). Each row includes proof photo, prescribed exercise, athlete reflection, and coach response when stored.`,
+      14,
+      30,
+      { maxWidth: pageW - 28 }
+    );
+    this.drawRoutineDayMixBarPdf(doc, 14, 42, activeC, inactiveC);
+
+    type RowType = { img: string };
+    const body: RowType[] = (list || []).map((a, idx) => ({ img: images[idx] }));
+
+    const imageSizeMm = 12;
 
     autoTable(doc, {
-      startY: 32,
-      head: [['Name', 'Routine', 'Intensity', 'Time', 'Image']],
-      body: body.map((r, idx) => [
-        r.name, 
-        (list[idx]?.routine || 'N/A'),
-        (list[idx]?.routine_intensity || 'N/A'),
-        (this.formatTime12h(list[idx]?.time_of_submission) || 'N/A'),
+      startY: 58,
+      head: [['Athlete', 'Email', 'Exercise', 'Intensity', 'Time', 'Status', 'Reflection', 'Coach response', 'Photo']],
+      body: body.map((_, idx) => [
+        list[idx]?.name || 'Student',
+        list[idx]?.student_email || '—',
+        list[idx]?.routine || 'N/A',
+        list[idx]?.routine_intensity || 'N/A',
+        this.formatTime12h(list[idx]?.time_of_submission) || 'N/A',
+        list[idx]?.status || 'active',
+        this.clipPdfText(list[idx]?.student_reflection || '—', 280),
+        this.clipPdfText(list[idx]?.coach_response || '—', 280),
         ''
       ]),
-      styles: { fontSize: 9, cellPadding: 2, minCellHeight: imageSizeMm + 4 },
+      styles: { fontSize: 7, cellPadding: 1.5, overflow: 'linebreak', minCellHeight: imageSizeMm + 3 },
       headStyles: { fillColor: [10, 118, 100] },
-      columnStyles: { 
-        0: { cellWidth: 50 }, 
-        1: { cellWidth: 60 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 30 },
-        4: { cellWidth: imageSizeMm + 6 } 
+      columnStyles: {
+        0: { cellWidth: 28 },
+        1: { cellWidth: 34 },
+        2: { cellWidth: 36 },
+        3: { cellWidth: 22 },
+        4: { cellWidth: 20 },
+        5: { cellWidth: 18 },
+        6: { cellWidth: 44 },
+        7: { cellWidth: 44 },
+        8: { cellWidth: imageSizeMm + 5 }
       },
       didDrawCell: (data) => {
-        if (data.section === 'body' && data.column.index === 4) {
+        if (data.section === 'body' && data.column.index === 8) {
           const rowIndex = data.row.index;
           const imgData = body[rowIndex]?.img;
           if (imgData) {
@@ -549,7 +647,9 @@ export class RoutinehistoryComponent implements OnInit {
             const y = data.cell.y + (data.cell.height - h) / 2;
             try {
               (doc as any).addImage(imgData, 'PNG', x, y, w, h);
-            } catch {}
+            } catch {
+              /* ignore */
+            }
           }
         }
       }
@@ -579,13 +679,19 @@ export class RoutinehistoryComponent implements OnInit {
                       ? String(file)
                       : `${environment.apiUrl}/uploads/routines/${file}`)
                   : null;
+                const rawStatus = (a.status ?? a.student_status ?? '').toString().toLowerCase().trim();
+                const status: 'active' | 'inactive' = rawStatus === 'active' ? 'active' : 'inactive';
                 return {
                   user_id: a.user_id ?? a.id ?? null,
                   name: a.name ?? a.username ?? 'Student',
+                  student_email: a.student_email ?? a.email ?? null,
                   image,
                   routine: a.routine || '',
                   routine_intensity: a.routine_intensity || '',
-                  time_of_submission: a.time_of_submission || ''
+                  time_of_submission: a.time_of_submission || '',
+                  student_reflection: a.student_reflection ?? null,
+                  coach_response: a.coach_response ?? null,
+                  status
                 } as AttendeeRecord;
               });
               this.monthlyAttendanceCache.set(d, attendees);
@@ -600,68 +706,121 @@ export class RoutinehistoryComponent implements OnInit {
       );
     }
 
-    // Build flat rows: Date, Name, Routine, Intensity, Time, Image
-    const rows: { date: string; name: string; routine: string; intensity: string; time: string; imageUrl: string | null }[] = [];
+    type MonthRow = {
+      date: string;
+      name: string;
+      email: string;
+      routine: string;
+      intensity: string;
+      time: string;
+      reflection: string;
+      coach: string;
+      status: string;
+      imageUrl: string | null;
+    };
+    const rows: MonthRow[] = [];
     for (const d of days) {
       const list = this.monthlyAttendanceCache.get(d) || [];
       const dateStr = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       for (const a of list) {
-        rows.push({ 
-          date: dateStr, 
-          name: a.name || 'Student', 
+        rows.push({
+          date: dateStr,
+          name: a.name || 'Student',
+          email: a.student_email || '—',
           routine: a.routine || 'N/A',
           intensity: a.routine_intensity || 'N/A',
-          time: a.time_of_submission || 'N/A',
-          imageUrl: a.image || null 
+          time: this.formatTime12h(a.time_of_submission) || 'N/A',
+          reflection: this.clipPdfText(a.student_reflection || '—', 260),
+          coach: this.clipPdfText(a.coach_response || '—', 260),
+          status: a.status || 'active',
+          imageUrl: a.image || null
         });
       }
       if (list.length === 0) {
-        // Still show the day with no attendees
-        rows.push({ date: dateStr, name: '(none)', routine: 'N/A', intensity: 'N/A', time: 'N/A', imageUrl: null });
+        rows.push({
+          date: dateStr,
+          name: '(none)',
+          email: '—',
+          routine: 'N/A',
+          intensity: 'N/A',
+          time: 'N/A',
+          reflection: '—',
+          coach: '—',
+          status: '—',
+          imageUrl: null
+        });
       }
     }
 
-    // Preload all images
-    const images: string[] = await Promise.all(
-      rows.map(async r => (r.imageUrl ? await this.toDataURL(r.imageUrl) : ''))
-    );
+    const images: string[] = await Promise.all(rows.map(async r => (r.imageUrl ? await this.toDataURL(r.imageUrl) : '')));
 
     const doc = new jsPDF({ orientation: 'landscape' });
-    const title = `Routine Attendance Report (Whole Month)`;
-    const sub = `${this.selectedClass.class_name || 'Class'} — ${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
-    doc.setFontSize(16);
-    doc.text(title, 14, 18);
-    doc.setFontSize(12);
-    doc.text(sub, 14, 26);
+    const pageW = doc.internal.pageSize.getWidth();
+    const ym = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+    doc.setFillColor(10, 118, 100);
+    doc.rect(0, 0, pageW, 22, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(15);
+    doc.text('Athletrack — Routine history (full month)', 14, 13);
+    doc.setFontSize(10);
+    doc.text(`${this.selectedClass.class_name || 'Class'} · ${ym}`, 14, 19);
+    doc.setTextColor(0, 0, 0);
 
-    const imageSizeMm = 13.2; // ~50px at 96DPI
+    const submissionRows = rows.filter(r => r.name !== '(none)');
+    doc.setFontSize(10);
+    doc.text(
+      `There are ${submissionRows.length} submission row${submissionRows.length === 1 ? '' : 's'} across ${ym}. Charts summarize active vs inactive attendance markers per logged row.`,
+      14,
+      30,
+      { maxWidth: pageW - 28 }
+    );
+    const act = submissionRows.filter(r => r.status === 'active').length;
+    const inact = submissionRows.filter(r => r.status === 'inactive').length;
+    this.drawRoutineDayMixBarPdf(doc, 14, 42, act, inact);
 
+    const imageSizeMm = 11;
     autoTable(doc, {
-      startY: 32,
-      head: [['Date', 'Name', 'Routine', 'Intensity', 'Time', 'Image']],
-      body: rows.map(() => ['', '', '', '', '', '']),
-      styles: { fontSize: 8, cellPadding: 2, minCellHeight: imageSizeMm + 4 },
-      headStyles: { fillColor: [10, 118, 100] },
+      startY: 56,
+      head: [['Date', 'Athlete', 'Email', 'Exercise', 'Intensity', 'Time', 'Status', 'Reflection', 'Coach response', 'Photo']],
+      body: rows.map(() => new Array(10).fill('')),
+      styles: { fontSize: 6.5, cellPadding: 1.2, overflow: 'linebreak', minCellHeight: imageSizeMm + 3 },
+      headStyles: { fillColor: [10, 118, 100], fontSize: 7 },
       columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 50 },
-        2: { cellWidth: 50 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 25 },
-        5: { cellWidth: imageSizeMm + 6 }
+        0: { cellWidth: 22 },
+        1: { cellWidth: 26 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 34 },
+        4: { cellWidth: 16 },
+        5: { cellWidth: 16 },
+        6: { cellWidth: 14 },
+        7: { cellWidth: 38 },
+        8: { cellWidth: 38 },
+        9: { cellWidth: imageSizeMm + 4 }
       },
       didParseCell: (data) => {
         if (data.section === 'body') {
           const idx = data.row.index;
-          if (data.column.index === 0) data.cell.text = [rows[idx].date];
-          if (data.column.index === 1) data.cell.text = [rows[idx].name];
-          if (data.column.index === 2) data.cell.text = [rows[idx].routine];
-          if (data.column.index === 3) data.cell.text = [rows[idx].intensity];
-          if (data.column.index === 4) data.cell.text = [rows[idx].time];
+          const r = rows[idx];
+          const cells = [
+            r.date,
+            r.name,
+            r.email,
+            r.routine,
+            r.intensity,
+            r.time,
+            r.status,
+            r.reflection,
+            r.coach,
+            ''
+          ];
+          const col = data.column.index;
+          if (col >= 0 && col < 9) {
+            data.cell.text = [cells[col]];
+          }
         }
       },
       didDrawCell: (data) => {
-        if (data.section === 'body' && data.column.index === 5) {
+        if (data.section === 'body' && data.column.index === 9) {
           const idx = data.row.index;
           const imgData = images[idx];
           if (imgData) {
@@ -671,7 +830,9 @@ export class RoutinehistoryComponent implements OnInit {
             const y = data.cell.y + (data.cell.height - h) / 2;
             try {
               (doc as any).addImage(imgData, 'PNG', x, y, w, h);
-            } catch {}
+            } catch {
+              /* ignore */
+            }
           }
         }
       }
@@ -679,6 +840,39 @@ export class RoutinehistoryComponent implements OnInit {
 
     const fileName = `routine_report_month_${(this.selectedClass.class_name || 'class').toString().replace(/\s+/g, '_')}_${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}.pdf`;
     doc.save(fileName);
+  }
+
+  private clipPdfText(value: string | null | undefined, maxChars: number): string {
+    const t = (value ?? '').toString().replace(/\s+/g, ' ').trim();
+    if (!t) {
+      return '—';
+    }
+    if (t.length <= maxChars) {
+      return t;
+    }
+    return `${t.slice(0, maxChars - 1)}…`;
+  }
+
+  private drawRoutineDayMixBarPdf(doc: jsPDF, x: number, y: number, active: number, inactive: number): void {
+    const total = active + inactive || 1;
+    const barW = 120;
+    const barH = 7;
+    let cx = x;
+    doc.setFontSize(8);
+    doc.setTextColor(60, 60, 60);
+    doc.text('Attendance mix (active vs inactive markers)', x, y - 1);
+    const segments = [
+      { n: active, rgb: [34, 197, 94] as [number, number, number], label: 'Active' },
+      { n: inactive, rgb: [148, 163, 184] as [number, number, number], label: 'Inactive' }
+    ];
+    for (const seg of segments) {
+      const w = (seg.n / total) * barW;
+      doc.setFillColor(seg.rgb[0], seg.rgb[1], seg.rgb[2]);
+      doc.rect(cx, y, Math.max(w, seg.n > 0 ? 1.5 : 0), barH, 'F');
+      cx += Math.max(w, seg.n > 0 ? 1.5 : 0);
+    }
+    doc.setTextColor(40, 40, 40);
+    doc.text(`Active: ${active}   Inactive: ${inactive}`, x, y + barH + 5);
   }
 
   private fetchRoutineHistory(): void {

@@ -1354,31 +1354,212 @@ export class ClassComponent implements OnInit {
       return;
     }
 
-    const doc = new jsPDF({ orientation: 'landscape' });
-    const title = `${this.selectedClass.class_name || 'Class'} - Athlete List`;
-    doc.setFontSize(14);
-    doc.text(title, 14, 16);
-
-    const statusLabel = this.dailyStatusFilter === 'all'
-      ? 'All'
-      : this.dailyStatusFilter.charAt(0).toUpperCase() + this.dailyStatusFilter.slice(1);
-    doc.setFontSize(10);
-    doc.text(`Filter: ${statusLabel}`, 14, 24);
-
-    const rows = this.filteredStudents.map((student: any) => [
-      student?.name || '-',
-      student?.code || '-',
-      this.getStudentStatusLabel(student)
-    ]);
-
-    autoTable(doc, {
-      head: [['Name', 'Code', 'Status']],
-      body: rows.length ? rows : [['No athletes found for this filter.', '', '']],
-      startY: 28
+    const students = this.selectedClass.enrolledStudents || [];
+    const { active, inactive, deactivated } = this.partitionStudentsForPdfReport(students);
+    const weekLabel = this.getTrainingWeekRangeLabel();
+    const generatedAt = new Date().toLocaleString('en-US', {
+      dateStyle: 'medium',
+      timeStyle: 'short'
     });
 
+    const doc = new jsPDF({ orientation: 'landscape' });
+    const pageW = doc.internal.pageSize.getWidth();
+
+    doc.setFillColor(2, 47, 17);
+    doc.rect(0, 0, pageW, 22, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.text('Athletrack — Class engagement report', 14, 14);
+    doc.setFontSize(10);
+    doc.text(`Generated ${generatedAt}`, 14, 20);
+    doc.setTextColor(0, 0, 0);
+
+    let y = 30;
+    doc.setFontSize(13);
+    doc.setTextColor(2, 47, 17);
+    doc.text(this.selectedClass.class_name || 'Class', 14, y);
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    y += 6;
+    doc.text(
+      `Reporting window: current training week (${weekLabel}). Active means at least one routine logged this week; inactive means enrolled but none yet; deactivated means removed from participation.`,
+      14,
+      y,
+      { maxWidth: pageW - 28 }
+    );
+    y += 14;
+
+    doc.setFontSize(11);
+    doc.setTextColor(10, 118, 100);
+    doc.text(
+      `There are ${active.length} active student${active.length === 1 ? '' : 's'}, ${inactive.length} inactive, and ${deactivated.length} deactivated in this class for ${weekLabel}.`,
+      14,
+      y,
+      { maxWidth: pageW - 28 }
+    );
+    y += 12;
+
+    this.drawEnrollmentStackedBarPdf(doc, 14, y, active.length, inactive.length, deactivated.length);
+    y += 28;
+
+    const addSection = (
+      heading: string,
+      narrative: string,
+      head: string[],
+      rows: (string | number)[][],
+      accent: [number, number, number]
+    ) => {
+      const emptyMsg = () => {
+        const r = new Array(head.length).fill('—');
+        r[0] = 'No students in this section';
+        return [r];
+      };
+      doc.setFillColor(accent[0], accent[1], accent[2]);
+      doc.rect(14, y - 4, pageW - 28, 8, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(11);
+      doc.text(heading, 18, y + 2);
+      doc.setTextColor(0, 0, 0);
+      y += 10;
+      doc.setFontSize(9);
+      doc.text(narrative, 14, y, { maxWidth: pageW - 28 });
+      y += 8;
+      autoTable(doc, {
+        startY: y,
+        head: [head],
+        body: rows.length ? rows : emptyMsg(),
+        theme: 'striped',
+        headStyles: { fillColor: [accent[0], accent[1], accent[2]], textColor: 255 },
+        styles: { fontSize: 8, cellPadding: 2 },
+        margin: { left: 14, right: 14 }
+      });
+      const finalY = (doc as any).lastAutoTable?.finalY;
+      y = (typeof finalY === 'number' ? finalY : y + 40) + 12;
+    };
+
+    addSection(
+      'Active this week',
+      `There ${active.length === 1 ? 'is' : 'are'} ${active.length} active student${active.length === 1 ? '' : 's'} with at least one submission during ${weekLabel}.`,
+      ['Name', 'Code', 'Email', 'Day active (submission)', 'Weekly engagement'],
+      active.map((s: any) => [
+        s?.name ?? '—',
+        s?.code ?? '—',
+        s?.student_email ?? s?.email ?? '—',
+        this.formatPdfDayActive(s?.last_active_date_in_week),
+        'Completed'
+      ]),
+      [22, 101, 52]
+    );
+
+    addSection(
+      'Inactive (enrolled, no submission this week)',
+      `There ${inactive.length === 1 ? 'is' : 'are'} ${inactive.length} inactive student${inactive.length === 1 ? '' : 's'} — still enrolled but no routine logged between the week boundaries above.`,
+      ['Name', 'Code', 'Email', 'Weekly engagement'],
+      inactive.map((s: any) => [
+        s?.name ?? '—',
+        s?.code ?? '—',
+        s?.student_email ?? s?.email ?? '—',
+        'Not completed yet'
+      ]),
+      [107, 114, 128]
+    );
+
+    addSection(
+      'Deactivated students',
+      deactivated.length
+        ? `The following ${deactivated.length} student${deactivated.length === 1 ? '' : 's'} ${deactivated.length === 1 ? 'was' : 'were'} deactivated from this class. Reasons are recorded where provided.`
+        : 'No deactivated students in this roster.',
+      ['Name', 'Code', 'Email', 'Deactivation reason'],
+      deactivated.map((s: any) => [
+        s?.name ?? '—',
+        s?.code ?? '—',
+        s?.student_email ?? s?.email ?? '—',
+        (s?.deactivation_reason ?? '—').toString()
+      ]),
+      [185, 28, 28]
+    );
+
     const safeClassName = (this.selectedClass.class_name || 'class').toString().replace(/\s+/g, '_');
-    doc.save(`${safeClassName}_athlete_list.pdf`);
+    doc.save(`${safeClassName}_class_report.pdf`);
+  }
+
+  private partitionStudentsForPdfReport(students: any[]) {
+    const active: any[] = [];
+    const inactive: any[] = [];
+    const deactivated: any[] = [];
+    for (const s of students || []) {
+      if (this.normalizeStudentStatus(s?.student_status) === 'deactivated') {
+        deactivated.push(s);
+      } else if (this.hasCompletedThisWeek(s)) {
+        active.push(s);
+      } else {
+        inactive.push(s);
+      }
+    }
+    return { active, inactive, deactivated };
+  }
+
+  private getTrainingWeekRangeLabel(): string {
+    const today = new Date();
+    const dow = today.getDay();
+    const daysToMonday = dow === 0 ? 6 : dow - 1;
+    const monday = new Date(today);
+    monday.setHours(0, 0, 0, 0);
+    monday.setDate(today.getDate() - daysToMonday);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const fmt = (d: Date) =>
+      d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    return `${fmt(monday)} – ${fmt(sunday)}`;
+  }
+
+  private formatPdfDayActive(iso: string | null | undefined): string {
+    if (!iso) {
+      return 'No dated activity this week';
+    }
+    const d = new Date(String(iso).includes('T') ? iso : `${iso}T12:00:00`);
+    if (Number.isNaN(d.getTime())) {
+      return String(iso);
+    }
+    return d.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+
+  private drawEnrollmentStackedBarPdf(
+    doc: jsPDF,
+    x: number,
+    y: number,
+    active: number,
+    inactive: number,
+    deactivated: number
+  ) {
+    const total = active + inactive + deactivated || 1;
+    const barW = 140;
+    const barH = 8;
+    let cx = x;
+    const segments: { n: number; rgb: [number, number, number]; label: string }[] = [
+      { n: active, rgb: [34, 197, 94], label: 'Active' },
+      { n: inactive, rgb: [156, 163, 175], label: 'Inactive' },
+      { n: deactivated, rgb: [239, 68, 68], label: 'Deactivated' }
+    ];
+    for (const seg of segments) {
+      const w = (seg.n / total) * barW;
+      doc.setFillColor(...seg.rgb);
+      doc.rect(cx, y, Math.max(w, seg.n > 0 ? 2 : 0), barH, 'F');
+      cx += Math.max(w, seg.n > 0 ? 2 : 0);
+    }
+    doc.setFontSize(8);
+    doc.setTextColor(60, 60, 60);
+    let lx = x;
+    doc.text('Engagement mix (share of roster)', x, y - 2);
+    for (const seg of segments) {
+      doc.text(`${seg.label}: ${seg.n}`, lx, y + barH + 5);
+      lx += 46;
+    }
   }
 
   onModalBackdropClick(

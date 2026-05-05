@@ -3,10 +3,8 @@
     <app-sidenav (navToggled)="onNavToggled($event)" class="fixed top-0 left-0 h-full z-10"></app-sidenav>
     <div class="flex flex-1">
         <!-- Content div with lower z-index -->
-        <div class="transition-all duration-300 w-full z-1 mt-16"
-            [class.ml-64]="isNavOpen"
-            [class.ml-20]="!isNavOpen"
-            [class.pl-5]="!isNavOpen">
+        <div class="transition-all duration-300 w-full z-1 mt-16 ml-0 pb-20 lg:pb-6"
+            [ngClass]="{ 'lg:ml-64': isNavOpen, 'lg:ml-20': !isNavOpen, 'lg:pl-5': !isNavOpen }">
             <div class="p-2 sm:p-6">
 
 

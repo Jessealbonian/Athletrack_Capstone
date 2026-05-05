@@ -3,9 +3,8 @@
     <app-navbar class="relative z-20"></app-navbar>
     <div class="content-area">
         <div class="dashboard-container">
-            <div class="transition-all duration-300 z-1 mt-16" [class.ml-64]="isNavOpen"
-                [class.ml-20]="!isNavOpen"
-                [class.pl-5]="!isNavOpen">
+            <div class="transition-all duration-300 z-1 mt-16 ml-0 pb-20 lg:pb-6"
+                [ngClass]="{ 'lg:ml-64': isNavOpen, 'lg:ml-20': !isNavOpen, 'lg:pl-5': !isNavOpen }">
 
                 <div class="sm:ml-3 ml-12 mt-8 ">
                     <div

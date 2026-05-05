@@ -3,6 +3,7 @@ module.exports = {
   content: [
     './src/**/*.{html,ts}',
   ],
+  safelist: ['lg:ml-64', 'lg:ml-20', 'lg:pl-5', 'pb-20', 'lg:pb-6'],
   theme: {
     extend: {
       animation: {
