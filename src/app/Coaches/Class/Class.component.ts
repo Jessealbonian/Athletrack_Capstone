@@ -1349,18 +1349,38 @@ export class ClassComponent implements OnInit {
     return this.hasCompletedThisWeek(student) ? 'Active' : 'Inactive';
   }
 
-  generateClassListPdf() {
+  async generateClassListPdf() {
     if (!this.selectedClass) {
       return;
     }
 
     const students = this.selectedClass.enrolledStudents || [];
     const { active, inactive, deactivated } = this.partitionStudentsForPdfReport(students);
+    const activeRate = students.length ? Math.round((active.length / students.length) * 100) : 0;
     const weekLabel = this.getTrainingWeekRangeLabel();
     const generatedAt = new Date().toLocaleString('en-US', {
       dateStyle: 'medium',
       timeStyle: 'short'
     });
+    const classId = Number(this.selectedClass?.class_id || 0);
+
+    const studentMetricsMap = new Map<number, {
+      lastSubmissionDate: string;
+      firstSubmissionDate: string;
+      reportsSubmitted: number;
+      currentStreakDays: number;
+      highlight: 'never' | 'inactive-recently' | 'consistent';
+    }>();
+    if (classId > 0) {
+      const metricTasks = (students || [])
+        .filter((s: any) => Number(s?.user_id) > 0)
+        .map(async (s: any) => {
+          const uid = Number(s.user_id);
+          const metric = await this.fetchStudentReportMetrics(classId, uid);
+          studentMetricsMap.set(uid, metric);
+        });
+      await Promise.all(metricTasks);
+    }
 
     const doc = new jsPDF({ orientation: 'landscape' });
     const pageW = doc.internal.pageSize.getWidth();
@@ -1392,15 +1412,34 @@ export class ClassComponent implements OnInit {
     doc.setFontSize(11);
     doc.setTextColor(10, 118, 100);
     doc.text(
-      `There are ${active.length} active student${active.length === 1 ? '' : 's'}, ${inactive.length} inactive, and ${deactivated.length} deactivated in this class for ${weekLabel}.`,
+      `Total: ${students.length} | Active: ${active.length} | Inactive: ${inactive.length} | Deactivated: ${deactivated.length} | Activity Rate: ${activeRate}%`,
       14,
       y,
       { maxWidth: pageW - 28 }
     );
-    y += 12;
+    y += 11;
 
     this.drawEnrollmentStackedBarPdf(doc, 14, y, active.length, inactive.length, deactivated.length);
-    y += 28;
+    y += 18;
+
+    autoTable(doc, {
+      startY: y,
+      head: [['Summary Dashboard', 'Value']],
+      body: [
+        ['Total Students', String(students.length)],
+        ['Active Students', String(active.length)],
+        ['Inactive Students', String(inactive.length)],
+        ['Deactivated Students', String(deactivated.length)],
+        ['Activity Rate', `${activeRate}%`],
+        ['Report Date Range', weekLabel]
+      ],
+      theme: 'striped',
+      headStyles: { fillColor: [2, 47, 17], textColor: 255 },
+      styles: { fontSize: 9, cellPadding: 2 },
+      margin: { left: 14, right: 14 },
+      tableWidth: 115
+    });
+    y = ((doc as any).lastAutoTable?.finalY ?? y + 20) + 10;
 
     const addSection = (
       heading: string,
@@ -1440,11 +1479,16 @@ export class ClassComponent implements OnInit {
     addSection(
       'Active this week',
       `There ${active.length === 1 ? 'is' : 'are'} ${active.length} active student${active.length === 1 ? '' : 's'} with at least one submission during ${weekLabel}. Exact submission dates are available under Routine History.`,
-      ['Name', 'Code', 'Activity this week'],
+      ['Student Name', 'Status', 'Student Code/ID', 'Date Joined', 'Last Active Date', 'Reports Submitted', 'Current Streak', 'Highlight'],
       active.map((s: any) => [
         s?.name ?? '—',
+        'Active',
         s?.code ?? '—',
-        this.formatPdfWeeklyActivitySummary(s)
+        this.getStudentReportMetric(s, studentMetricsMap).firstSubmissionDate,
+        this.getStudentReportMetric(s, studentMetricsMap).lastSubmissionDate,
+        this.getStudentReportMetric(s, studentMetricsMap).reportsSubmitted,
+        this.getStudentReportMetric(s, studentMetricsMap).currentStreakDays,
+        this.getHighlightLabel(this.getStudentReportMetric(s, studentMetricsMap).highlight)
       ]),
       [22, 101, 52]
     );
@@ -1452,11 +1496,16 @@ export class ClassComponent implements OnInit {
     addSection(
       'Inactive (enrolled, no submission this week)',
       `There ${inactive.length === 1 ? 'is' : 'are'} ${inactive.length} inactive student${inactive.length === 1 ? '' : 's'} — still enrolled but no routine logged between the week boundaries above.`,
-      ['Name', 'Code', 'Activity this week'],
+      ['Student Name', 'Status', 'Student Code/ID', 'Date Joined', 'Last Active Date', 'Reports Submitted', 'Current Streak', 'Highlight'],
       inactive.map((s: any) => [
         s?.name ?? '—',
+        'Inactive',
         s?.code ?? '—',
-        this.formatPdfWeeklyActivitySummary(s)
+        this.getStudentReportMetric(s, studentMetricsMap).firstSubmissionDate,
+        this.getStudentReportMetric(s, studentMetricsMap).lastSubmissionDate,
+        this.getStudentReportMetric(s, studentMetricsMap).reportsSubmitted,
+        this.getStudentReportMetric(s, studentMetricsMap).currentStreakDays,
+        this.getHighlightLabel(this.getStudentReportMetric(s, studentMetricsMap).highlight)
       ]),
       [107, 114, 128]
     );
@@ -1466,10 +1515,15 @@ export class ClassComponent implements OnInit {
       deactivated.length
         ? `The following ${deactivated.length} student${deactivated.length === 1 ? '' : 's'} ${deactivated.length === 1 ? 'was' : 'were'} deactivated from this class. The reason entered at deactivation is visible in the Class Details screen (not stored on this export).`
         : 'No deactivated students in this roster.',
-      ['Name', 'Code', 'Notes'],
+      ['Student Name', 'Status', 'Student Code/ID', 'Date Joined', 'Last Active Date', 'Reports Submitted', 'Current Streak', 'Notes'],
       deactivated.map((s: any) => [
         s?.name ?? '—',
+        'Deactivated',
         s?.code ?? '—',
+        this.getStudentReportMetric(s, studentMetricsMap).firstSubmissionDate,
+        this.getStudentReportMetric(s, studentMetricsMap).lastSubmissionDate,
+        this.getStudentReportMetric(s, studentMetricsMap).reportsSubmitted,
+        this.getStudentReportMetric(s, studentMetricsMap).currentStreakDays,
         'Deactivated — see Class Details for recorded reason'
       ]),
       [185, 28, 28]
@@ -1509,14 +1563,98 @@ export class ClassComponent implements OnInit {
     return `${fmt(monday)} – ${fmt(sunday)}`;
   }
 
-  /** PDF-only copy using fields already returned by getEnrolledStudentsForClass (no extra API). */
-  private formatPdfWeeklyActivitySummary(student: any): string {
-    if (this.normalizeStudentStatus(student?.student_status) === 'deactivated') {
-      return '—';
+  private getStudentReportMetric(
+    student: any,
+    map: Map<number, {
+      lastSubmissionDate: string;
+      firstSubmissionDate: string;
+      reportsSubmitted: number;
+      currentStreakDays: number;
+      highlight: 'never' | 'inactive-recently' | 'consistent';
+    }>
+  ) {
+    const uid = Number(student?.user_id || 0);
+    return map.get(uid) || {
+      lastSubmissionDate: '—',
+      firstSubmissionDate: '—',
+      reportsSubmitted: 0,
+      currentStreakDays: 0,
+      highlight: 'never'
+    };
+  }
+
+  private getHighlightLabel(flag: 'never' | 'inactive-recently' | 'consistent'): string {
+    if (flag === 'consistent') return '🟢 Consistent';
+    if (flag === 'inactive-recently') return '🟡 Inactive recently';
+    return '🔴 Never submitted';
+  }
+
+  private async fetchStudentReportMetrics(classId: number, userId: number): Promise<{
+    lastSubmissionDate: string;
+    firstSubmissionDate: string;
+    reportsSubmitted: number;
+    currentStreakDays: number;
+    highlight: 'never' | 'inactive-recently' | 'consistent';
+  }> {
+    const fallback = {
+      lastSubmissionDate: '—',
+      firstSubmissionDate: '—',
+      reportsSubmitted: 0,
+      currentStreakDays: 0,
+      highlight: 'never' as const
+    };
+    try {
+      const res: any = await new Promise((resolve, reject) => {
+        this.http
+          .get(`${this.apiUrl}/routes.php?request=getRoutineHistoryForStudentInClass&class_id=${classId}&user_id=${userId}`)
+          .subscribe({ next: resolve, error: reject });
+      });
+      const items: any[] = Array.isArray(res?.payload) ? res.payload : [];
+      if (!items.length) {
+        return fallback;
+      }
+      const dates = items
+        .map((i: any) => new Date(i?.date_of_submission))
+        .filter((d: Date) => !Number.isNaN(d.getTime()))
+        .sort((a: Date, b: Date) => a.getTime() - b.getTime());
+      if (!dates.length) {
+        return { ...fallback, reportsSubmitted: items.length };
+      }
+      const first = dates[0];
+      const last = dates[dates.length - 1];
+      const today = new Date();
+      const daysSinceLast = Math.floor((today.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
+      const streak = this.computeDateStreakDays(dates);
+      let highlight: 'never' | 'inactive-recently' | 'consistent' = 'inactive-recently';
+      if (items.length === 0) highlight = 'never';
+      else if (streak >= 3 || daysSinceLast <= 2) highlight = 'consistent';
+      else if (daysSinceLast > 7) highlight = 'inactive-recently';
+      return {
+        lastSubmissionDate: last.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        firstSubmissionDate: first.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        reportsSubmitted: items.length,
+        currentStreakDays: streak,
+        highlight
+      };
+    } catch {
+      return fallback;
     }
-    return this.hasCompletedThisWeek(student)
-      ? 'Logged ≥1 routine during this reporting week'
-      : 'No routine logged yet during this reporting week';
+  }
+
+  private computeDateStreakDays(sortedDates: Date[]): number {
+    if (!sortedDates.length) return 0;
+    const unique = Array.from(
+      new Set(sortedDates.map((d: Date) => d.toISOString().slice(0, 10)))
+    )
+      .map((s: string) => new Date(`${s}T00:00:00`))
+      .sort((a: Date, b: Date) => a.getTime() - b.getTime());
+    let streak = 1;
+    for (let i = unique.length - 1; i > 0; i--) {
+      const diff = Math.round((unique[i].getTime() - unique[i - 1].getTime()) / (1000 * 60 * 60 * 24));
+      if (diff === 1) streak += 1;
+      else break;
+    }
+    return streak;
   }
 
   private drawEnrollmentStackedBarPdf(
