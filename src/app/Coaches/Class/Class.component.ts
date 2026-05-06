@@ -2,6 +2,8 @@ import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { AuthService } from '../../auth.service';
 import { SidenavComponent } from '../sidenav/sidenav.component';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -187,13 +189,22 @@ export class ClassComponent implements OnInit {
   deactivateReason = '';
   isDeactivatingStudent = false;
 
+  /** Class List Report (PDF) — period selection before generation */
+  showClassReportModal = false;
+  classReportPeriodType: 'daily' | 'monthly' | 'yearly' | 'custom' = 'daily';
+  classReportDayDate = '';
+  classReportMonthPick = 1;
+  classReportYearPick = new Date().getFullYear();
+  classReportRangeStart = '';
+  classReportRangeEnd = '';
+
   archivedFilter = false;
 
   onNavToggled(isOpen: boolean) {
     this.isNavOpen = isOpen;
   }
 
-  private apiUrl = 'https://capstonebackend-9wrj.onrender.com/api';
+  private readonly apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient, private auth: AuthService) {}
 
@@ -1349,38 +1360,183 @@ export class ClassComponent implements OnInit {
     return this.hasCompletedThisWeek(student) ? 'Active' : 'Inactive';
   }
 
+  openClassReportModal() {
+    const t = new Date();
+    this.classReportDayDate = t.toISOString().slice(0, 10);
+    this.classReportMonthPick = t.getMonth() + 1;
+    this.classReportYearPick = t.getFullYear();
+    this.classReportRangeStart = this.classReportDayDate;
+    this.classReportRangeEnd = this.classReportDayDate;
+    this.classReportPeriodType = 'daily';
+    this.showClassReportModal = true;
+  }
+
+  closeClassReportModal() {
+    this.showClassReportModal = false;
+  }
+
+  private pad2(n: number): string {
+    return String(n).padStart(2, '0');
+  }
+
+  /**
+   * Class list bucket rules (backend supplies counts; we classify each roster row):
+   * - C Deactivated: student_status === 'deactivated'
+   * - B Inactive: not deactivated and zero all-time submissions for this class
+   * - A1 Active + period: not deactivated, has history, >=1 submission in selected period
+   * - A2 Active + no period submission: not deactivated, has history, zero submissions in selected period
+   */
+  private classifyClassListReportRow(s: any): 'A1' | 'A2' | 'B' | 'C' {
+    if (this.normalizeStudentStatus(s?.student_status) === 'deactivated') {
+      return 'C';
+    }
+    const all = Number(s?.submissions_all_time ?? 0);
+    const inPeriod = Number(s?.submissions_in_period ?? 0);
+    if (all === 0) {
+      return 'B';
+    }
+    if (inPeriod > 0) {
+      return 'A1';
+    }
+    return 'A2';
+  }
+
+  private getClassReportPeriodBounds(): { start: string; end: string; typeLabel: string; rangeDescription: string } {
+    switch (this.classReportPeriodType) {
+      case 'daily':
+        return {
+          start: this.classReportDayDate,
+          end: this.classReportDayDate,
+          typeLabel: 'Daily',
+          rangeDescription: this.fmtShortUsDate(this.classReportDayDate)
+        };
+      case 'monthly': {
+        const y = this.classReportYearPick;
+        const m = this.classReportMonthPick;
+        const last = new Date(y, m, 0).getDate();
+        return {
+          start: `${y}-${this.pad2(m)}-01`,
+          end: `${y}-${this.pad2(m)}-${this.pad2(last)}`,
+          typeLabel: 'Monthly',
+          rangeDescription: `${new Date(y, m - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })}`
+        };
+      }
+      case 'yearly': {
+        const y = this.classReportYearPick;
+        return {
+          start: `${y}-01-01`,
+          end: `${y}-12-31`,
+          typeLabel: 'Yearly',
+          rangeDescription: `${y}`
+        };
+      }
+      case 'custom':
+        return {
+          start: this.classReportRangeStart,
+          end: this.classReportRangeEnd,
+          typeLabel: 'Custom Range',
+          rangeDescription: `${this.classReportRangeStart} – ${this.classReportRangeEnd}`
+        };
+      default:
+        return {
+          start: this.classReportDayDate,
+          end: this.classReportDayDate,
+          typeLabel: 'Daily',
+          rangeDescription: ''
+        };
+    }
+  }
+
+  private fmtShortUsDate(iso: string): string {
+    const d = new Date(`${iso}T12:00:00`);
+    return Number.isNaN(d.getTime())
+      ? iso
+      : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  private formatDeactivatedAt(raw: any): string {
+    if (raw == null || raw === '') {
+      return '—';
+    }
+    const d = new Date(String(raw).replace(' ', 'T'));
+    return Number.isNaN(d.getTime()) ? String(raw) : d.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  confirmClassReportPdf() {
+    const pb = this.getClassReportPeriodBounds();
+    if (!pb.start || !pb.end || pb.start > pb.end) {
+      void Swal.fire({
+        icon: 'error',
+        title: 'Invalid dates',
+        text: 'Please choose a valid period (start must be on or before end).'
+      });
+      return;
+    }
+    this.showClassReportModal = false;
+    void this.generateClassListPdf();
+  }
+
   async generateClassListPdf() {
     if (!this.selectedClass) {
       return;
     }
 
-    const students = this.selectedClass.enrolledStudents || [];
-    const { active, inactive, deactivated } = this.partitionStudentsForPdfReport(students);
-    const activeRate = students.length ? Math.round((active.length / students.length) * 100) : 0;
-    const weekLabel = this.getTrainingWeekRangeLabel();
+    const classId = Number(this.selectedClass.class_id);
+    const adminId = this.currentAdminId;
+    const pb = this.getClassReportPeriodBounds();
+
+    const url =
+      `${this.apiUrl}/routes.php?request=getClassListReportData&class_id=${classId}` +
+      `&period_start=${encodeURIComponent(pb.start)}&period_end=${encodeURIComponent(pb.end)}&show_deactivated=1` +
+      (adminId ? `&admin_id=${adminId}` : '');
+
+    let res: any;
+    try {
+      res = await firstValueFrom(this.http.get<any>(url));
+    } catch {
+      void Swal.fire({ icon: 'error', title: 'Error', text: 'Could not load report data from the server.' });
+      return;
+    }
+
+    if (res?.status?.remarks !== 'success' || !res?.payload) {
+      void Swal.fire({
+        icon: 'error',
+        title: 'Report unavailable',
+        text: res?.status?.message || 'The server could not build this class report.'
+      });
+      return;
+    }
+
+    const payload = res.payload;
+    const rows: any[] = Array.isArray(payload.students) ? payload.students : [];
+    const daily: { date: string; count: number }[] = Array.isArray(payload.daily_submissions)
+      ? payload.daily_submissions
+      : [];
+
+    const a1: any[] = [];
+    const a2: any[] = [];
+    const b: any[] = [];
+    const c: any[] = [];
+    for (const s of rows) {
+      const bucket = this.classifyClassListReportRow(s);
+      if (bucket === 'A1') {
+        a1.push(s);
+      } else if (bucket === 'A2') {
+        a2.push(s);
+      } else if (bucket === 'B') {
+        b.push(s);
+      } else {
+        c.push(s);
+      }
+    }
+
+    const totalRoster = rows.length;
+    const nonDeactivated = rows.filter((x) => this.normalizeStudentStatus(x.student_status) !== 'deactivated').length;
+
     const generatedAt = new Date().toLocaleString('en-US', {
       dateStyle: 'medium',
       timeStyle: 'short'
     });
-    const classId = Number(this.selectedClass?.class_id || 0);
-
-    const studentMetricsMap = new Map<number, {
-      lastSubmissionDate: string;
-      firstSubmissionDate: string;
-      reportsSubmitted: number;
-      currentStreakDays: number;
-      highlight: 'never' | 'inactive-recently' | 'consistent';
-    }>();
-    if (classId > 0) {
-      const metricTasks = (students || [])
-        .filter((s: any) => Number(s?.user_id) > 0)
-        .map(async (s: any) => {
-          const uid = Number(s.user_id);
-          const metric = await this.fetchStudentReportMetrics(classId, uid);
-          studentMetricsMap.set(uid, metric);
-        });
-      await Promise.all(metricTasks);
-    }
 
     const doc = new jsPDF({ orientation: 'landscape' });
     const pageW = doc.internal.pageSize.getWidth();
@@ -1389,70 +1545,77 @@ export class ClassComponent implements OnInit {
     doc.rect(0, 0, pageW, 22, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(16);
-    doc.text('Athletrack — Class engagement report', 14, 14);
+    doc.text('Class List Report', 14, 14);
     doc.setFontSize(10);
     doc.text(`Generated ${generatedAt}`, 14, 20);
     doc.setTextColor(0, 0, 0);
 
     let y = 30;
-    doc.setFontSize(13);
+    doc.setFontSize(12);
     doc.setTextColor(2, 47, 17);
-    doc.text(this.selectedClass.class_name || 'Class', 14, y);
-    doc.setFontSize(10);
-    doc.setTextColor(60, 60, 60);
+    doc.text(payload.class_name || this.selectedClass.class_name || 'Class', 14, y);
     y += 6;
-    doc.text(
-      `Reporting window: current training week (${weekLabel}). Active means at least one routine logged this week; inactive means enrolled but none yet; deactivated means removed from participation.`,
-      14,
-      y,
-      { maxWidth: pageW - 28 }
-    );
-    y += 14;
+    doc.setFontSize(9);
+    doc.setTextColor(60, 60, 60);
+    const desc = (payload.description || this.selectedClass.description || '').toString().trim();
+    if (desc) {
+      doc.text(desc, 14, y, { maxWidth: pageW - 28 });
+      y += 8;
+    }
+    doc.text(`Coach: ${payload.coach_name || '—'}`, 14, y);
+    y += 5;
+    doc.text(`Report type: ${pb.typeLabel}`, 14, y);
+    y += 5;
+    doc.text(`Selected period: ${pb.rangeDescription} (${pb.start} to ${pb.end})`, 14, y);
+    y += 10;
 
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setTextColor(10, 118, 100);
     doc.text(
-      `Total: ${students.length} | Active: ${active.length} | Inactive: ${inactive.length} | Deactivated: ${deactivated.length} | Activity Rate: ${activeRate}%`,
+      `Summaries are based on routine submission history for this class. “Inactive” means no submission ever; “Active” rows require at least one past submission.`,
       14,
       y,
       { maxWidth: pageW - 28 }
     );
-    y += 11;
+    y += 12;
 
-    this.drawEnrollmentStackedBarPdf(doc, 14, y, active.length, inactive.length, deactivated.length);
-    y += 18;
+    this.drawClassListCompositionPiePdf(doc, 14, y, a1.length, a2.length, b.length, c.length);
+    this.drawClassListDailyLinePdf(doc, 128, y, daily);
+    y += 38;
 
     autoTable(doc, {
       startY: y,
-      head: [['Summary Dashboard', 'Value']],
+      head: [['Summary', 'Value']],
       body: [
-        ['Total Students', String(students.length)],
-        ['Active Students', String(active.length)],
-        ['Inactive Students', String(inactive.length)],
-        ['Deactivated Students', String(deactivated.length)],
-        ['Activity Rate', `${activeRate}%`],
-        ['Report Date Range', weekLabel]
+        ['Total students in class', String(totalRoster)],
+        ['Students not deactivated (active enrollment)', String(nonDeactivated)],
+        ['Active — submitted during selected period', String(a1.length)],
+        ['Active — prior submissions but none in selected period', String(a2.length)],
+        ['Inactive — no submission history (ever)', String(b.length)],
+        ['Deactivated students', String(c.length)]
       ],
       theme: 'striped',
       headStyles: { fillColor: [2, 47, 17], textColor: 255 },
       styles: { fontSize: 9, cellPadding: 2 },
       margin: { left: 14, right: 14 },
-      tableWidth: 115
+      tableWidth: pageW - 28
     });
-    y = ((doc as any).lastAutoTable?.finalY ?? y + 20) + 10;
+    y = ((doc as any).lastAutoTable?.finalY ?? y + 40) + 10;
+
+    const emptyRow = (cols: number, msg: string) => {
+      const r = new Array(cols).fill('—');
+      r[0] = msg;
+      return r;
+    };
 
     const addSection = (
       heading: string,
       narrative: string,
       head: string[],
-      rows: (string | number)[][],
-      accent: [number, number, number]
+      bodyRows: (string | number)[][],
+      accent: [number, number, number],
+      emptyMessage = 'No students found in this category.'
     ) => {
-      const emptyMsg = () => {
-        const r = new Array(head.length).fill('—');
-        r[0] = 'No students in this section';
-        return [r];
-      };
       doc.setFillColor(accent[0], accent[1], accent[2]);
       doc.rect(14, y - 4, pageW - 28, 8, 'F');
       doc.setTextColor(255, 255, 255);
@@ -1466,7 +1629,7 @@ export class ClassComponent implements OnInit {
       autoTable(doc, {
         startY: y,
         head: [head],
-        body: rows.length ? rows : emptyMsg(),
+        body: bodyRows.length ? bodyRows : [emptyRow(head.length, emptyMessage)],
         theme: 'striped',
         headStyles: { fillColor: [accent[0], accent[1], accent[2]], textColor: 255 },
         styles: { fontSize: 8, cellPadding: 2 },
@@ -1476,223 +1639,188 @@ export class ClassComponent implements OnInit {
       y = (typeof finalY === 'number' ? finalY : y + 40) + 12;
     };
 
+    const daysInPeriod = Math.max(1, Number(payload.days_in_period) || 1);
+
     addSection(
-      'Active this week',
-      `There ${active.length === 1 ? 'is' : 'are'} ${active.length} active student${active.length === 1 ? '' : 's'} with at least one submission during ${weekLabel}. Exact submission dates are available under Routine History.`,
-      ['Student Name', 'Status', 'Student Code/ID', 'Date Joined', 'Last Active Date', 'Reports Submitted', 'Current Streak', 'Highlight'],
-      active.map((s: any) => [
-        s?.name ?? '—',
-        'Active',
-        s?.code ?? '—',
-        this.getStudentReportMetric(s, studentMetricsMap).firstSubmissionDate,
-        this.getStudentReportMetric(s, studentMetricsMap).lastSubmissionDate,
-        this.getStudentReportMetric(s, studentMetricsMap).reportsSubmitted,
-        this.getStudentReportMetric(s, studentMetricsMap).currentStreakDays,
-        this.getHighlightLabel(this.getStudentReportMetric(s, studentMetricsMap).highlight)
-      ]),
+      '1. Active Students Who Submitted During Selected Period',
+      `Students with at least one routine submission between ${pb.start} and ${pb.end}.`,
+      [
+        'Student',
+        'Code / ID',
+        'Badge',
+        'Submissions (period)',
+        'Last submission',
+        'Last routine',
+        'Status',
+        'Submission rate (optional)'
+      ],
+      a1.map((s: any) => {
+        const inP = Number(s.submissions_in_period ?? 0);
+        const rate =
+          daysInPeriod > 0 ? `${Math.min(100, Math.round((inP / daysInPeriod) * 100))}% (vs. days in period)` : '—';
+        return [
+          s.name ?? '—',
+          s.code ?? '—',
+          'Active · submitted in period',
+          String(inP),
+          s.last_submission_date ?? '—',
+          s.last_routine_name ?? '—',
+          'Active',
+          rate
+        ];
+      }),
       [22, 101, 52]
     );
 
     addSection(
-      'Inactive (enrolled, no submission this week)',
-      `There ${inactive.length === 1 ? 'is' : 'are'} ${inactive.length} inactive student${inactive.length === 1 ? '' : 's'} — still enrolled but no routine logged between the week boundaries above.`,
-      ['Student Name', 'Status', 'Student Code/ID', 'Date Joined', 'Last Active Date', 'Reports Submitted', 'Current Streak', 'Highlight'],
-      inactive.map((s: any) => [
-        s?.name ?? '—',
-        'Inactive',
-        s?.code ?? '—',
-        this.getStudentReportMetric(s, studentMetricsMap).firstSubmissionDate,
-        this.getStudentReportMetric(s, studentMetricsMap).lastSubmissionDate,
-        this.getStudentReportMetric(s, studentMetricsMap).reportsSubmitted,
-        this.getStudentReportMetric(s, studentMetricsMap).currentStreakDays,
-        this.getHighlightLabel(this.getStudentReportMetric(s, studentMetricsMap).highlight)
+      '2. Active Students With Previous Submission History But No Submission During Selected Period',
+      'Still on the active roster, have submitted before, but not within the selected report window.',
+      ['Student', 'Code / ID', 'Badge', 'Last submission', 'Last routine', 'Status'],
+      a2.map((s: any) => [
+        s.name ?? '—',
+        s.code ?? '—',
+        'Active · no submission in period',
+        s.last_submission_date ?? '—',
+        s.last_routine_name ?? '—',
+        'Active — no submission during selected period'
       ]),
+      [10, 118, 100]
+    );
+
+    addSection(
+      '3. Inactive Students With No Submission History',
+      'Enrolled (not deactivated) but no routine has ever been recorded for this class.',
+      ['Student', 'Code / ID', 'Badge', 'Status', 'Note'],
+      b.map((s: any) => [s.name ?? '—', s.code ?? '—', 'Inactive', 'Inactive', 'No routine submission history']),
       [107, 114, 128]
     );
 
     addSection(
-      'Deactivated students',
-      deactivated.length
-        ? `The following ${deactivated.length} student${deactivated.length === 1 ? '' : 's'} ${deactivated.length === 1 ? 'was' : 'were'} deactivated from this class. The reason entered at deactivation is visible in the Class Details screen (not stored on this export).`
-        : 'No deactivated students in this roster.',
-      ['Student Name', 'Status', 'Student Code/ID', 'Date Joined', 'Last Active Date', 'Reports Submitted', 'Current Streak', 'Notes'],
-      deactivated.map((s: any) => [
-        s?.name ?? '—',
+      '4. Deactivated Students',
+      'Removed from participation for this class. Metrics reference submissions on or before deactivation when a timestamp exists.',
+      [
+        'Student',
+        'Code / ID',
+        'Badge',
+        'Reason',
+        'Deactivated at',
+        'Last submission (before deactivation)',
+        'Last routine (before deactivation)',
+        'Total submissions (before deactivation)'
+      ],
+      c.map((s: any) => [
+        s.name ?? '—',
+        s.code ?? '—',
         'Deactivated',
-        s?.code ?? '—',
-        this.getStudentReportMetric(s, studentMetricsMap).firstSubmissionDate,
-        this.getStudentReportMetric(s, studentMetricsMap).lastSubmissionDate,
-        this.getStudentReportMetric(s, studentMetricsMap).reportsSubmitted,
-        this.getStudentReportMetric(s, studentMetricsMap).currentStreakDays,
-        'Deactivated — see Class Details for recorded reason'
+        (s.deactivation_reason ?? '—').toString(),
+        this.formatDeactivatedAt(s.deactivated_at),
+        s.last_submission_before_deactivation ?? '—',
+        s.last_routine_before_deactivation ?? '—',
+        String(s.submissions_before_deactivation ?? '0')
       ]),
       [185, 28, 28]
     );
 
-    const safeClassName = (this.selectedClass.class_name || 'class').toString().replace(/\s+/g, '_');
-    doc.save(`${safeClassName}_class_report.pdf`);
+    const safeClassName = (payload.class_name || this.selectedClass.class_name || 'class').toString().replace(/\s+/g, '_');
+    doc.save(`${safeClassName}_class_list_report.pdf`);
   }
 
-  private partitionStudentsForPdfReport(students: any[]) {
-    const active: any[] = [];
-    const inactive: any[] = [];
-    const deactivated: any[] = [];
-    for (const s of students || []) {
-      if (this.normalizeStudentStatus(s?.student_status) === 'deactivated') {
-        deactivated.push(s);
-      } else if (this.hasCompletedThisWeek(s)) {
-        active.push(s);
-      } else {
-        inactive.push(s);
-      }
-    }
-    return { active, inactive, deactivated };
-  }
-
-  private getTrainingWeekRangeLabel(): string {
-    const today = new Date();
-    const dow = today.getDay();
-    const daysToMonday = dow === 0 ? 6 : dow - 1;
-    const monday = new Date(today);
-    monday.setHours(0, 0, 0, 0);
-    monday.setDate(today.getDate() - daysToMonday);
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    const fmt = (d: Date) =>
-      d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    return `${fmt(monday)} – ${fmt(sunday)}`;
-  }
-
-  private getStudentReportMetric(
-    student: any,
-    map: Map<number, {
-      lastSubmissionDate: string;
-      firstSubmissionDate: string;
-      reportsSubmitted: number;
-      currentStreakDays: number;
-      highlight: 'never' | 'inactive-recently' | 'consistent';
-    }>
-  ) {
-    const uid = Number(student?.user_id || 0);
-    return map.get(uid) || {
-      lastSubmissionDate: '—',
-      firstSubmissionDate: '—',
-      reportsSubmitted: 0,
-      currentStreakDays: 0,
-      highlight: 'never'
-    };
-  }
-
-  private getHighlightLabel(flag: 'never' | 'inactive-recently' | 'consistent'): string {
-    if (flag === 'consistent') return 'Consistent';
-    if (flag === 'inactive-recently') return 'Inactive recently';
-    return 'Never submitted';
-  }
-
-  private async fetchStudentReportMetrics(classId: number, userId: number): Promise<{
-    lastSubmissionDate: string;
-    firstSubmissionDate: string;
-    reportsSubmitted: number;
-    currentStreakDays: number;
-    highlight: 'never' | 'inactive-recently' | 'consistent';
-  }> {
-    const fallback = {
-      lastSubmissionDate: '—',
-      firstSubmissionDate: '—',
-      reportsSubmitted: 0,
-      currentStreakDays: 0,
-      highlight: 'never' as const
-    };
-    try {
-      const res: any = await new Promise((resolve, reject) => {
-        this.http
-          .get(`${this.apiUrl}/routes.php?request=getRoutineHistoryForStudentInClass&class_id=${classId}&user_id=${userId}`)
-          .subscribe({ next: resolve, error: reject });
-      });
-      const items: any[] = Array.isArray(res?.payload) ? res.payload : [];
-      if (!items.length) {
-        return fallback;
-      }
-      const dates = items
-        .map((i: any) => new Date(i?.date_of_submission))
-        .filter((d: Date) => !Number.isNaN(d.getTime()))
-        .sort((a: Date, b: Date) => a.getTime() - b.getTime());
-      if (!dates.length) {
-        return { ...fallback, reportsSubmitted: items.length };
-      }
-      const first = dates[0];
-      const last = dates[dates.length - 1];
-      const today = new Date();
-      const daysSinceLast = Math.floor((today.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
-      const streak = this.computeDateStreakDays(dates);
-      let highlight: 'never' | 'inactive-recently' | 'consistent' = 'inactive-recently';
-      if (items.length === 0) highlight = 'never';
-      else if (streak >= 3 || daysSinceLast <= 2) highlight = 'consistent';
-      else if (daysSinceLast > 7) highlight = 'inactive-recently';
-      return {
-        lastSubmissionDate: last.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        firstSubmissionDate: first.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        reportsSubmitted: items.length,
-        currentStreakDays: streak,
-        highlight
-      };
-    } catch {
-      return fallback;
-    }
-  }
-
-  private computeDateStreakDays(sortedDates: Date[]): number {
-    if (!sortedDates.length) return 0;
-    const unique = Array.from(
-      new Set(sortedDates.map((d: Date) => d.toISOString().slice(0, 10)))
-    )
-      .map((s: string) => new Date(`${s}T00:00:00`))
-      .sort((a: Date, b: Date) => a.getTime() - b.getTime());
-    let streak = 1;
-    for (let i = unique.length - 1; i > 0; i--) {
-      const diff = Math.round((unique[i].getTime() - unique[i - 1].getTime()) / (1000 * 60 * 60 * 24));
-      if (diff === 1) streak += 1;
-      else break;
-    }
-    return streak;
-  }
-
-  private drawEnrollmentStackedBarPdf(
+  /** Pie-style roster composition (four slices). */
+  private drawClassListCompositionPiePdf(
     doc: jsPDF,
     x: number,
     y: number,
-    active: number,
-    inactive: number,
-    deactivated: number
+    a1: number,
+    a2: number,
+    inact: number,
+    deact: number
   ) {
-    const total = active + inactive + deactivated || 1;
-    const barW = 140;
-    const barH = 8;
-    let cx = x;
-    const segments: { n: number; rgb: [number, number, number]; label: string }[] = [
-      { n: active, rgb: [34, 197, 94], label: 'Active' },
-      { n: inactive, rgb: [156, 163, 175], label: 'Inactive' },
-      { n: deactivated, rgb: [239, 68, 68], label: 'Deactivated' }
+    const slices = [
+      { v: a1, rgb: [34, 197, 94] as [number, number, number], label: 'Active · in period' },
+      { v: a2, rgb: [10, 118, 100] as [number, number, number], label: 'Active · not in period' },
+      { v: inact, rgb: [156, 163, 175] as [number, number, number], label: 'Inactive · never' },
+      { v: deact, rgb: [239, 68, 68] as [number, number, number], label: 'Deactivated' }
     ];
-    for (const seg of segments) {
-      const w = (seg.n / total) * barW;
-      doc.setFillColor(...seg.rgb);
-      doc.rect(cx, y, Math.max(w, seg.n > 0 ? 2 : 0), barH, 'F');
-      cx += Math.max(w, seg.n > 0 ? 2 : 0);
-    }
+    const total = slices.reduce((s, z) => s + z.v, 0) || 1;
+    const r = 14;
+    const cx = x + r + 4;
+    const cy = y + r + 6;
+    let ang = -Math.PI / 2;
     doc.setFontSize(8);
     doc.setTextColor(60, 60, 60);
-    let lx = x;
-    doc.text('Engagement mix (share of roster)', x, y - 2);
-    for (const seg of segments) {
-      doc.text(`${seg.label}: ${seg.n}`, lx, y + barH + 5);
-      lx += 46;
+    doc.text('Roster composition (pie)', x, y);
+    for (const sl of slices) {
+      const arc = (sl.v / total) * Math.PI * 2;
+      if (sl.v <= 0) {
+        continue;
+      }
+      doc.setFillColor(sl.rgb[0], sl.rgb[1], sl.rgb[2]);
+      const steps = Math.max(8, Math.ceil((sl.v / total) * 40));
+      for (let i = 0; i < steps; i++) {
+        const t1 = ang + (i / steps) * arc;
+        const t2 = ang + ((i + 1) / steps) * arc;
+        const p1x = cx + r * Math.cos(t1);
+        const p1y = cy + r * Math.sin(t1);
+        const p2x = cx + r * Math.cos(t2);
+        const p2y = cy + r * Math.sin(t2);
+        doc.lines(
+          [
+            [p1x - cx, p1y - cy],
+            [p2x - p1x, p2y - p1y],
+            [cx - p2x, cy - p2y]
+          ],
+          cx,
+          cy,
+          [1, 1],
+          'F',
+          true
+        );
+      }
+      ang += arc;
+    }
+    doc.setFillColor(255, 255, 255);
+    doc.circle(cx, cy, r * 0.48, 'F');
+    let ly = y + 6;
+    for (const sl of slices) {
+      doc.setFillColor(sl.rgb[0], sl.rgb[1], sl.rgb[2]);
+      doc.rect(x + r * 2 + 18, ly - 2, 3, 3, 'F');
+      doc.setTextColor(40, 40, 40);
+      doc.text(`${sl.label}: ${sl.v}`, x + r * 2 + 24, ly);
+      ly += 5;
+    }
+  }
+
+  /** Line chart: submissions per day across the selected window (sparse days ok). */
+  private drawClassListDailyLinePdf(doc: jsPDF, x: number, y: number, daily: { date: string; count: number }[]) {
+    const plotW = 115;
+    const plotH = 28;
+    doc.setFontSize(8);
+    doc.setTextColor(60, 60, 60);
+    doc.text('Submissions over time (line)', x, y);
+    doc.setDrawColor(180, 180, 180);
+    doc.rect(x, y + 4, plotW, plotH, 'S');
+    if (!daily.length) {
+      doc.setFontSize(8);
+      doc.text('No submissions in this period.', x + 4, y + 18);
+      return;
+    }
+    const maxC = Math.max(...daily.map((d) => d.count), 1);
+    const xs = daily.map((_, i) => x + (i / Math.max(daily.length - 1, 1)) * plotW);
+    const ys = daily.map((d) => y + 4 + plotH - (d.count / maxC) * (plotH - 4));
+    doc.setDrawColor(10, 118, 100);
+    doc.setLineWidth(0.4);
+    for (let i = 0; i < daily.length - 1; i++) {
+      doc.line(xs[i], ys[i], xs[i + 1], ys[i + 1]);
+    }
+    doc.setFillColor(10, 118, 100);
+    for (let i = 0; i < daily.length; i++) {
+      doc.circle(xs[i], ys[i], 0.8, 'F');
     }
   }
 
   onModalBackdropClick(
     event: MouseEvent,
-    modal: 'addClass' | 'addTask' | 'upload' | 'classDetails' | 'deactivate' | 'token' | 'studentHistory'
+    modal: 'addClass' | 'addTask' | 'upload' | 'classDetails' | 'deactivate' | 'token' | 'studentHistory' | 'classReport'
   ) {
     if (event.target === event.currentTarget) {
       switch (modal) {
@@ -1717,11 +1845,15 @@ export class ClassComponent implements OnInit {
         case 'studentHistory':
           this.closeStudentHistoryModal();
           break;
+        case 'classReport':
+          this.closeClassReportModal();
+          break;
       }
     }
   }
 
   private closeTopMostModal() {
+    if (this.showClassReportModal) return this.closeClassReportModal();
     if (this.studentHistoryModalOpen) return this.closeStudentHistoryModal();
     if (this.showDeactivateModal) return this.closeDeactivateModal();
     if (this.showTokenModal) return this.closeTokenModal();

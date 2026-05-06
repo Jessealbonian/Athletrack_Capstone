@@ -326,7 +326,7 @@
               <option value="inactive">Inactive</option>
               <option value="deactivated">Deactivated</option>
             </select>
-            <button (click)="generateClassListPdf()" class="px-3 py-2 rounded transition-colors duration-150 text-white font-semibold text-sm w-full sm:w-auto" style="background:#0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'">
+            <button (click)="openClassReportModal()" class="px-3 py-2 rounded transition-colors duration-150 text-white font-semibold text-sm w-full sm:w-auto" style="background:#0A7664;" onmouseover="this.style.backgroundColor='#22473F'" onmouseout="this.style.backgroundColor='#0A7664'">
               Generate Report (PDF)
             </button>
           </div>
@@ -378,6 +378,57 @@
             <button *ngIf="!isEditingClassDetails" (click)="deleteClass()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto bg-red-600 hover:bg-red-700">Delete Class</button>
             <button (click)="closeClassDetailsModal()" class="px-4 py-2 rounded transition-colors duration-150 text-white font-semibold w-full sm:w-auto" style="background:gray" [ngClass]="'hover:bg-gray-700'">Cancel</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Class List Report Period Modal -->
+    <div *ngIf="showClassReportModal" (click)="onModalBackdropClick($event, 'classReport')" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+      <div (click)="$event.stopPropagation()" class="bg-white shadow-lg p-4 sm:p-6 rounded-lg w-full max-w-lg mx-2">
+        <h2 class="text-lg font-bold text-black mb-3">Class List Report</h2>
+        <p class="text-sm text-gray-600 mb-4">Choose how to define the reporting window. Students are grouped by all‑time participation and activity within this window.</p>
+        <div class="mb-3">
+          <label class="block text-sm font-semibold mb-1">Report type</label>
+          <select [(ngModel)]="classReportPeriodType" class="w-full border rounded px-3 py-2 text-sm">
+            <option value="daily">Daily</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+            <option value="custom">Custom date range</option>
+          </select>
+        </div>
+        <div class="mb-3" *ngIf="classReportPeriodType === 'daily'">
+          <label class="block text-sm font-semibold mb-1">Date</label>
+          <input type="date" [(ngModel)]="classReportDayDate" class="w-full border rounded px-3 py-2 text-sm" />
+        </div>
+        <div class="flex gap-2 mb-3" *ngIf="classReportPeriodType === 'monthly'">
+          <div class="flex-1">
+            <label class="block text-sm font-semibold mb-1">Month</label>
+            <select [(ngModel)]="classReportMonthPick" class="w-full border rounded px-2 py-2 text-sm">
+              <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [ngValue]="m">{{ m }}</option>
+            </select>
+          </div>
+          <div class="flex-1">
+            <label class="block text-sm font-semibold mb-1">Year</label>
+            <input type="number" [(ngModel)]="classReportYearPick" class="w-full border rounded px-3 py-2 text-sm" min="2000" max="2100" />
+          </div>
+        </div>
+        <div class="mb-3" *ngIf="classReportPeriodType === 'yearly'">
+          <label class="block text-sm font-semibold mb-1">Year</label>
+          <input type="number" [(ngModel)]="classReportYearPick" class="w-full border rounded px-3 py-2 text-sm" min="2000" max="2100" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4" *ngIf="classReportPeriodType === 'custom'">
+          <div>
+            <label class="block text-sm font-semibold mb-1">Start</label>
+            <input type="date" [(ngModel)]="classReportRangeStart" class="w-full border rounded px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1">End</label>
+            <input type="date" [(ngModel)]="classReportRangeEnd" class="w-full border rounded px-3 py-2 text-sm" />
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row justify-end gap-2">
+          <button type="button" (click)="closeClassReportModal()" class="px-4 py-2 rounded bg-gray-500 text-white font-semibold">Cancel</button>
+          <button type="button" (click)="confirmClassReportPdf()" class="px-4 py-2 rounded text-white font-semibold" style="background:#0A7664;">Generate PDF</button>
         </div>
       </div>
     </div>
