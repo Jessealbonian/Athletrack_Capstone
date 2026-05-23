@@ -132,25 +132,14 @@ export class LoginComponent implements OnInit {
       },
       error: (error) => {
         Swal.fire({
-          title: 'Account Not Found',
-          text: 'No account exists with these credentials. Would you like to create one?',
-          icon: 'question',
-          showCancelButton: true,
-          confirmButtonText: 'Yes, Register',
-          cancelButtonText: 'Try Again'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            this.router.navigate(['/register']);
-          }
+          title: 'Login Failed',
+          text: error.error?.message || 'Invalid email or password. Please try again.',
+          icon: 'error'
         });
-        this.error = error.error.message || 'Login failed';
+        this.error = error.error?.message || 'Login failed';
         console.error('Login error:', error);
       }
     });
-  }
-
-  navigateToRegister() {
-    this.router.navigate(['/register']);
   }
 
   navigateToAdmin() {
@@ -175,12 +164,4 @@ export class LoginComponent implements OnInit {
     }, Math.floor(Math.random() * 3000) + 2000); // 2-5 seconds
   }
 
-  showRegisterBuffer() {
-    this.showBuffer = true;
-    this.bufferMessage = 'Switching to register...';
-    setTimeout(() => {
-      this.showBuffer = false;
-      this.router.navigate(['/register']);
-    }, Math.floor(Math.random() * 3000) + 2000); // 2-5 seconds
-  }
 }

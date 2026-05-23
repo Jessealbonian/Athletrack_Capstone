@@ -4,6 +4,11 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { RouterLink } from '@angular/router';
 
+interface LandingVisitResponse {
+  visit_count: number;
+  last_visited?: string;
+}
+
 @Component({
   selector: 'app-landing-page',
   standalone: true,
@@ -12,6 +17,9 @@ import { RouterLink } from '@angular/router';
   styleUrls: ['./landing-page.component.css']
 })
 export class LandingPageComponent implements OnInit, OnDestroy {
+  private readonly visitIntervalMs = 30 * 60 * 1000;
+  private readonly localLastIncrementKey = 'athletrack_landing_last_increment';
+
   visitCount = 0;
   displayedCount = 0;
   isLoading = true;
@@ -44,30 +52,92 @@ export class LandingPageComponent implements OnInit, OnDestroy {
   loadAndIncrement() {
     this.isLoading = true;
     this.lastError = null;
-  
-    const postUrl = `${environment.apiUrl}/routes.php?request=landing-visits`;
+
     const getUrl = `${environment.apiUrl}/routes.php?request=landing-visits&increment=0`;
-  
-    // do both sequentially
-    this.http.post(postUrl, {}).subscribe({
-      next: () => {
-        this.http.get<any>(getUrl).subscribe({
-          next: res => {
-            this.visitCount = res.visit_count;
-            this.displayedCount = res.visit_count;
-            this.isLoading = false;
-          },
-          error: err => {
-            this.lastError = `[GET] Fetch error: ${err.message || err}`;
-            this.isLoading = false;
-          }
-        });
+    const postUrl = `${environment.apiUrl}/routes.php?request=landing-visits`;
+
+    this.http.get<LandingVisitResponse>(getUrl).subscribe({
+      next: res => {
+        const currentCount = res.visit_count ?? 0;
+
+        if (this.shouldIncrementVisit(res.last_visited)) {
+          this.http.post(postUrl, {}).subscribe({
+            next: () => {
+              this.markLocalIncrement();
+              this.fetchVisitCount();
+            },
+            error: err => {
+              this.lastError = `[POST] Increment error: ${err.message || err}`;
+              this.applyVisitCount(currentCount);
+            }
+          });
+          return;
+        }
+
+        this.applyVisitCount(currentCount);
       },
       error: err => {
-        this.lastError = `[POST] Increment error: ${err.message || err}`;
+        this.lastError = `[GET] Fetch error: ${err.message || err}`;
         this.isLoading = false;
       }
     });
+  }
+
+  private fetchVisitCount(): void {
+    const getUrl = `${environment.apiUrl}/routes.php?request=landing-visits&increment=0`;
+
+    this.http.get<LandingVisitResponse>(getUrl).subscribe({
+      next: res => this.applyVisitCount(res.visit_count ?? 0),
+      error: err => {
+        this.lastError = `[GET] Fetch error: ${err.message || err}`;
+        this.isLoading = false;
+      }
+    });
+  }
+
+  private shouldIncrementVisit(lastVisited?: string): boolean {
+    const serverLast = this.parseVisitTimestamp(lastVisited);
+    const localLast = this.getLocalLastIncrement();
+    const referenceMs =
+      serverLast !== null && localLast !== null
+        ? Math.max(serverLast, localLast)
+        : serverLast ?? localLast;
+
+    if (referenceMs === null) {
+      return true;
+    }
+
+    return Date.now() - referenceMs >= this.visitIntervalMs;
+  }
+
+  private parseVisitTimestamp(value?: string): number | null {
+    if (!value) {
+      return null;
+    }
+
+    const normalized = value.includes('T') ? value : value.replace(' ', 'T');
+    const parsed = Date.parse(normalized);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
+  private getLocalLastIncrement(): number | null {
+    const stored = localStorage.getItem(this.localLastIncrementKey);
+    if (!stored) {
+      return null;
+    }
+
+    const parsed = Number(stored);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
+  private markLocalIncrement(): void {
+    localStorage.setItem(this.localLastIncrementKey, String(Date.now()));
+  }
+
+  private applyVisitCount(count: number): void {
+    this.visitCount = count;
+    this.displayedCount = count;
+    this.isLoading = false;
   }
 
   animateVisitCount(to: number) {
